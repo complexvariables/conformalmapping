@@ -1,0 +1,33 @@
+head	2.1;
+access;
+symbols
+	Initial:2.1;
+locks; strict;
+comment	@// @;
+
+
+2.1
+date	98.05.10.04.23.41;	author tad;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+2.1
+log
+@*** empty log message ***
+@
+text
+@function Mi = inv(M)
+%INV    Inverse SC map object.
+%   INV(M) returns an object formally representing the inverse of the
+%   map M. 
+
+%   Copyright 1998 by Toby Driscoll.
+%   $Id$
+
+Mi = scmapinv(M);
+@

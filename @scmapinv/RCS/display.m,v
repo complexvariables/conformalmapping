@@ -1,0 +1,59 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.3
+date	2001.07.20.14.34.21;	author driscoll;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2001.07.20.14.30.37;	author driscoll;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2001.07.20.14.29.33;	author driscoll;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@function display(fi)
+
+fprintf('\n%s = Inverse of:\n',inputname(1))
+disp(fi.themap)
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d3 1
+a3 1
+fprintf('\n%s = inverse of:\n',inputname(1))
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 1
+a4 1
+disp(fi)
+@

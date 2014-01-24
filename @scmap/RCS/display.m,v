@@ -1,0 +1,48 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.2
+date	2001.07.20.13.46.12;	author driscoll;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2001.07.20.13.32.40;	author driscoll;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@function display(f)
+
+% $Id: display.m,v 1.1 2001/07/20 13:32:40 driscoll Exp driscoll $ 
+
+fprintf('\n%s =\n',inputname(1))
+disp(f)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 1
+a3 1
+% $Id$ 
+d5 1
+a5 1
+fprintf('\n%s =\n\n',inputname(1))
+@

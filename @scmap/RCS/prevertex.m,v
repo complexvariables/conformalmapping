@@ -1,0 +1,56 @@
+head	2.2;
+access;
+symbols
+	Initial:2.1;
+locks; strict;
+comment	@// @;
+
+
+2.2
+date	98.05.13.23.29.29;	author tad;	state Exp;
+branches;
+next	2.1;
+
+2.1
+date	98.05.10.04.23.56;	author tad;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+2.2
+log
+@Changed 'fields' to 'fieldnames' as per matlab warning.
+@
+text
+@function z = prevertex(M)
+%PREVERTEX Extract a vector of the prevertices of an S-C map.
+
+%   Copyright 1998 by Toby Driscoll.
+%   $Id: prevertex.m,v 2.1 1998/05/10 04:23:56 tad Exp tad $
+
+tmp = parameters(M);
+if strmatch('prevertex',fieldnames(tmp))
+  z = tmp.prevertex;
+else
+  msg = sprintf('Prevertices not defined for map of class %s\n',class(M));
+  error(msg)
+end
+@
+
+
+2.1
+log
+@*** empty log message ***
+@
+text
+@d5 1
+a5 1
+%   $Id$
+d8 1
+a8 1
+if strmatch('prevertex',fields(tmp))
+@
