@@ -1,0 +1,16 @@
+
+For milestone 'release 0.1':
+
+* ?
+
+
+For milestone 'release 0.2':
+
+* Write periodic spline class (< closedcurve).
+
+* Write ellipse class (< closedcurve).
+
+* Write Szego kernel class.
+
+* Write fftmap class (< conformalmap).
+

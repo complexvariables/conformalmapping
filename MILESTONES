@@ -1,0 +1,28 @@
+
+release 0.1:
+
+  * Basic Mobius transformations work.
+    * Composition
+    * Plotting
+
+  * Test framework for classes.
+    * Each class has some basic test class
+
+  * (Semi-)consistent plotting framework.
+
+
+release 0.2:
+
+  * Help text for classes and functions more standardized and complete.
+
+  * Standardize RSPLOT like PLOT.
+
+  * Maps based on Szego kernel.
+    * Periodic spline class, ellipse, (other smooth classes?).
+    * Basic fft map (Taylor series for maps from disk).
+
+
+release 1.0:
+
+  * ?
+
