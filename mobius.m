@@ -36,7 +36,7 @@ methods
         if isa(A, 'double') && isequal(size(A), [2, 2])
           matrix = A;
         else
-          error('CMT:InvalidArguments', ...
+          error('CMT:InvalidArgument', ...
                 'Single argument should be a 2-by-2 matrix.')
         end
         
@@ -54,7 +54,7 @@ methods
           range = disk(circle(w));
           matrix = A2\A1;
         else
-          error('CMT:InvalidArguments', ...
+          error('CMT:InvalidArgument', ...
                 'Invalid arguments; see help for mobius.')
         end
         

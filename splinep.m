@@ -47,12 +47,12 @@ methods
         xk = varargin{1}(:);
         yk = varargin{2}(:);
         if numel(xk) ~= numel(yk)
-          error('CMT:InvalidArguments', ...
+          error('CMT:InvalidArgument', ...
                 'Input vectors must have the same number of elements.')
         end
         
       otherwise
-        error('CMT:InvalidArguments', ...
+        error('CMT:InvalidArgument', ...
               'Expected a complex vector or two real vectors.')
     end
     

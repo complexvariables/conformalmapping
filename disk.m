@@ -40,7 +40,7 @@ methods
         badargs = true;
     end
     if badargs
-      error('CMT:InvalidArguments', ...
+      error('CMT:InvalidArgument', ...
             'Expected 3 points or a center and radius.')
     end
     

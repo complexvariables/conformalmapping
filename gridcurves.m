@@ -25,7 +25,7 @@ methods
     end
     
     if nargin > 1 || ~isa(curves, 'cell')
-      error('CMT:InvalidArguments', ...
+      error('CMT:InvalidArgument', ...
             'Expected a cell array of individual grid curves.')
     end
     

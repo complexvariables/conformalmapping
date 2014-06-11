@@ -46,7 +46,7 @@ methods
       argsok = false;
     end
     if ~argsok
-      error('CMT:InvalidArguments', ...
+      error('CMT:InvalidArgument', ...
             'Expected domain and range region objects.')
     end
     
