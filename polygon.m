@@ -567,6 +567,11 @@ methods
     end
   end
   
+  function tangent(~)
+    error('CMT:NotImplemented', ...
+          'Placeholder function waiting on implementation.')
+  end
+  
   function q = truncate(p)
     % TRUNCATE Truncate an unbounded polygon.
     %   Q = TRUNCATE(P) returns a polygon whose finite vertices are the same

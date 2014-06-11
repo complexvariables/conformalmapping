@@ -1,7 +1,7 @@
 classdef closedcurve
 % CLOSEDCURVE abstract base class for simple planar Jordan curves.
 
-% This file is a part of the CMToolbox.
+% This file is a part of the CMToolkit.
 % It is licensed under the BSD 3-clause license.
 % (See LICENSE.)
 
@@ -86,6 +86,13 @@ methods
     n = C.length_;
   end
   
+  function t = modparam(C, t)
+    % Ensures parameter satisfies 0 <= t < length(C).
+    if any(t < 0 | 1 <= length(C))
+      t = mod(t, length(C));
+    end
+  end
+  
   function out = plot(C, varargin)
     % Plot curve in the plane.
     washold = ishold;
@@ -166,6 +173,7 @@ end
 
 methods(Abstract=true)
   z = point(C, t)
+  z = tangent(C, t)
 end
 
 methods(Hidden)
