@@ -32,6 +32,11 @@ methods
     gc.curves_ = curves;
   end
   
+  function disp(gd)
+    fprintf('gridcurves object:\n\n')
+    fprintf('  with %d gridlines.\n\n', numel(gd))
+  end
+  
   function n = numel(gc, varargin)
     n = numel(gc.curves_, varargin{:});
   end
@@ -43,7 +48,8 @@ methods
     hold on
     for k = 1:numel(gc.curves_)
       zg = gc.curves_{k};
-      plot(real(zg), imag(zg), varargin{:}, 'tag', gctag)
+      args = plotdef.gridargs;
+      plot(real(zg), imag(zg), args{:}, varargin{:}, 'tag', gctag)
     end
     
     if ~washold

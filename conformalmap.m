@@ -160,8 +160,7 @@ methods
     cah = newplot;
     hold on
     
-    args = plotdef.gridargs;
-    hg = plot(apply(f, grid(f.domain_)), args{:});
+    hg = plot(apply(f, grid(f.domain_)));
     hb = plot(f.range_);
     
     if ~washold
