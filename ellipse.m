@@ -64,7 +64,8 @@ methods
   end
   
   function zt = tangent(E, t)
-    zt = -E.a*sin(t) + 1i*E.b*cos(t);
+    t = modparam(E, t)*2*pi;
+    zt = (-E.a*sin(t) + 1i*E.b*cos(t))*2*pi;
     if E.r
       zt = zt.*exp(1i*E.r);
     end
