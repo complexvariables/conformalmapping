@@ -16,6 +16,12 @@ properties
   chordal_arclength_ = 0            % total chordal arclength
 end
 
+properties(Dependent)
+  xpts
+  ypts
+  zpts
+end
+
 methods
   function S = splinep(varargin)
     if ~nargin
@@ -78,7 +84,7 @@ methods
     switch class(op)
       case 'mobius'
         M = matrix(op);
-        z = zpts(S);
+        z = S.zpts;
         out = splinep((M(1)*z + M(3))./(M(2)*z + M(4)));
         
       otherwise
@@ -96,6 +102,18 @@ methods
     fprintf('  defined with %d spline knots,\n', numel(S.xk_))
     lstr = strtrim(evalc('disp(arclength(S))'));
     fprintf('  total chordal arc length %s\n\n', lstr)
+  end
+  
+  function x = get.xpts(S)
+    x = S.xk_;
+  end
+  
+  function y = get.ypts(S)
+    y = S.yk_;
+  end
+  
+  function z = get.zpts(S)
+    z = complex(S.xk_, S.yk_);
   end
   
   function S = minus(S, z)
@@ -119,7 +137,7 @@ methods
       [z, S] = deal(S, z);
     end
     if isa(z, 'double') && numel(z) == 1
-      S = splinep(z*zpts(S));
+      S = splinep(z*S.zpts);
     else
       error('CMT:NotDefined', ...
             'Only scalar multiplication defined.')
@@ -135,7 +153,7 @@ methods
       error('CMT:NotDefined', ...
             'Only translation by a scalar allowed.')
     end
-    S = splinep(zpts(S) + z);
+    S = splinep(S.zpts + z);
   end
   
   function z = point(S, t)
@@ -147,7 +165,7 @@ methods
   function replicate(S)
     % Print in format for pasting into scripts, etc.
     fprintf('%s = splinep([ ...\n    ', inputname(1));
-    z = zpts(S);
+    z = S.zpts;
     n = numel(z) - 1; % don't repeat first point
     for k = 1:n
       fprintf('%.4f', real(z(k)));
@@ -183,19 +201,7 @@ methods
   end
   
   function S = uminus(S)
-    S = splinep(-zpts(S));
-  end
-  
-  function x = xpts(S)
-    x = S.xk_;
-  end
-  
-  function y = ypts(S)
-    y = S.yk_;
-  end
-  
-  function z = zpts(S)
-    z = complex(S.xk_, S.yk_);
+    S = splinep(-S.zpts);
   end
 end
 

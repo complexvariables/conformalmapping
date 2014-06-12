@@ -16,7 +16,7 @@ s = splinep([ ...
 ]);
 plot(s)
 hold on
-plot(zpts(s), 'rd') % plot the knots
+plot(s.zpts, 'rd') % plot the knots
 
 %%
 % If you are not into tediously entering knot points by hand, you may use
