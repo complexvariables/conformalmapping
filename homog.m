@@ -192,6 +192,16 @@ methods
     c = homog(a.numer_*b.denom_ + a.denom_*b.numer_, a.denom_*b.denom_);
   end
   
+  function c = rdivide(a, b)
+    if isfloat(a)
+      a = homog(a);
+    end
+    if isfloat(b)
+      b = homog(b);
+    end
+    c = times(a, inv(b));
+  end
+  
   function zeta = subsref(zeta, s)
     % Provide double-like indexing.
     switch s.type
@@ -218,6 +228,16 @@ methods
       otherwise
         error('Unspported assignment syntax.')
     end
+  end
+  
+  function c = times(a, b)
+    if isfloat(a)
+      a = homog(a);
+    end
+    if isfloat(b)
+      b = homog(b);
+    end
+    c = homog(a.numer_.*b.numer_, a.denom.*b.denom_);
   end
   
   function eta = transpose(zeta)
