@@ -274,7 +274,7 @@ methods(Access=protected, Static)
       x(end+1) = x(1);
       y(end+1) = y(1);
     end
-    nk = length(x);
+    nk = numel(x);
     n = nk - 1;
     dx = diff(x);
     dy = diff(y);

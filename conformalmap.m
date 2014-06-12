@@ -182,7 +182,7 @@ methods
   end
   
   function out = subsref(f, S)
-    if length(S) == 1 && strcmp(S.type, '()')
+    if numel(S) == 1 && strcmp(S.type, '()')
       out = apply(f, S.subs{:});
     else
       out = builtin('subsref', f, S);

@@ -19,7 +19,7 @@ methods
   
   function box = boundbox(C)
     % Return bounding box for curve using evenly spaced points.
-    t = length(C)*(0:199)'/200;
+    t = C.length_*(0:199)'/200;
     box = boundbox(point(C, t));
   end
   
@@ -87,9 +87,9 @@ methods
   end
   
   function t = modparam(C, t)
-    % Ensures parameter satisfies 0 <= t < length(C).
-    if any(t < 0 | 1 <= length(C))
-      t = mod(t, length(C));
+    % Ensures parameter satisfies 0 <= t < C.length_.
+    if any(t < 0 | 1 <= C.length_)
+      t = mod(t, C.length_);
     end
   end
   
@@ -121,7 +121,7 @@ methods
     if nargin < 2
       scale = [];
     end
-    t = length(C)*(0:199)'/200;
+    t = C.length_*(0:199)'/200;
     box = plotbox(point(C, t), scale);
   end
 
@@ -143,7 +143,7 @@ methods
       [x1, x2, x3] = c2rs(z);
       x = [x1, x2, x3];
     end
-    h = adaptplot(@rspoint, [0, length(C)]);
+    h = adaptplot(@rspoint, [0, C.length_]);
     set(h, varargin{:});
     
     if ~washold
@@ -158,8 +158,8 @@ methods
   
   function z = subsref(C, S)
     % Equate C(t) with point(C, t). Fallback to builtin subsref otherwise.
-    if length(S) == 1 && strcmp(S.type, '()')
-      if length(S.subs) == 1
+    if numel(S) == 1 && strcmp(S.type, '()')
+      if numel(S.subs) == 1
         z = point(C, S.subs{1});
         return
       else
@@ -182,7 +182,7 @@ methods(Hidden)
       z = point(C, t);
       x = [real(z), imag(z)];
     end
-    h = adaptplot(@xypoint, [0 length(C)]);
+    h = adaptplot(@xypoint, [0, C.length_]);
   end
 end
 

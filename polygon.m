@@ -476,7 +476,7 @@ methods
     zh = p.hvertex_;
     zhind = p.hindex_;
     z = nan(size(t));
-    t = modparam(t(:));
+    t = modparam(p, t(:));
     
     % Loop by side number.
     for k = 1:n

@@ -37,7 +37,7 @@ methods
     switch nargin
       case 1
         z3 = varargin{1};
-        if isa(z3, 'double') && length(z3) == 3
+        if isa(z3, 'double') && numel(z3) == 3
           badargs = false;
           
           % Deduce center and radius.
