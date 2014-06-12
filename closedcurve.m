@@ -55,6 +55,10 @@ methods
     end
   end
   
+  function C = ctranspose(C)
+    C = cinvcurve(C);
+  end
+  
   function display(C)
     fprintf('\n%s =\n', inputname(1))
     disp(C)
