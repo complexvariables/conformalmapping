@@ -173,13 +173,13 @@ methods
   function z2 = second(S, t)
     t = modparam(S, t)*S.chordal_arclength_;
     z2 = complex(ppval(S.pp_{1,3}, t), ...
-                 ppval(S.pp_{2,3}, t));
+                 ppval(S.pp_{2,3}, t))*arclength(S)^2;
   end
   
   function zt = tangent(S, t)
-    t = modparam(S, t)*S.chordal_arclength_;
+    t = modparam(S, t)*arclength(S);
     zt = complex(ppval(S.pp_{1,2}, t), ...
-                 ppval(S.pp_{2,2}, t));
+                 ppval(S.pp_{2,2}, t))*arclength(S);
   end
   
   function S = uminus(S)
