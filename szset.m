@@ -20,6 +20,7 @@ properties
   nS                              % Number of collcation points.
   method                          % Solver method.
   trace                           % Print out solution trace information.
+  nF                              % Default size of FFT to employ.
 end
 
 properties(Access=protected)
@@ -28,6 +29,7 @@ properties(Access=protected)
       'nS', 128, [], '[ integer {128} ]'
       'method', 'auto', [], '[ backslash | orth_resid | {auto} ]'
       'trace', false, [], '[ true | {false} ]'
+      'nF', 512, [], '[ integer {512} ]'
     }
 end
 

@@ -1,4 +1,4 @@
-%% Specification by example -- Szego kernel.
+%% Specification by example -- Szego kernel map.
 % This file best viewed via the command
 %
 %   open(publish('spec_mobius_grids')).
@@ -17,15 +17,20 @@ G = splinep([ ...
     0.3099 - 0.6023i; 0.7427 - 0.5906i; 1.1053 - 0.1813i
     1.2807 + 0.3567i ...
 ]);
-% plot(G)
 
 %%
-% Compute the Szego kernel for |G|.
+% Make the map and draw it.
+f = szmap(G, 0);
+plot(f)
+
+%%
+% So how is this done? Start by computing the Szego kernel for |G|.
 S = szego(G, 0);
 disp(S)
 
+
 %%
-% Take 20 evenly spaced points around G, and consider the boundary
+% Take some (20 here) evenly spaced points around G, and consider the boundary
 % correspondence.
 t = (0:19)'/20;
 
