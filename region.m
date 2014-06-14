@@ -200,11 +200,12 @@ methods
   end
   
   function tf = isexterior(R)
+    % True if region has only inner boundaries. False otherwise.
     tf = hasinner(R) & ~hasouter(R);
   end
   
   function tf = isin(R, z)
-    % Is point in region?
+    % Is point z in region?
     if isempty(R.outerboundary_)
       outin = true;
     else
@@ -227,12 +228,20 @@ methods
   end
   
   function tf = isinterior(R)
+    % True if region has only outer boundaries. False otherwise.
     tf = hasouter(R) & ~hasinner(R);
   end
   
   function tf = isinside(R, z)
     % Another name for isin(R, z).
     tf = isin(R, z);
+  end
+  
+  function tf = issimplyconnected(R)
+    % True if region is simply connected (only one outer or inner boundary, but
+    % not both).
+    tf = (isinterior(R) & R.numouter == 1) ...
+         | (isexterior(R) & R.numinner == 1);
   end
   
   function b = outer(R)
