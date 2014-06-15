@@ -30,8 +30,7 @@ methods
       case 2
         if isa(center, 'double') && isa(radius, 'double') ...
             && numel(center) == 1 && numel(radius) == 1
-          z3 = center + radius*exp(2i*pi*[0, 0.25, 0.5]);
-          C = circle(z3);
+          C = circle(center, radius);
         else
           badargs = true;
         end
@@ -52,16 +51,16 @@ methods
     D = D@region(supargs{:});
   end
   
-  function gd = grid(D, radial, circular)
-    if nargin < 2 || isempty(radial)
+  function gd = grid(D, nradial, ncircular)
+    if nargin < 2 || isempty(nradial)
       nrad = 20;
     else
-      nrad = radial;
+      nrad = nradial;
     end
-    if nargin < 3 || isempty(circular)
+    if nargin < 3 || isempty(ncircular)
       ncirc = 5;
     else
-      ncirc = circular;
+      ncirc = ncircular;
     end
     
     npt = 200;
