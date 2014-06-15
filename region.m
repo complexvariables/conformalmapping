@@ -11,15 +11,15 @@ classdef region
 % region, or do we mean the entire plane?
 %
 % r = region(p)
-% r = region(p, 'interior')
+% r = region(p, 'interiorto')
 %   Constructs an interior region bounded by the closed curve p or the
 %   cell array of closed curves p.
-% r = region(q, 'exterior')
+% r = region(q, 'exteriorto')
 %   Constructs an exterior region bounded by the closed curve q or the cell
 %   array of closed curves q.
 % r = region(p, q)
-% r = region(p, 'interior, q, 'exterior')
-% r = region(q, 'exterior', p, 'interior)
+% r = region(p, 'interiorto', q, 'exteriorto')
+% r = region(q, 'exteriorto', p, 'interiorto')
 %   Constructs a region with p as the exterior boundary and q as the
 %   interior boundary. The arguments may be cell arrays.
 %
@@ -63,9 +63,9 @@ methods
         [p, q] = varargin{:};
         if ischar(q)
           switch q
-            case 'interior'
+            case 'interiorto'
               R.outerboundary_ = region.checkcc(p);
-            case 'exterior'
+            case 'exteriorto'
               R.innerboundary_ = region.checkcc(p);
             otherwise
               error('String %s unrecognized.')
@@ -77,10 +77,10 @@ methods
         
       case 4
         [p, pstr, q, qstr] = varargin{:};        
-        if strcmp(pstr, 'interior') && strcmp(qstr, 'exterior')
+        if strcmp(pstr, 'interiorto') && strcmp(qstr, 'exteriorto')
           R.outerboundary_ = region.checkcc(p);
           R.innerboundary_ = region.checkcc(q);
-        elseif strcmp(qstr, 'interior') && strcmp(pstr, 'exterior')
+        elseif strcmp(qstr, 'interiorto') && strcmp(pstr, 'exteriorto')
           R.outerboundary_ = region.checkcc(q);
           R.innerboundary_ = region.checkcc(p);
         else
