@@ -9,7 +9,7 @@ classdef diskex < region
 % Written by Everett Kropf, 2014.
 
 properties
-  extent_ = 3             % Default grid extent.
+  extent_ = 2             % Default grid extent.
 end
 
 methods
@@ -61,7 +61,7 @@ methods
       nrad = nradial;
     end
     if nargin < 3 || isempty(ncircular)
-      ncirc = 5;
+      ncirc = 6;
     else
       ncirc = ncircular;
     end
