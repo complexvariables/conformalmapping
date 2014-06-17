@@ -54,6 +54,31 @@ methods
     f.kernel_ = S;
     f.coefs_ = c;
   end
+  
+  function g = ctranspose(f)
+    d = domain(f);
+    if ~issimplyconnected(d)
+      error('CMT:NotDefined', ...
+            'This operation only defined for simply connected domains.')
+    end
+    
+    ftmp = szmap(d', 0, szset('nS', f.kernel_.N));
+    
+    if isinterior(d)
+      d = region(outer(d), 'exteriorto');
+    else
+      d = region(inner(d));
+    end
+    
+    r = range(f);
+    if isinterior(r)
+      r = region(outer(r), 'exteriorto');
+    else
+      r = region(inner(r));
+    end
+    
+    g = conformalmap(d, r, @(z) 1./conj(ftmp(conj(1./z))));
+  end
 end
 
 methods(Access=protected)
