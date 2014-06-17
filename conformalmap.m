@@ -27,23 +27,28 @@ end
 
 methods
   function f = conformalmap(domain, range, varargin)
-    % Eventually, construct map given domain and range if called as base
-    % class. Store domain and range otherwise.
-    
     if ~nargin
       return
     end
     
+    argsok = false;
     composition = false;
-    if nargin >= 2 && all(cellfun(@(c) isa(c, 'conformalmap'), ...
+    anonymous = false;
+    if nargin >= 2
+      if all(cellfun(@(c) isa(c, 'conformalmap'), ...
                           [{domain, range}, varargin]))
-      composition = true;
-      argsok = true;
-    elseif nargin == 2
-      argsok = (isempty(domain) | isa(domain, 'region')) ...
-               & (isempty(range) | isa(range, 'region'));
-    else
-      argsok = false;
+        composition = true;
+        argsok = true;
+      else
+        argsok = (isempty(domain) | isa(domain, 'region')) ...
+                 & (isempty(range) | isa(range, 'region'));
+        if nargin == 3
+          anonymous = isa(varargin{1}, 'function_handle');
+          argsok = argsok & anonymous;
+        elseif nargin > 3
+          argsok = false;
+        end
+      end
     end
     if ~argsok
       error('CMT:InvalidArgument', ...
@@ -53,10 +58,13 @@ methods
     if composition
       f.function_list_ = [{domain, range}, varargin];
       f.domain_ = f.function_list_{1}.domain;
-      f.range_ =f.function_list_{end}.range;
+      f.range_ = f.function_list_{end}.range;
     else
       f.domain_ = domain;
       f.range_ = range;
+      if anonymous
+        f.function_list_ = varargin;
+      end
     end
   end
   
@@ -66,7 +74,10 @@ methods
     %
     % See the apply concept in the developer docs for more details.
     
-    if iscomposition(f)
+    if isanonymous(f)
+      w = f.function_list{1}(z);
+      return
+    elseif iscomposition(f)
       % f is a composition, apply each map in turn.
       w = z;
       for k = 1:numel(f.function_list_)
@@ -136,8 +147,13 @@ methods
     d = f.domain_;
   end
   
+  function tf = isanonymous(f)
+    tf = numel(f.function_list_) == 1 ...
+         && isa(f.function_list_{1}, 'function_handle');
+  end
+  
   function tf = iscomposition(f)
-    tf = ~isempty(f.function_list_);
+    tf = numel(f.function_list_) > 1;
   end
   
   function f = mtimes(f1, f2)
