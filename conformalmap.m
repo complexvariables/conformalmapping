@@ -74,10 +74,7 @@ methods
     %
     % See the apply concept in the developer docs for more details.
     
-    if isanonymous(f)
-      w = f.function_list{1}(z);
-      return
-    elseif iscomposition(f)
+    if iscomposition(f)
       % f is a composition, apply each map in turn.
       w = z;
       for k = 1:numel(f.function_list_)
@@ -207,9 +204,13 @@ methods
 end
 
 methods(Access=protected)
-  function w = apply_map(~, z)
-    % Identity map.
-    w = z;
+  function w = apply_map(f, z)
+    if isanonymous(f)
+      w = f.function_list_{1}(z);
+    else
+      % Default map is identity.
+      w = z;
+    end
   end
 end
 
