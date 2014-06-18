@@ -82,6 +82,8 @@ methods
       warning('This is not accurate for epsilon > 0.95.')
     end
     
+    t = modparam(E, t)*2*pi;
+    
     % ellipse term magnitude function
     emf = @(m, e) e.^m./(1 + e.^(2*m))./m;
     % term function
