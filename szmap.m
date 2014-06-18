@@ -20,6 +20,7 @@ classdef szmap < conformalmap
 properties
   kernel_
   coefs_
+  opts_
 end
 
 methods
@@ -53,6 +54,7 @@ methods
     
     f.kernel_ = S;
     f.coefs_ = c;
+    f.opts_ = opts;
   end
   
   function g = ctranspose(f)
@@ -62,22 +64,24 @@ methods
             'This operation only defined for simply connected domains.')
     end
     
-    ftmp = szmap(d', 0, szset('nS', f.kernel_.N));
-    
     if isinterior(d)
-      d = region(outer(d), 'exteriorto');
+      d = diskex(outer(d));
     else
-      d = region(inner(d));
+      d = disk(inner(d));
     end
     
     r = range(f);
     if isinterior(r)
-      r = region(outer(r), 'exteriorto');
+      br = outer(r);
+      r = region(br, 'exteriorto');
     else
-      r = region(inner(r));
+      br = inner(r);
+      r = region(br);
     end
     
-    g = conformalmap(d, r, @(z) 1./conj(ftmp(conj(1./z))));
+    stmp = szmap(br', 0, f.opts_);
+    ftmp = @(z) 1./conj(apply_map(stmp, conj(1./z)));
+    g = conformalmap(d, r, ftmp);
   end
 end
 
