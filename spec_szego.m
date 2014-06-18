@@ -30,7 +30,7 @@ disp(S)
 
 
 %%
-% Take some (20 here) evenly spaced points around G, and consider the boundary
+% Take some evenly spaced points around G, and consider the boundary
 % correspondence.
 t = (0:19)'/20;
 
@@ -90,45 +90,49 @@ G = splinep([ ...
 
 
 %%
-% Create a map for the interior and exterior of the curve. Note the use of
-% the conjugate inverse for the exterior map.
+% Create a map for the interior and exterior of the curve. We have
+% overloaded the conjugate transpose operator (|'|) for |szmap| to give the
+% exterior map of a simply connected region given the interior map.
+
 fin = szmap(G, 0);
-g = szmap(G', 0);
-fout = @(z) 1./conj(g(1./conj(z)));
+fout = fin';
+
 
 %%
-% Compute the outer grid.
-gde = grid(diskex(0, 1));
-gdi = cell(1, numel(gde));
-for k = 1:numel(gde)
-  gdi{k} = fout(gde{k});
-end
-gdi = gridcurves(gdi);
+% Justification for the use of the conjugate transpose operator comes from
+% the way the exterior map is composed. The command |fout = fin'| is in
+% spirit composed of the commands
+%
+%   g = szmap(G', 0);
+%   fout = @(z) 1./conj(g(1./conj(z)));
+%
+% Overloading the |ctranspose| operator allows us to also specify the
+% proper domain and range for the new map, instead of just having a
+% function handle, which in turn allows using the automated mechanisms for
+% plotting, and allowing us to treat |fout| as a |szmap| object.
+
+clf
+plot(fin)
+hold on
+plot(fout)
+plot(G(0), 'r.', 'markersize', 18)
 
 
 %%
 % Compute the shape fingerprint, which is just the graph of the boundary
 % correspondence angles between the shape and the unit disk with respect to the
 % interior and exterior maps.
-Sin = fin.kernel_;
-Sout = g.kernel_;
+Sin = kernel(fin);
+Sout = kernel(fout);
 s = (0:199)'/200;                 % Points in [0, 1) for the 
                                   % parameterized  boundary G.
-tin = unwrap(theta(Sin, s));      % Interior boundary image angles.
+tin = unwrap(theta(Sin, s));      % Interior boundary image angles for the
+                                  % map |G -> disk|.
 tout = unwrap(theta(Sout, s));    % Exterior boundary image angles.
 
 
 %%
 clf
-subplot(1,2,1), hold on
-plot(gdi)
-plot(fin)
-plot(G(0), 'r.')
-axis(plotbox(G))
-aspectequal
-axis off
-
-subplot(1,2,2)
 plot(tin/pi, tout/pi)
 xlabel('\theta_{inner}/\pi')
 ylabel('\theta_{outer}/\pi')

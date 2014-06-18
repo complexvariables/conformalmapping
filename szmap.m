@@ -25,19 +25,24 @@ end
 
 methods
   function f = szmap(range, a, opts)
+    if nargin
+      if isa(range, 'closedcurve')
+        range = region(range);
+      end
+      if ~issimplyconnected(range)
+        error('CMT:InvalidArgument', ...
+          'Region must be simply connected.')
+      end
+      args = {unitdisk, range};
+    else
+      args = {};
+    end
+    
+    f = f@conformalmap(args{:});
+    
     if ~nargin
       return
     end
-    
-    if isa(range, 'closedcurve')
-      range = region(range);
-    end
-    if ~issimplyconnected(range)
-      error('CMT:InvalidArgument', ...
-            'Region must be simply connected.')
-    end
-    
-    f = f@conformalmap(unitdisk, range);
     
     if nargin < 3 || isempty(opts)
       opts = szset;
@@ -59,11 +64,6 @@ methods
   
   function g = ctranspose(f)
     d = domain(f);
-    if ~issimplyconnected(d)
-      error('CMT:NotDefined', ...
-            'This operation only defined for simply connected domains.')
-    end
-    
     if isinterior(d)
       d = diskex(outer(d));
     else
@@ -79,14 +79,31 @@ methods
       r = region(br);
     end
     
-    stmp = szmap(br', 0, f.opts_);
-    ftmp = @(z) 1./conj(apply_map(stmp, conj(1./z)));
-    g = conformalmap(d, r, ftmp);
+    g = szmap(br', 0, f.opts_);
+    func = @(z) 1./conj(apply_map_(g, conj(1./z)));
+    
+    g.domain_ = d;
+    g.range_ = r;
+    g.function_list_ = {func};
+  end
+  
+  function S = kernel(f)
+    S = f.kernel_;
   end
 end
 
 methods(Access=protected)
   function w = apply_map(f, z)
+    if isanonymous(f)
+      w = apply_map@conformalmap(f, z);
+    else
+      w = apply_map_(f, z);
+    end
+  end
+end
+
+methods(Access=private)
+  function w = apply_map_(f, z)
     w = polyval(f.coefs_, z);
   end
 end
