@@ -137,11 +137,6 @@ methods
     
     % This should really be more modularised. -- EK
     
-    % In a previous incarnation, boundary curves were parameterized by
-    % length. In CMT, all closedcurves are expected to have parameter
-    % length of 1. Change kept in comments below because I'm paranoid.
-    % -- EK
-    
     if nargin < 3 || isempty(tol)
       ntol = 10*eps(2*pi);
     else
@@ -163,7 +158,6 @@ methods
     % Start with a proportionally spaced guess. Hey, you gotta start
     % somewhere, and sometimes you get lucky.
     t = s/(2*pi);
-%     t = length(S.C)*s/(2*pi);
     
     % Bisection generates initial guess for Newton. We take advantage of
     % the fact that, as a function of t,
@@ -176,10 +170,8 @@ methods
     % [0, length(C)) so bisection finishes closeish to 5 steps. There ends up
     % being an evaluation at a large number of points, but it's only once.
     nb = max(ceil(1/(2^4*btol)), numel(t));
-%     nb = max(ceil(length(S.C)/(2^4*btol)), numel(t));
     if nb > numel(t)
       tt = (0:nb-1)'/nb;
-%       tt = length(S.C)*(0:nb-1)'/nb;
     else
       tt = t;
     end
@@ -190,7 +182,6 @@ methods
     left = zeros(size(t));
     left(colk) = tt(chg);
     right = ones(size(t));
-%     right = length(S.C)*ones(size(t));
     right(colk) = tt(chg+1);
     
     % Bisect.
@@ -222,7 +213,7 @@ methods
       update(~done) = fval(~done)./thetap(S, t(~done));
       t(~done) = t(~done) + update(~done);
 
-      if all(abs(abs(prev_update) - abs(update)) <= 100*eps)
+      if all(abs(abs(prev_update(~done)) - abs(update(~done))) <= 100*eps)
         break
       end
       prev_update = update;
