@@ -26,10 +26,10 @@ end
 properties(Access=protected)
   proplist = ...
     {
-      'nS', 128, [], '[ integer {128} ]'
+      'nS', 512, [], '[ integer {512} ]'
       'method', 'auto', [], '[ backslash | orth_resid | {auto} ]'
       'trace', false, [], '[ true | {false} ]'
-      'nF', 512, [], '[ integer {512} ]'
+      'nF', 256, [], '[ integer {256} ]'
     }
 end
 
