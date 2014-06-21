@@ -49,9 +49,15 @@ methods
         if (isa(z, 'double') && length(z) == 3) && (isa(w, 'double') && ...
             length(w) == 3)
           A1 = mobius.standardmap(z);
-          domain = disk(circle(z));
+          circ = circle(z);
+          if ~isinf(circ)
+            domain = disk(circ);
+          end
           A2 = mobius.standardmap(w);
-          range = disk(circle(w));
+          circ = circle(w);
+          if ~isinf(circ)
+            range = disk(circle(w));
+          end
           matrix = A2\A1;
         else
           error('CMT:InvalidArgument', ...
