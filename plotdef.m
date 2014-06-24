@@ -62,7 +62,7 @@ methods(Static)
     c = plotdef.defaultlinewidth;
   end
   
-  function [arglist, gargs] = pullgridargs(arglist)
+  function [args, gargs] = pullgridargs(arglist)
     % Separate grid args from cell array arglist. Must have an even number of
     % entries of the {'name', value} pair form.
     
@@ -95,11 +95,11 @@ methods(Static)
       end
       
       idx = idx(idx ~= k & idx ~= k+1);
-      if isempty(idx)
-        arglist = {};
-      else
-        arglist = arglist{idx};
-      end
+    end
+    if ~isempty(idx)
+      args = arglist{idx};
+    else
+      args = {};
     end
   end
   
