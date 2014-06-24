@@ -162,7 +162,7 @@ methods
     f = conformalmap(f2, f1);
   end
   
-  function out = plot(f)
+  function out = plot(f, varargin)
     washold = ishold;
     
     if isempty(f.range_) || (~isempty(f.domain_) && isempty(grid(f.domain_)))
@@ -172,9 +172,10 @@ methods
     
     cah = newplot;
     hold on
-    
-    hg = plot(apply(f, grid(f.domain_)));
-    hb = plot(f.range_);
+
+    [pargs, gargs] = plotdef.pullgridargs(varargin);
+    hg = plot(apply(f, grid(f.domain_, gargs{:})));
+    hb = plot(f.range_, pargs{:});
     
     if ~washold
       plotdef.whitefigure(cah)

@@ -62,6 +62,47 @@ methods(Static)
     c = plotdef.defaultlinewidth;
   end
   
+  function [arglist, gargs] = pullgridargs(arglist)
+    % Separate grid args from cell array arglist. Must have an even number of
+    % entries of the {'name', value} pair form.
+    
+    n = numel(arglist);
+    if mod(n, 2)
+      error('CMT:InvalidArgument', 'Expected name/value pairs.')
+    end
+    
+    recognized = {'nrad', 'ncirc'};
+    gargs = {[], []};
+    idx = 1:n;
+    for k = 1:2:n-1
+      try
+        match = validatestring(arglist{k}, recognized);
+      catch err
+        if strcmp(err.identifier, ...
+                  'MATLAB:unrecognizedStringChoice')
+          continue
+        end
+        rethrow(err)
+      end
+      
+      switch match
+        case 'nrad'
+          gargs{1} = arglist{k+1};
+        case 'ncirc'
+          gargs{2} = arglist{k+1};
+        otherwise
+          error('CMT:BadThings', 'This should never happen.')
+      end
+      
+      idx = idx(idx ~= k & idx ~= k+1);
+      if isempty(idx)
+        arglist = {};
+      else
+        arglist = arglist{idx};
+      end
+    end
+  end
+  
   function whitefigure(fig)
     if ~nargin
       fig = gcf;
