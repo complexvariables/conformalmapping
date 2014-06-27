@@ -53,11 +53,19 @@ methods
       maxstrlen = max(maxstrlen, length(opt.proplist{k,1}));
     end
     
-    fprintf('\nValues for class %s, defaults in {}:\n\n', class(opt))
+    fprintf('Values for %s object, with format\n', class(opt))
+    fprintf('  % *s : [ description {default} ] : current value\n\n', ...
+            maxstrlen, 'name');
     for k = 1:nump
-      fprintf('% *s : %s\n', maxstrlen, opt.proplist{k,[1, 4]});
+      curval = evalc(sprintf('disp(opt.%s)', opt.proplist{k,1}));
+      fprintf('  % *s : %s : %s\n', ...
+              maxstrlen, opt.proplist{k,[1, 4]}, strtrim(curval));
     end
     fprintf('\n')
+  end
+  
+  function disp(opt)
+    defaults(opt)
   end
   
   function input = nvpair(opt, varargin)
