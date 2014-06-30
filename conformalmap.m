@@ -83,16 +83,14 @@ methods
       return
     end
     
-    if ismethod(z, 'apply')
-      % Try asking the target object first.
-      try
-        w = apply(z, f);
-        return
-      catch err
-        if ~any(strcmp(err.identifier, ...
-                       {'MATLAB:UndefinedFunction', 'CMT:NotDefined'}))
-          rethrow(err)
-        end
+    % Try asking the target object first.
+    try
+      w = apply(z, f);
+      return
+    catch err
+      if ~any(strcmp(err.identifier, ...
+          {'MATLAB:UndefinedFunction', 'CMT:NotDefined'}))
+        rethrow(err)
       end
     end
     
