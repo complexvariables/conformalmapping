@@ -195,11 +195,11 @@ methods
     r = f.range_;
   end
   
-  function out = subsref(f, S)
+  function varargout = subsref(f, S)
     if numel(S) == 1 && strcmp(S.type, '()')
-      out = apply(f, S.subs{:});
+      [varargout{1:nargout}] = apply(f, S.subs{:});
     else
-      out = builtin('subsref', f, S);
+      [varargout{1:nargout}] = builtin('subsref', f, S);
     end
   end
 end
