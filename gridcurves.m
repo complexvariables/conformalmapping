@@ -1,6 +1,10 @@
 classdef gridcurves
 % GRIDCURVES class holds grid curves for regions.
 %
+% grid = gridcurves(curves)
+% The given cell array curves is stored in the object. This is mainly to
+% facilitate the use of plot(grid) to give a standard look to grid plots.
+%
 % Stores grid curves as entries in cell array. Consider
 %    gd = gridcurves;
 % We overload gd(n) and gd(n,m) to retrieve those cell array entries. Why
@@ -38,18 +42,21 @@ methods
   end
   
   function n = numel(gc, varargin)
+    % Overloaded for subsref.
+    
     n = numel(gc.curves_, varargin{:});
   end
   
   function out = plot(gc, varargin)
     washold = ishold;
+    ah = newplot;
     
     gctag = sprintf('gridcurve_%s', num2hex(rand));
     hold on
     for k = 1:numel(gc.curves_)
       zg = gc.curves_{k};
       args = plotdef.gridargs;
-      plot(real(zg), imag(zg), args{:}, varargin{:}, 'tag', gctag)
+      line(real(zg), imag(zg), args{:}, varargin{:}, 'tag', gctag)
     end
     
     if ~washold
@@ -57,7 +64,7 @@ methods
     end
     
     if nargout
-      out = findobj(gca, 'tag', gctag);
+      out = findobj(ah, 'tag', gctag);
     end
   end
     
