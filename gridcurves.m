@@ -36,9 +36,41 @@ methods
     gc.curves_ = curves;
   end
   
+  function gc = conj(gc)
+    % Complex conjugation.
+    for k = 1:numel(gc.curves_)
+      gc.curves_{k} = conj(gc.curves_{k});
+    end
+  end
+  
   function disp(gd)
     fprintf('gridcurves object:\n\n')
-    fprintf('  with %d gridlines.\n\n', numel(gd))
+    fprintf('  with %d gridlines.\n\n', numel(gd.curves_))
+  end
+  
+  function gc = minus(gc, b)
+    if ~isa(gc, 'gridcurves')
+      gc = plus(-b, gc);
+      return
+    end
+    gc.scalaronly(b)
+    for k = 1:numel(gc.curves_)
+      gc.curves_{k} = gc.curves_{k} - b;
+    end
+  end
+  
+  function gc = mtimes(gc, b)
+    if ~isa(gc, 'gridcurves')
+      [gc, b] = deal(b, gc);
+    end
+    gc.scalaronly(b)
+    for k = 1:numel(gc.curves_)
+      gc.curves_{k} = b*gc.curves_{k};
+    end
+  end
+  
+  function gc = mrdivide(gc, b)
+    gc = rdivide(gc, b);
   end
   
   function n = numel(gc, varargin)
@@ -46,7 +78,20 @@ methods
     
     n = numel(gc.curves_, varargin{:});
   end
-  
+    
+  function gc = rdivide(gc, b)
+    if isa(gc, 'gridcurves')
+      gc.scalaronly(b)
+      gc = mtimes(gc, 1/b);
+    else
+      [gc, b] = deal(b, gc);
+      gc.scalaronly(b)
+      for k = 1:numel(gc.curves_)
+        gc.curves_{k} = b./gc.curves_{k};
+      end
+    end
+  end
+
   function out = plot(gc, varargin)
     washold = ishold;
     ah = newplot;
@@ -67,6 +112,16 @@ methods
       out = findobj(ah, 'tag', gctag);
     end
   end
+  
+  function gc = plus(gc, b)
+    if ~isa(gc, 'gridcurves')
+      [gc, b] = deal(b, gc);
+    end
+    gc.scalaronly(b)
+    for k = 1:numel(gc.curves_)
+      gc.curves_{k} = gc.curves_{k} + b;
+    end
+  end
     
   function varargout = subsref(gc, S)
     % Provide C(j) or C(j,k) access to curve cell array.
@@ -82,6 +137,20 @@ methods
       otherwise
         [varargout{1:nargout}] = builtin('subsref', gc, S);
     end
+  end
+  
+  function gc = uminus(gc)
+    for k = 1:numel(gc.curves_)
+      gc.curves_{k} = -gc.curves_{k};
+    end
+  end
+end
+
+methods(Access=private)
+  function scalaronly(~, b)
+    if ~isa(b, 'double') || numel(b) ~= 1
+      error('CMT:NotDefined', 'Operation only defined for scalar values.')
+    end    
   end
 end
 
