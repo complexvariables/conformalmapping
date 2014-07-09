@@ -1,8 +1,5 @@
-function d = unitdisk()
-% UNITDISK creates a unit disk region.
-%
-% d = unitdisk()
-%   Creates the unit disk region by d = disk(0, 1).
+function aspectequal(ah)
+% ASPECTEQUAL sets data aspect ratio to equal on all dimensions.
 
 % This file is a part of the CMToolbox.
 % It is licensed under the BSD 3-clause license.
@@ -11,4 +8,8 @@ function d = unitdisk()
 % Copyright Toby Driscoll, 2014.
 % Written by Everett Kropf, 2014.
 
-d = disk(0, 1);
+if ~nargin || isempty(ah)
+  ah = gca;
+end
+
+set(ah, 'dataaspectratio', [1, 1, 1])

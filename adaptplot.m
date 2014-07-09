@@ -24,6 +24,10 @@ function [out1,out2] = adaptplot(fun,tspan,varargin)
 %
 %   See also FPLOT.
 
+% This file is a part of the CMToolbox.
+% It is licensed under the BSD 3-clause license.
+% (See LICENSE.)
+
 %   Copyright Toby Driscoll, 2006. All rights reserved.
 %   Version 1.0, 02 June 2006
 
