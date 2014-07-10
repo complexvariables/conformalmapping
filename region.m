@@ -330,3 +330,5 @@ methods (Access=private)
         z = z(:);
     end
 end
+
+end
