@@ -55,6 +55,7 @@ properties
   zT_               % Stored collocation unit tangents.
   dt_ = 0           % dt
   
+  newtTol_          % Newton iteration tolerance.
   noisy_ = false    % Logical; informational output?
 end
 
@@ -77,6 +78,7 @@ methods
     S.N = opts.nS;
     S.theta0_ = angle(-1i*phi(S, 0)^2*tangent(S.C, 0));
     S.Saa_ = sum(abs(S.phi_.^2))*S.dt_;
+    S.newtTol_ = opts.newtonTol;
     S.noisy_ = opts.trace;
   end
   
@@ -138,7 +140,7 @@ methods
     % This should really be more modularised. -- EK
     
     if nargin < 3 || isempty(tol)
-      ntol = 10*eps(2*pi);
+      ntol = S.newtTol_;
     else
       ntol = tol;
     end

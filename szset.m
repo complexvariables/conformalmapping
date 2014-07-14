@@ -4,6 +4,14 @@ classdef szset < optset
 % opts = szset('name', value, ...)
 %   Creates option structure for szego via name/value pairs.
 %
+% Properties:
+%   nS                -- Number of collcation points.
+%   method            -- Solver method.
+%   trace             -- Print out solution trace information.
+%   nF                -- Default size of FFT to employ.
+%   newtonTol         -- Newton iteration tolerance.
+%
+% Methods:
 % defaults(szset)
 %   Shows properties which may be set along with defaults.
 %
@@ -21,6 +29,7 @@ properties
   method                          % Solver method.
   trace                           % Print out solution trace information.
   nF                              % Default size of FFT to employ.
+  newtonTol                       % Newton iteration tolerance.
 end
 
 properties(Access=protected)
@@ -30,6 +39,7 @@ properties(Access=protected)
       'method', 'auto', [], '[ backslash | orth_resid | {auto} ]'
       'trace', false, [], '[ true | {false} ]'
       'nF', 256, [], '[ integer {256} ]'
+      'newtonTol', 10*eps(2*pi), [], '[ scalar double {10*eps(2*pi)} ]'
     }
 end
 
