@@ -158,9 +158,9 @@ methods
     elseif isexterior(R)
       zb = zeros(4*R.numinner, 1);
       for k = 1:R.numinner
-        zb(4*(k - 1) + (1:4)) = bb2z(plotbox(R.innerboundary_{k}, 1));
+        zb(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.innerboundary_{k}, 1));
       end
-      zb = bb2z(plotbox(zb, 2));
+      zb = cmt.bb2z(cmt.plotbox(zb, 2));
       fill(real(zb), imag(zb), fillargs{:}, varargin{:});
     end
     
@@ -290,13 +290,13 @@ methods
     
     zi = zeros(4*R.numinner, 1);
     for k = 1:R.numinner
-      zi(4*(k - 1) + (1:4)) = bb2z(plotbox(R.innerboundary_{k}, 1));
+      zi(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.innerboundary_{k}, 1));
     end
     zo = zeros(4*R.numouter, 1);
     for k = 1:R.numouter
-      zo(4*(k - 1) + (1:4)) = bb2z(plotbox(R.outerboundary_{k}, 1));
+      zo(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.outerboundary_{k}, 1));
     end
-    box = plotbox([zi; zo], scale);
+    box = cmt.plotbox([zi; zo], scale);
   end
 end
 
@@ -313,22 +313,6 @@ methods(Static)
     end
     cc = suitor(:);
   end % checkcc
-end
-
-methods (Access=private)
-    function z = bb2z(box)
-        % BB2Z axis bounding box to vertices.
-        
-        % This file is a part of the CMToolbox.
-        % It is licensed under the BSD 3-clause license.
-        % (See LICENSE.)
-        
-        % Copyright Toby Driscoll, 2014.
-        % Written by Everett Kropf, 2014.
-        
-        z = complex(box([1, 2, 2, 1]), box([3, 3, 4, 4]));
-        z = z(:);
-    end
 end
 
 end
