@@ -5,10 +5,10 @@ classdef szset < optset
 %   Creates option structure for szego via name/value pairs.
 %
 % Properties:
-%   nS                -- Number of collcation points.
-%   method            -- Solver method.
+%   numCollPts        -- Number of collcation points.
+%   kernSolMethod     -- Solver method.
 %   trace             -- Print out solution trace information.
-%   nF                -- Default size of FFT to employ.
+%   numFourierPts     -- Default size of FFT to employ.
 %   newtonTol         -- Newton iteration tolerance.
 %
 % Methods:
@@ -25,20 +25,20 @@ classdef szset < optset
 % Written by Everett Kropf, 2014.
 
 properties
-  nS                              % Number of collcation points.
-  method                          % Solver method.
-  trace                           % Print out solution trace information.
-  nF                              % Default size of FFT to employ.
-  newtonTol                       % Newton iteration tolerance.
+  numCollPts              % Number of collcation points.
+  kernSolMethod           % Solver method.
+  trace                   % Print out solution trace information.
+  numFourierPts           % Default size of FFT to employ.
+  newtonTol               % Newton iteration tolerance.
 end
 
 properties(Access=protected)
   proplist = ...
     {
-      'nS', 512, [], '[ integer {512} ]'
-      'method', 'auto', [], '[ backslash | orth_resid | {auto} ]'
+      'numCollPts', 512, [], '[ integer {512} ]'
+      'kernSolMethod', 'auto', [], '[ backslash | orth_resid | {auto} ]'
       'trace', false, [], '[ true | {false} ]'
-      'nF', 256, [], '[ integer {256} ]'
+      'numFourierPts', 256, [], '[ integer {256} ]'
       'newtonTol', 10*eps(2*pi), [], '[ scalar double {10*eps(2*pi)} ]'
     }
 end
