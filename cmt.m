@@ -10,6 +10,7 @@ classdef cmt
 % Copyright Toby Driscoll, 2014.
 % Written by Everett Kropf, 2014.
 
+
 methods(Static)
   function z = bb2z(box)
     % BB2Z axis bounding box to vertices.
@@ -52,6 +53,40 @@ methods(Static)
     box(1:2) = mean(box(1:2)) + dbox;
     box(3:4) = mean(box(3:4)) + dbox;
   end
+  
+  function set(module,varargin)
+      if ~isappdata(0,'cmt_prefs')
+          setappdata(0,'cmt_prefs',[])
+      end
+      
+      prefs = getappdata(0,'cmt_prefs');
+      for j = 1:2:length(varargin)
+          prefs.(module).(varargin{j}) = varargin{j+1};
+      end
+      setappdata(0,'cmt_prefs',prefs)     
+  end
+  
+  function prefs = get(module,property)
+      prefs = getappdata(0,'cmt_prefs');
+      if isempty(prefs)
+          return
+      end
+      
+      if isfield(prefs,module)
+          prefs = prefs.(module);
+      else
+          error('CMT:cmt:prefs','Module "%s" not found.',module)
+      end
+      
+      if (nargin > 1)
+          if isfield(prefs,property)
+              prefs = prefs.property;
+          else
+              error('CMT:cmt:prefs','Property "%s" not found.',property)
+          end
+      end
+  end
+  
 end
 
 end
