@@ -53,7 +53,7 @@ methods
 
     boundary = outer(range);
     S = szego(boundary, a, opts);
-    nF = opts.nF;
+    nF = opts.numFourierPts;
     t = invtheta(S, 2*pi*(0:nF-1)'/nF);
     c = flipud(fft(boundary(t))/nF);
     

@@ -74,7 +74,7 @@ methods
     
     S.C = C_;
     S.a = a_;
-    S.N = opts.nS;
+    S.N = opts.numCollPts;
     S.theta0_ = angle(-1i*phi(S, 0)^2*tangent(S.C, 0));
     S.Saa_ = sum(abs(S.phi_.^2))*S.dt_;
     S.noisy_ = opts.trace;
@@ -252,7 +252,7 @@ end
 methods(Access=protected, Static)
   function out = compute_kernel(C, a, opts)
     noisy = opts.trace;
-    N_ = opts.nS;
+    N_ = opts.numCollPts;
     
     % Parameter length should be 1, if not this should be length(C)/N.
     dt = 1/N_;
@@ -289,14 +289,14 @@ methods(Access=protected, Static)
       fprintf('  Solving for Szego kernel at collocation points using ')
     end
     
-    if strcmp(opts.method, 'auto')
+    if strcmp(opts.kernSolMethod, 'auto')
       if N_ < 2048
         method = 'bs';
       else
         method = 'or';
       end
     else
-      method = opts.method;
+      method = opts.kernSolMethod;
     end
     if any(strcmp(method, {'backslash', 'bs'}))
       if noisy
@@ -414,7 +414,7 @@ methods(Access=protected, Static)
         error(iastr, ...
               'Number of collcation points must be a scalar double value.')
       end
-      opts.nS = Ntmp;
+      opts.numCollPts = Ntmp;
     end
   end
 end
