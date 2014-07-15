@@ -1,4 +1,4 @@
-classdef conformalmap
+classdef (InferiorClasses = {?double}) conformalmap
 % CONFORMALMAP base class.
 %
 % This class has two purposes. As a base class, which would normally be
@@ -151,15 +151,6 @@ methods
     tf = numel(f.function_list_) > 1;
   end
   
-  function f = mtimes(f1, f2)
-    % Interpret f1*f2 as the composition f1(f2(z)).
-
-    if ~(isa(f1, 'conformalmap') && isa(f2, 'conformalmap'))
-      error('CMT:NotDefined', 'Operation is not defined.')
-    end    
-    f = conformalmap(f2, f1);
-  end
-  
   function out = plot(f, varargin)
     washold = ishold;
     
@@ -177,7 +168,7 @@ methods
     
     if ~washold
       plotdef.whitefigure(cah)
-      axis(plotbox(f.range_))
+      axis(comap.plotbox(f.range_))
       aspectequal
       axis off
       hold off
@@ -188,6 +179,8 @@ methods
     end
   end
   
+  
+      
   function r = range(f)
     % Return map range region.
     r = f.range_;
@@ -200,6 +193,76 @@ methods
       [varargout{1:nargout}] = builtin('subsref', f, S);
     end
   end
+end
+
+%% Arithmetic operators. 
+methods 
+    
+  function f = mtimes(f1, f2)
+    % Interpret f1*f2 as the composition f1(f2(z)), or as scalar times 
+    % the image.
+
+    % Make sure a conformalmap is first. 
+    if isnumeric(f1) 
+        tmp = f1;  f1 = f2;  f2 = tmp;
+    end
+    
+    if isnumeric(f2)
+        const = f2;  % for naming
+        f = conformalmap(f1,@(z) const*z);
+    elseif isa(f2,'conformalmap')
+        % Do a composition of the two maps. 
+        f = conformalmap(f2, f1);
+    else
+        error('CMT:conformalmap:mtimes',...
+            'Must either multiply by a scalar or compose two maps.')
+    end
+  end
+  
+  function g = minus(f,c)
+      if isnumeric(f)
+          g = plus(-f,c);
+      else
+          g = plus(f,-c);
+      end
+  end
+  
+  function g = plus(f,c)
+      % Defines adding a constant (translation of the range).
+      
+      if isnumeric(f)
+          tmp = c;  c = f;  f = tmp;
+      end
+      
+      if ~isnumeric(c) || (length(c) > 1)
+          error('CMT:conformalmap:plus',...
+              'You may only add a scalar to a conformalmap.')
+      end
+      
+      g = conformalmap( f, @(z) z+c );    
+  end
+  
+  function g = mpower(f,n)
+      
+      if (n ~= round(n)) || (n < 0)
+          error('CMT:conformalmap:integerpower',...
+              'Power must be a positive integer.')
+      end
+      
+      g = f;
+      p = floor(log2(n));
+      for k = 1:p
+          g = conformalmap(g,g);
+      end
+      for k = n-p
+          g = conformalmap(g,f);
+      end
+  end
+  
+  function g = uminus(f)
+      g = conformalmap( f, @(z) -z );
+  end
+ 
 end
 
 methods(Access=protected)
