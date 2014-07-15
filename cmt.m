@@ -1,5 +1,7 @@
-classdef cmtutil
-% CMTUTIL utility function class.
+classdef cmt
+% CMT is a helper function wrapper class.
+% 
+% See methods(cmt) for a list of functions.
 
 % This file is a part of the CMToolkit.
 % It is licensed under the BSD 3-clause license.
@@ -43,7 +45,7 @@ methods(Static)
       scale = 1.2;
     end
     
-    box = cmtutil.boundbox(points);
+    box = cmt.boundbox(points);
     
     dbox = scale/2*max(diff(box(1:2)), diff(box(3:4)))*[-1 1];
     

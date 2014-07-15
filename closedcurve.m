@@ -20,7 +20,7 @@ methods
   function box = boundbox(C)
     % Return bounding box for curve using evenly spaced points.
     t = C.length_*(0:199)'/200;
-    box = cmtutil.boundbox(point(C, t));
+    box = cmt.boundbox(point(C, t));
   end
   
   function varargout = corner(C, varargin)
@@ -126,7 +126,7 @@ methods
       scale = [];
     end
     t = C.length_*(0:199)'/200;
-    box = cmtutil.plotbox(point(C, t), scale);
+    box = cmt.plotbox(point(C, t), scale);
   end
 
   function out = rsplot(C, varargin)
