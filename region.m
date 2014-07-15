@@ -158,9 +158,9 @@ methods
     elseif isexterior(R)
       zb = zeros(4*R.numinner, 1);
       for k = 1:R.numinner
-        zb(4*(k - 1) + (1:4)) = cmtutil.bb2z(plotbox(R.innerboundary_{k}, 1));
+        zb(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.innerboundary_{k}, 1));
       end
-      zb = cmtutil.bb2z(cmtutil.plotbox(zb, 2));
+      zb = cmt.bb2z(cmt.plotbox(zb, 2));
       fill(real(zb), imag(zb), fillargs{:}, varargin{:});
     end
     
@@ -290,13 +290,13 @@ methods
     
     zi = zeros(4*R.numinner, 1);
     for k = 1:R.numinner
-      zi(4*(k - 1) + (1:4)) = cmtutil.bb2z(plotbox(R.innerboundary_{k}, 1));
+      zi(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.innerboundary_{k}, 1));
     end
     zo = zeros(4*R.numouter, 1);
     for k = 1:R.numouter
-      zo(4*(k - 1) + (1:4)) = cmtutil.bb2z(plotbox(R.outerboundary_{k}, 1));
+      zo(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.outerboundary_{k}, 1));
     end
-    box = cmtutil.plotbox([zi; zo], scale);
+    box = cmt.plotbox([zi; zo], scale);
   end
 end
 
