@@ -55,6 +55,7 @@ properties
   zT_               % Stored collocation unit tangents.
   dt_ = 0           % dt
   
+  newtTol_          % Newton iteration tolerance.
   noisy_ = false    % Logical; informational output?
 end
 
@@ -77,6 +78,7 @@ methods
     S.N = opts.numCollPts;
     S.theta0_ = angle(-1i*phi(S, 0)^2*tangent(S.C, 0));
     S.Saa_ = sum(abs(S.phi_.^2))*S.dt_;
+    S.newtTol_ = opts.newtonTol;
     S.noisy_ = opts.trace;
   end
   
@@ -138,10 +140,11 @@ methods
     % This should really be more modularised. -- EK
     
     if nargin < 3 || isempty(tol)
-      ntol = 10*eps(2*pi);
+      ntol = S.newtTol_;
     else
       ntol = tol;
     end
+    trace_label = 'CMT:szego:invtheta';
     
     % Should check that 1) s is monotonically increasing, and 2) s(end) <
     % 2*pi.
@@ -187,6 +190,9 @@ methods
     % Bisect.
     done = abs(f(t, s)) < btol;
     biter = 0;
+    if S.noisy_
+      fprintf('%s: Starting bisection ...\n', trace_label)
+    end
     while ~all(done) && biter < bmaxiter
       biter = biter + 1;
 
@@ -196,6 +202,10 @@ methods
       left(~done) = isneg.*left(~done) + ~isneg.*t(~done);
       right(~done) = isneg.*t(~done) + ~isneg.*right(~done);
       done(~done) = abs(fk) < btol;
+    end
+    if S.noisy_
+      fprintf('%s: Bisection finished in %d steps.\n', ...
+              trace_label, biter)
     end
 
     % Apply Newton's method.
@@ -207,6 +217,9 @@ methods
     prev_update = nan(size(update));
     
     niter = 0;
+    if S.noisy_
+      fprintf('%s: Starting Newton iteration ...\n', trace_label)
+    end
     while ~all(done) && niter < nmaxiter
       niter = niter + 1;
 
@@ -222,11 +235,15 @@ methods
       done(~done) = abs(fval(~done)) < ntol;
       update(done) = 0;
     end
+    if S.noisy_
+      fprintf('%s: Newton finished in %d steps.\n', ...
+              trace_label, niter)
+    end
     
     maxerr = max(abs(fval));
     if S.noisy_
-      fprintf('szego:invtheta: %d/%d points with f > eps, max|f| = %.4e.\n', ...
-              sum(~done), numel(t), max(abs(fval)))
+      fprintf('%s: %d/%d points with |f| > eps, max|f| = %.4e.\n\n', ...
+              trace_label, sum(~done), numel(t), max(abs(fval)))
     end
     if maxerr > 100*ntol
       warning('CMT:OutOfTolerance', ...
