@@ -168,7 +168,7 @@ methods
     
     if ~washold
       plotdef.whitefigure(cah)
-      axis(cmt.plotbox(f.range_))
+      axis(plotbox(f.range_))
       aspectequal
       axis off
       hold off

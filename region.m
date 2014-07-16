@@ -290,11 +290,11 @@ methods
     
     zi = zeros(4*R.numinner, 1);
     for k = 1:R.numinner
-      zi(4*(k - 1) + (1:4)) = bb2z(cmt.plotbox(R.innerboundary_{k}, 1));
+      zi(4*(k - 1) + (1:4)) = cmt.bb2z(cmt.plotbox(R.innerboundary_{k}, 1));
     end
     zo = zeros(4*R.numouter, 1);
     for k = 1:R.numouter
-      zo(4*(k - 1) + (1:4)) = bb2z(cmt.plotbox(R.outerboundary_{k}, 1));
+      zo(4*(k - 1) + (1:4)) = cmt.bb2z(cmt.plotbox(R.outerboundary_{k}, 1));
     end
     box = cmt.plotbox([zi; zo], scale);
   end
