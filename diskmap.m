@@ -202,18 +202,13 @@ classdef (InferiorClasses = {?double}) diskmap < conformalmap
         
         function map = continuation(map,newPolygon,varargin)
             % Continuation of given map to a new polygon
-            opt = map.options;
             z0 = map.prevertex;
             if (length(z0) ~= length(newPolygon))
                 error('CMT:diskmap:construct',...
                     'Polygon %s must have the same length as %s.',...
                     inputname(2),inputname(1))
             end
-            if (nargin > 2)
-                opt = scmapopt(opt,varargin{:});
-            end
-            opt = scmapopt(opt,'initial',z0);
-            map = diskmap(newPolygon,z0,opt);
+            map = diskmap(newPolygon,map.options,'initial',z0);
         end       
         
 
