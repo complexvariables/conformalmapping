@@ -54,11 +54,7 @@ methods(Static)
     box(3:4) = mean(box(3:4)) + dbox;
   end
   
-  function set(module,varargin)
-      if ~isappdata(0,'cmt_prefs')
-          setappdata(0,'cmt_prefs',[])
-      end
-      
+  function set(module,varargin)     
       prefs = getappdata(0,'cmt_prefs');
       for j = 1:2:length(varargin)
           prefs.(module).(varargin{j}) = varargin{j+1};

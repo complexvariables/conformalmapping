@@ -465,6 +465,11 @@ classdef (InferiorClasses = {?double}) diskmap < conformalmap
         
         function prefs = get(varargin)
             prefs = cmt.get('diskmap',varargin{:});
+            if isempty(prefs)
+                % Set up the factory defaults.
+                diskmap.set;
+                prefs = cmt.get('diskmap',varargin{:});
+            end
         end
         
         function set(varargin)
@@ -623,6 +628,7 @@ classdef (InferiorClasses = {?double}) diskmap < conformalmap
             %   Copyright 1998-2001 by Toby Driscoll.
             %   $Id: dparam.m 199 2002-09-13 18:54:27Z driscoll $
             
+            import nesolver.nesolve
             n = length(w);				% no. of vertices
             w = w(:);
             beta = beta(:);
@@ -680,9 +686,9 @@ classdef (InferiorClasses = {?double}) diskmap < conformalmap
                 opt(9) = min(eps^(2/3),tol/10);
                 opt(12) = nqpts;
                 try
-                    opt = [100*(n-3),-1,0.5,1];
-                    [y,itHist] = nsold(y0,@(y) dpfun(y,fdat),[tol,tol],opt);
-                    %[y,termcode] = nesolve('dpfun',y0,opt,fdat);
+                    %opt = [100*(n-3),-1,0.5,1];
+                    %[y,itHist] = nsold(y0,@(y) dpfun(y,fdat),[tol,tol],opt);
+                    [y,termcode] = nesolve('dpfun',y0,opt,fdat);
                 catch
                     % Have to delete the "waitbar" figure if interrupted
                     close(findobj(allchild(0),'flat','Tag','TMWWaitbar'));
