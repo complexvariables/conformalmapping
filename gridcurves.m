@@ -48,6 +48,14 @@ methods
     fprintf('  with %d gridlines.\n\n', numel(gd.curves_))
   end
   
+  function w = apply(gc,f)
+      w = cell(numel(gc), 1);
+      for k = 1:numel(w)
+          w{k} = evaluate(f, gc.curves_{k});
+      end
+      w = gridcurves(w);
+  end
+  
   function gc = minus(gc, b)
     if ~isa(gc, 'gridcurves')
       gc = plus(-b, gc);

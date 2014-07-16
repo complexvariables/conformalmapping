@@ -69,53 +69,7 @@ methods
   end
   
   function w = apply(f, z)
-    % w = apply(f, z)
-    %   Apply the conformal map to z.
-    %
-    % See the apply concept in the developer docs for more details.
-    
-    if iscomposition(f)
-      % f is a composition, apply each map in turn.
-      w = z;
-      for k = 1:numel(f.function_list_)
-        w = apply(f.function_list_{k}, w);
-      end
-      return
-    end
-    
-    % Try asking the target object first.
-    try
-      w = apply(z, f);
-      return
-    catch err
-      if ~any(strcmp(err.identifier, ...
-          {'MATLAB:UndefinedFunction', 'CMT:NotDefined'}))
-        rethrow(err)
-      end
-    end
-    
-    % Try the apply defined by subclass.
-    try
-      if isa(z, 'gridcurves')
-        w = cell(numel(z), 1);
-        for k = 1:numel(w)
-          w{k} = apply_map(f, z{k});
-        end
-        w = gridcurves(w);
-      else
-        w = apply_map(f, z);
-      end
-    catch err
-      if strcmp(err.identifier, 'MATLAB:UndefinedFunction')
-        msg = sprintf('Applying %s to %s is not defined.', class(f), class(z));
-        if ~isempty(err.message)
-          msg = sprintf('%s\n%s', msg, err.message);
-        end
-        error('CMT:NotDefined', msg)
-      else
-        rethrow(err)
-      end
-    end
+      w = evaluate(f,z);
   end
   
   function disp(f)
@@ -142,6 +96,33 @@ methods
     d = f.domain_;
   end
   
+  function w = evaluate(f, z)
+    % w = apply(f, z)
+    %   Apply the conformal map to z.
+    %
+    % See the apply concept in the developer docs for more details.
+    
+    if iscomposition(f)
+      % f is a composition, apply each map in turn.
+      w = z;
+      for k = 1:numel(f.function_list_)
+        w = evaluate(f.function_list_{k}, w);
+      end
+    else   
+        % Try asking the target object first.
+        try
+            w = evaluate(z, f);
+            return
+        catch err
+            if ~any(strcmp(err.identifier, ...
+                    {'MATLAB:UndefinedFunction', 'CMT:NotDefined'}))
+                rethrow(err)
+            end
+        end
+    end
+ 
+  end
+
   function tf = isanonymous(f)
     tf = numel(f.function_list_) == 1 ...
          && isa(f.function_list_{1}, 'function_handle');
@@ -163,7 +144,7 @@ methods
     hold on
 
     [pargs, gargs] = plotdef.pullgridargs(varargin);
-    hg = plot(apply(f, grid(f.domain_, gargs{:})));
+    hg = plot( apply( grid(f.domain_, gargs{:}), f) );
     hb = plot(f.range_, pargs{:});
     
     if ~washold

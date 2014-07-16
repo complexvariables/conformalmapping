@@ -310,7 +310,7 @@ classdef (InferiorClasses = {?double}) diskmap < conformalmap
             
         end
         
-         function wp = evaluate(map,zp,tol)
+        function wp = evaluate(map,zp,tol)
             %EVAL Evaluate Schwarz-Christoffel disk map at points.
             %   EVAL(M,ZP) evaluates the Schwarz-Christoffel map M at the points ZP
             %   in the unit disk. The default tolerance of M is used.

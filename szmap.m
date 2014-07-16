@@ -87,6 +87,11 @@ methods
     g.function_list_ = {func};
   end
   
+  function w = evaluate(f, z)
+    w = polyval(f.coefs_, z);
+  end
+
+  
   function S = kernel(f)
     S = f.kernel_;
   end
