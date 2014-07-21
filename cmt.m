@@ -82,17 +82,20 @@ classdef cmt
             
             if isfield(prefs,module)
                 prefs = prefs.(module);
+                if (nargin > 1)
+                    if isfield(prefs,property)
+                        prefs = prefs.property;
+                    else
+                        error('CMT:cmt:prefs',...
+                            'Property "%s" not found.',property)
+                    end
+                end
+
             else
-                error('CMT:cmt:prefs','Module "%s" not found.',module)
+                prefs = [];
+                %error('CMT:cmt:prefs','Module "%s" not found.',module)
             end
             
-            if (nargin > 1)
-                if isfield(prefs,property)
-                    prefs = prefs.property;
-                else
-                    error('CMT:cmt:prefs','Property "%s" not found.',property)
-                end
-            end
         end
         
     end

@@ -458,7 +458,7 @@ classdef sct
                 beta = beta(renum);
                 qdat(:,1:n) = qdat(:,renum);
                 qdat(:,n+1+(1:n)) = qdat(:,n+1+renum);
-                kinf = max(find(isinf(z)));
+                kinf = find(isinf(z), 1, 'last' );
                 argw = cumsum([angle(w(3)-w(2));-pi*beta([3:n,1])]);
                 argw = argw([n,1:n-1]);
             else
@@ -744,6 +744,30 @@ classdef sct
                 delete(fig)
             end
         end
+        
+        function prefs = get(varargin)
+            prefs = cmt.get('sct',varargin{:});
+            if isempty(prefs)
+                % Set up the factory defaults.
+                sct.set;
+                prefs = sct.get('sct',varargin{:});
+            end
+        end
+        
+        function set(varargin)
+            %
+            if (nargin == 0) || isempty(cmt.get('sct'))
+                % Factory defaults.
+                varargin = { ...
+                    'inverseODE',true, ...
+                    'inverseNewton',true, ...
+                    'inverseNewtonMax',10,...
+                    varargin{:} };
+            end
+            
+            cmt.set('sct',varargin{:})  
+        end
+ 
     end  % internal methods block
     
 end
