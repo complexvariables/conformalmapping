@@ -1,7 +1,7 @@
 %% Specification by example -- periodic spline.
 % This file best viewed via the command
 %
-%   open(publish('spec_mobius_grids')).
+%   open(publish('spec_splinep')).
 %
 clear
 
@@ -9,10 +9,9 @@ clear
 % One way to create a spline object is to give a set of knots in the plane.
 s = splinep([ ...
     0.5896 + 1.2486i; -0.1426 + 1.5954i; -0.9133 + 1.1561i
-    -0.5819 + 0.3160i; -0.8748 - 0.1156i; -1.5222 - 0.6936i
-    -1.4220 - 1.4258i; -0.4971 - 0.8863i; 0.2274 - 0.4547i
-    0.8362 - 0.9634i; 1.5838 - 0.7013i; 1.3141 + 0.4008i
-    0.5742 + 0.4855i ...
+    -0.8465 + 0.3536i; -1.1116 - 0.2398i; -1.2695 - 0.9643i
+    -0.5660 - 1.1075i; 0.2013 - 0.7552i; 0.8362 - 0.9634i
+    1.5838 - 0.7013i; 1.3141 + 0.4008i; 0.8474 + 0.7291i ...
 ]);
 plot(s)
 hold on
