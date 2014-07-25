@@ -14,40 +14,38 @@ gdz = zipper.cgrid;
 % radial lines for a total of |4*nu|. At level |mu|, there should be a
 % total of |2^(mu-1)*nu| radial lines.
 
-mu = 6;
+mu = 5;
 nu = 32;
 
-gc = cell(mu + 2^(mu-1)*nu, 1);
-r = zeros(mu, 1);
-r(1) = 0.6;
+gc = cell(1 + mu + 2^(mu-1)*nu, 1);
+r = 0.6;
 
-% Level 1 circles
+% Level 0 circle.
 ncp = 200;
-gc{1} = r(1)*exp(2i*pi*(0:ncp-1)'/(ncp-1));
+gc{1} = r*exp(2i*pi*(0:ncp-1)'/(ncp-1));
 
-% Level 1 radial lines.
-ppul = 200; % Number of radial line points per unit length.
-ncr = ceil(ppul*(1 - r(1)));
-rln = linspace(r(1), 1 - 1e-8, ncr);
-for k = 1:nu
-  gc{1 + k} = rln*exp(2i*pi*(k-1)/nu);
-end
+% Base number of radial line points per unit length.
+ppul = 200;
 
-idx = 2 + nu;
-for j = 2:mu
-  ncp = j*ncp;
-  dr = 1 - r(j-1);
-  r(j) = 0.5*dr + r(j-1);
-  gc{idx} = r(j)*exp(2i*pi*(0:ncp-1)'/(ncp-1));
-  
-  ncr = ceil(j*ppul*(1 - r(j)));
-  rln = linspace(r(j), 1 - 1e-6, ncr);
-  nuj = 2^(j-2)*nu; % number of radial lines being added
+idx = 1;
+for j = 1:mu
+  if j > 1
+    nuj = 2^(j-2)*nu;
+  else
+    nuj = nu;
+  end
+  ncr = ceil(j*ppul*(1 - r));
+  rln = linspace(r, 1 - 1e-8, ncr)';
+  dt = 2*pi/nuj;
+  off = (j > 1)*dt/2;
   for k = 1:nuj
-    gc{idx + k} = rln*exp(1i*pi/nuj*(2*k-1));
+    gc{idx + k} = rln*exp(1i*(off + (k-1)*dt));
   end
   
-  idx = idx + 1 + nuj;
+  idx = idx + nuj + 1;
+  r = (1 + r)/2;
+  np = (j+1)*ncp;
+  gc{idx} = r*exp(2i*pi*(0:np-1)'/(np-1));
 end
 
 gd = gridcurves(gc);
