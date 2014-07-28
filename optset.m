@@ -38,10 +38,6 @@ methods
     function opt = optset(varargin)
         % Assign input name-value pairs.
         
-        if ~nargin
-            return
-        end
-        
         input = nvpair(opt, varargin{:});
         for k = 1:size(opt.proplist, 1)
             fname = opt.proplist{k,1};
