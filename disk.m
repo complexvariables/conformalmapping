@@ -57,15 +57,15 @@ methods
     if nargin < 2
       levels = 5;
     end
-    mu = double(int8(levels)); % Don't judge my integer size.
-    if mu <= 0
-      error('CMT:InvalidArgument', 'Number of levels must be > 0.')
+    if levels <= 0 || (levels - fix(levels)) ~= 0
+      error('CMT:InvalidArgument', ...
+          'Number of levels must be a positive integer.')
     end
     
     nu = 32; % Base radial line number.
     r = 0.6; % Base circle radius.
     
-    gc = cell(1 + mu + 2^(mu-1)*nu, 1);
+    gc = cell(1 + levels + 2^(levels-1)*nu, 1);
     
     % Level 0 circle.
     ncp = 200;
@@ -75,7 +75,7 @@ methods
     ppul = 200;
     
     idx = 1;
-    for j = 1:mu
+    for j = 1:levels
       if j > 1
         nuj = 2^(j-2)*nu;
       else
