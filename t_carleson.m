@@ -18,7 +18,7 @@ g = f';
 clf
 hold on
 plot(f(gd))
-plot(g(1./gd))
+plot(g(carleson(diskex(0, 1))))
 plot(G)
 axis(plotbox(G))
 aspectequal

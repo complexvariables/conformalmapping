@@ -29,153 +29,153 @@ classdef splinepwp < closedcurve
 % Written by Everett Kropf, 2014.
 
 properties(SetAccess=protected)
-  knots
-  corners
-  alpha
-  tknots
-  cornerTangent
+    knots
+    corners
+    alpha
+    tknots
+    cornerTangent
 end
 
 properties(Access=protected)
-  ppx
-  ppy
+    ppx
+    ppy
 end
 
 methods
-  function G = splinepwp(knots, corners)
-    % Constructor.
-    
-    if ~nargin
-      return
-    end
-    
-    % Check input.
-    corners = corners(:);
-    knots = knots(:);
-    if knots(1) == knots(end)
-      knots = knots(1:end-1);
-    end
-    if any(diff(corners) <= 0)
-      error('CMT:BadArguemnt', ...
-        'The corners array must be strictly monotonically increasing.')
-    end
-    try
-      knots(corners);
-    catch err
-      if strcmp(err.identifier, 'MATLAB:badsubscript')
-        error('CMT:BadArgument', ...
-          'The corners array must be a valid set of indices for knots.')
-      else
-        rethrow(err)
-      end
+    function G = splinepwp(knots, corners)
+        % Constructor.
+
+        if ~nargin
+            return
+        end
+
+        % Check input.
+        corners = corners(:);
+        knots = knots(:);
+        if knots(1) == knots(end)
+            knots = knots(1:end-1);
+        end
+        if any(diff(corners) <= 0)
+            error('CMT:BadArguemnt', ...
+                'The corners array must be strictly monotonically increasing.')
+        end
+        try
+            knots(corners);
+        catch err
+            if strcmp(err.identifier, 'MATLAB:badsubscript')
+                error('CMT:BadArgument', ...
+                    'The corners array must be a valid set of indices for knots.')
+            else
+                rethrow(err)
+            end
+        end
+
+        % Constructor work.
+        G.knots = knots;
+        G.corners = corners;
+        G = calculateSplines(G);
     end
 
-    % Constructor work.
-    G.knots = knots;
-    G.corners = corners;
-    G = calculateSplines(G);
-  end
-  
-  function tk = breaks(G)
-    tk = [G.tknots(G.corners); 1];
-  end
-  
-  function z = point(G, t)
-    % Point on curve at t.
-    
-    z = paramEval(G, t, 0);
-  end
-  
-  function zt = tangent(G, t)
-    % Tangent to curve at t.
-    
-    zt = paramEval(G, t, 1);
-  end
+    function tk = breaks(G)
+        tk = [G.tknots(G.corners); 1];
+    end
+
+    function z = point(G, t)
+        % Point on curve at t.
+
+        z = paramEval(G, t, 0);
+    end
+
+    function zt = tangent(G, t)
+        % Tangent to curve at t.
+
+        zt = paramEval(G, t, 1);
+    end
 end
 
 methods(Access=protected)
-  function G = calculateSplines(G)
-    v = G.knots;
-    cv = G.corners;
-    if cv(1) ~= 1
-      % Shift corners and knots.
-      shift = cv(1) - 1;
-      v = circshift(v, -shift);
-      cv = cv - shift;
-    end
-    
-    % Pseudo arc length parameterization via chordal arclengths.
-    nv = numel(v);
-    v = [v; v(1)];
-    dL = abs(diff(v));
-    t = [0; cumsum(dL)];
-    t = t/t(end);
-    
-    % Corner angles determined by neighboring knots.
-    pv = mod(cv - 2, nv) + 1;
-    fv = mod(cv, nv) + 1;
-    alpha_ = mod(angle((v(pv) - v(cv))./(v(fv) - v(cv)))/pi, 2);
-    
-    % Outgoing/incoming tangent vectors.
-    vtan = [ v(fv) - v(cv), v(cv) - v(pv) ];
-    mu = 5; % (arbitrary) tangent vector magnitude
-    vtan = mu*vtan./abs(vtan);
-    
-    % Compute piecewise polynomial splines for segments between corners.
-    ncv = numel(cv);
-    ppx_(ncv, 3) = mkpp([1 1], [1 1]);
-    ppy_ = ppx_;
-    for k = 1:ncv
-      if k + 1 <= ncv
-        vdx = cv(k):cv(k+1);
-      else
-        vdx = cv(k):nv+1;
-      end
-      vex = [vtan(k,1); v(vdx); vtan(mod(k, ncv)+1,2)];
-      tk = t(vdx);
-      
-      % Piecewise polynomials and derivatives.
-      ppx_(k,1) = spline(tk, real(vex));
-      ppx_(k,2:3) = splinepwp.ppderivs(ppx_(k,1));
-      ppy_(k,1) = spline(tk, imag(vex));
-      ppy_(k,2:3) = splinepwp.ppderivs(ppy_(k,1));
+    function G = calculateSplines(G)
+        v = G.knots;
+        cv = G.corners;
+        if cv(1) ~= 1
+            % Shift corners and knots.
+            shift = cv(1) - 1;
+            v = circshift(v, -shift);
+            cv = cv - shift;
+        end
+
+        % Pseudo arc length parameterization via chordal arclengths.
+        nv = numel(v);
+        v = [v; v(1)];
+        dL = abs(diff(v));
+        t = [0; cumsum(dL)];
+        t = t/t(end);
+
+        % Corner angles determined by neighboring knots.
+        pv = mod(cv - 2, nv) + 1;
+        fv = mod(cv, nv) + 1;
+        alpha_ = mod(angle((v(pv) - v(cv))./(v(fv) - v(cv)))/pi, 2);
+
+        % Outgoing/incoming tangent vectors.
+        vtan = [ v(fv) - v(cv), v(cv) - v(pv) ];
+        mu = 5; % (arbitrary) tangent vector magnitude
+        vtan = mu*vtan./abs(vtan);
+
+        % Compute piecewise polynomial splines for segments between corners.
+        ncv = numel(cv);
+        ppx_(ncv, 3) = mkpp([1 1], [1 1]);
+        ppy_ = ppx_;
+        for k = 1:ncv
+            if k + 1 <= ncv
+                vdx = cv(k):cv(k+1);
+            else
+                vdx = cv(k):nv+1;
+            end
+            vex = [vtan(k,1); v(vdx); vtan(mod(k, ncv)+1,2)];
+            tk = t(vdx);
+
+            % Piecewise polynomials and derivatives.
+            ppx_(k,1) = spline(tk, real(vex));
+            ppx_(k,2:3) = splinepwp.ppderivs(ppx_(k,1));
+            ppy_(k,1) = spline(tk, imag(vex));
+            ppy_(k,2:3) = splinepwp.ppderivs(ppy_(k,1));
+        end
+
+        G.knots = v(1:end-1);
+        G.corners = cv;
+        G.alpha = alpha_;
+        G.ppx = ppx_;
+        G.ppy = ppy_;
+        G.tknots = t;
+        G.cornerTangent = vtan;
     end
 
-    G.knots = v(1:end-1);
-    G.corners = cv;
-    G.alpha = alpha_;
-    G.ppx = ppx_;
-    G.ppy = ppy_;
-    G.tknots = t;
-    G.cornerTangent = vtan;
-  end
-  
-  function z = paramEval(G, t, d)
-    % Evaluate curve given parameter using derivative level d.
-    
-    if nargin < 3
-      % No derivative.
-      d = 0;
+    function z = paramEval(G, t, d)
+        % Evaluate curve given parameter using derivative level d.
+
+        if nargin < 3
+            % No derivative.
+            d = 0;
+        end
+        d = d + 1;
+        t = modparam(G, t);
+        z = nan(size(t));
+
+        brks = breaks(G);
+        for k = 1:numel(G.corners)
+            tL = brks(k) <= t & t < brks(k+1);
+            z(tL) = complex(ppval(G.ppx(k,d), t(tL)), ppval(G.ppy(k,d), t(tL)));
+        end
     end
-    d = d + 1;
-    t = modparam(G, t);
-    z = nan(size(t));
-    
-    brks = breaks(G);
-    for k = 1:numel(G.corners)
-      tL = brks(k) <= t & t < brks(k+1);
-      z(tL) = complex(ppval(G.ppx(k,d), t(tL)), ppval(G.ppy(k,d), t(tL)));
-    end
-  end
 end
 
 methods(Static, Access=private)
-  function ppd = ppderivs(pp)
-    % First and second derivatives of piecewise polynomial pp.
-    coef = pp.coefs;
-    ppd = [ mkpp(pp.breaks, [3*coef(:,1), 2*coef(:,2), coef(:,3)]), ...
+    function ppd = ppderivs(pp)
+        % First and second derivatives of piecewise polynomial pp.
+        coef = pp.coefs;
+        ppd = [ mkpp(pp.breaks, [3*coef(:,1), 2*coef(:,2), coef(:,3)]), ...
             mkpp(pp.breaks, [6*coef(:,1), 2*coef(:,2)]) ];
-  end
+    end
 end
-
+    
 end
