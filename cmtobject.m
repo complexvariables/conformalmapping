@@ -13,27 +13,35 @@ methods
         % facility.
         
         prefs = getappdata(0, 'cmt_prefs');
+        module = class(this);
+
         if isempty(prefs)
             % Set defaults.
-            set(this); 
-            prefs = getappdata(0, 'cmt_prefs');
+            if isa(property, 'optset') || isstruct(property)
+                set(this, property);
+                prefs = getappdata(0, 'cmt_prefs');
+            else
+                error('CMT:NotDefined', ...
+                    'No default values given to set for class %s.', ...
+                    module)
+            end
         end
         
-        module = class(this);
         if isfield(prefs, module)
             prefs = prefs.(module);
         else
+            % This shouldn't actually happen.
             error('CMT:NotDefined', ...
-                'Unable to retreive app data for class "%s".', ...
+                'Unable to retreive app data for class %s.', ...
                 module)
         end
         
-        if nargin > 1
+        if nargin > 1 && ischar(property)
            if isfield(prefs, property)
                prefs = prefs.(property);
            else
                error('CMT:NotDefined', ...
-                   'Property "%s" not defined for class "%s%".', ...
+                   'Property %s not defined for class %s%.', ...
                    property, module)
            end
         end
@@ -44,15 +52,22 @@ methods
         
         prefs = getappdata(0, 'cmt_prefs');        
         module = class(this);
-        if (nargin < 2 || ~isfield(prefs, module)) ...
-                && isprop(this, 'optsClass')
-            % Set default.
-            prefs.(module) = eval(this.optsClass);
+        
+        if numel(varargin) == 1
+            if isa(varargin{1}, 'optset') || isstruct(varargin{1})
+                % Set default.
+                prefs.(module) = varargin{1};
+                varargin = {};
+            else
+                error('CMT:InvalidArgument', ...
+                    'Defaults may only be "optset" or "struct".')
+            end
         end
         
         for k = 1:2:numel(varargin)
             prefs.(module).(varargin{k}) = varargin{k+1};
         end
+        
         setappdata(0, 'cmt_prefs', prefs);
     end
 end

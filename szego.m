@@ -1,16 +1,13 @@
 classdef szego < cmtobject
 % SZEGO class represents a Szego kernel.
 %
-% S = szego(C, a, ...)
+% S = szego(C, a)
 %   C - closedcurve object
-%   a - point such that f(a) = 0 where f is map to disk [a=0]
+%   a - point such that f(a) = 0 where f is map to disk.
 %
-% szego(C, a, N)
-%   Uses N as the number of collcation points (default = 128).
-% szego(C, a, opts)
-%   Uses an szset object to control behavior of szego.
-% szego(C, a, N, opts)
-%   Ignores the nS value in the szego object.
+% szego(C, a, 'name', value, ...)
+%   Uses preferences specified by name/value pairs. See szset for valid
+%   name/value pairs.
 %
 % s = theta(S, t) - boundary correspondence function gives angle on the unit
 %     circle of the image of a point on C given by parameter t,
@@ -59,26 +56,40 @@ properties
     noisy_ = false    % Logical; informational output?
 end
 
-properties(Hidden)
-   optsClass = 'szset' 
-end
-
 methods
     function S = szego(C, a, varargin)
+        % Constructor.
+        
+        % Make sure defaults are set.
+        opts = get(S, szset);
+        
         if ~nargin
             return
         end
-
-        [C_, a_, opts] = szego.parse_input(C, a, varargin{:});
-
-        kerndat = szego.compute_kernel(C_, a_, opts);
+        
+        if ~isa(C, 'closedcurve')
+            error(iastr, 'Expected a closedcurve object.')
+        end
+        if isempty(a)
+            a = 0;
+        elseif ~isa(a, 'double') && numel(a) ~= 1
+            error(iastr, 'Second argument must be a scalar double.')
+        end
+        
+        if nargin > 2
+           for k = 1:2:numel(varargin)
+              opts.(varargin{k}) = varargin{k+1}; 
+           end
+        end
+        
+        kerndat = szego.compute_kernel(C, a, opts);
         knames = fieldnames(kerndat);
         for k = 1:numel(knames)
             S.(knames{k}) = kerndat.(knames{k});
         end
 
-        S.C = C_;
-        S.a = a_;
+        S.C = C;
+        S.a = a;
         S.N = opts.numCollPts;
         S.theta0_ = angle(-1i*phi(S, 0)^2*tangent(S.C, 0));
         S.Saa_ = sum(abs(S.phi_.^2))*S.dt_;
@@ -329,7 +340,7 @@ methods(Access=protected, Static)
                 fprintf('orthogonal residuals...\n')
             end
             % Need initial guess; get it via interpolation.
-            tmp = szego(C, a, 256);
+            tmp = szego(C, a, 'numCollPts', 256);
             x = phi(tmp, t);
 
             % Pass guess to solver.
@@ -394,48 +405,6 @@ methods(Access=protected, Static)
             x = xpp + omeg*(r + xp - xpp);
             xpp = xp;
             xp = x;
-        end
-    end
-
-    function [C, a, opts] = parse_input(C, a, varargin)
-        iastr = 'CMT:InvalidArgument';
-
-        if ~isa(C, 'closedcurve')
-            error(iastr, 'Expected a closedcurve object.')
-        end
-        if isempty(a)
-            a = 0;
-        elseif ~isa(a, 'double') && numel(a) ~= 1
-            error(iastr, 'Second argument must be a scalar double.')
-        end
-
-        Ntmp = [];
-        if nargin > 2
-            if numel(varargin) == 2
-                [Ntmp, opts] = varargin{:};
-            elseif numel(varargin) == 1
-                opts = varargin{1};
-            else
-                error(iastr, 'Invalid extra arguments.')
-            end
-        else
-            opts = szset;
-        end
-
-        if ~isa(opts, 'szset')
-            if ~isa(opts, 'double')
-                error(iastr, 'Options must be given via an szset object.')
-            end
-            Ntmp = opts;
-            opts = szset;
-        end
-
-        if ~isempty(Ntmp)
-            if ~(isa(Ntmp, 'double') || numel(Ntmp) == 1)
-                error(iastr, ...
-                    'Number of collcation points must be a scalar double value.')
-            end
-            opts.numCollPts = Ntmp;
         end
     end
 end
