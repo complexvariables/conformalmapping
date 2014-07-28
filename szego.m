@@ -1,4 +1,4 @@
-classdef szego < cmtbase
+classdef szego < cmtobject
 % SZEGO class represents a Szego kernel.
 %
 % S = szego(C, a, ...)

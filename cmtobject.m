@@ -1,5 +1,5 @@
-classdef cmtbase
-% CMTBASE provides base CMT functionality for classes.
+classdef cmtobject
+% CMTOBJECT provides some base CMT functionality for classes.
 
 % This file is a part of the CMToolkit.
 % It is licensed under the BSD 3-clause license.
