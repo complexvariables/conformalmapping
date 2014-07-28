@@ -10,17 +10,6 @@ classdef cmt
 % Copyright Toby Driscoll, 2014.
 
 methods(Static)
-    function result = runTests()
-        import matlab.unittest.TestSuite;
-
-        suite_all_tests = TestSuite.fromFolder('test');
-        status = run(suite_all_tests);
-
-        if nargout
-            result = status;
-        end
-    end
-
     function z = bb2z(box)
         % BB2Z axis bounding box to vertices.
 
@@ -38,6 +27,19 @@ methods(Static)
 
         box([1 3]) = min([real(points(:)) imag(points(:))], [], 1);
         box([2 4]) = max([real(points(:)) imag(points(:))], [], 1);
+    end
+    
+    function clearPrefs
+        % Remove appdata prefs storage.
+        %
+        % Needed since "clear classes" complains if any objects are stored
+        % in appdata.
+        
+        try
+            rmappdata(0, 'cmt_prefs')
+        catch
+            % Don't care if it fails, most likely means no prefs set.
+        end
     end
 
     function box = plotbox(points, scale)
@@ -61,6 +63,17 @@ methods(Static)
 
         box(1:2) = mean(box(1:2)) + dbox;
         box(3:4) = mean(box(3:4)) + dbox;
+    end
+    
+    function result = runTests()
+        import matlab.unittest.TestSuite;
+
+        suite_all_tests = TestSuite.fromFolder('test');
+        status = run(suite_all_tests);
+
+        if nargout
+            result = status;
+        end
     end
 end
 
