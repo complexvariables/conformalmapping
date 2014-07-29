@@ -7,9 +7,9 @@ classdef szset < optset
 % Properties:
 %   numCollPts        -- Number of collcation points.
 %   kernSolMethod     -- Solver method.
+%   newtonTol         -- Newton iteration tolerance.
 %   trace             -- Print out solution trace information.
 %   numFourierPts     -- Default size of FFT to employ.
-%   newtonTol         -- Newton iteration tolerance.
 %
 % Methods:
 % defaults(szset)
@@ -27,9 +27,9 @@ classdef szset < optset
 properties
     numCollPts              % Number of collcation points.
     kernSolMethod           % Solver method.
+    newtonTol               % Newton iteration tolerance.
     trace                   % Print out solution trace information.
     numFourierPts           % Default size of FFT to employ.
-    newtonTol               % Newton iteration tolerance.
 end
 
 properties(Access=protected)
@@ -37,9 +37,9 @@ properties(Access=protected)
         {
         'numCollPts', 512, [], '[ integer {512} ]'
         'kernSolMethod', 'auto', [], '[ backslash | orth_resid | {auto} ]'
+        'newtonTol', 10*eps(2*pi), [], '[ scalar double {10*eps(2*pi)} ]'
         'trace', false, [], '[ true | {false} ]'
         'numFourierPts', 256, [], '[ integer {256} ]'
-        'newtonTol', 10*eps(2*pi), [], '[ scalar double {10*eps(2*pi)} ]'
         }
 end
 
