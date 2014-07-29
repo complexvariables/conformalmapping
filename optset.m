@@ -31,58 +31,92 @@ classdef optset
 % Written by Everett Kropf, 2014.
 
 properties(Abstract, Access=protected)
- 
-  proplist
+    proplist
 end
 
 methods
-  function opt = optset(varargin)
-    % Assign input name-value pairs.
-    input = nvpair(opt, varargin{:});
-    for k = 1:size(opt.proplist, 1)
-      fname = opt.proplist{k,1};
-      opt.(fname) = input.(fname);
+    function opt = optset(varargin)
+        % Assign input name-value pairs.
+        
+        input = nvpair(opt, varargin{:});
+        for k = 1:size(opt.proplist, 1)
+            fname = opt.proplist{k,1};
+            opt.(fname) = input.(fname);
+        end
     end
-  end
-  
-  function defaults(opt)
-    % Display default values for option class.
-    nump = size(opt.proplist, 1);
-    maxstrlen = 0;
-    for k = 1:nump
-      maxstrlen = max(maxstrlen, length(opt.proplist{k,1}));
+
+    function defaults(opt)
+        % Display default values for option class.
+        
+        nump = size(opt.proplist, 1);
+        maxstrlen = 0;
+        for k = 1:nump
+            maxstrlen = max(maxstrlen, length(opt.proplist{k,1}));
+        end
+
+        fprintf('Values for %s object, with format\n', class(opt))
+        fprintf('  % *s : [ description {default} ] : current value\n\n', ...
+            maxstrlen, 'name');
+        for k = 1:nump
+            curval = evalc(sprintf('disp(opt.%s)', opt.proplist{k,1}));
+            fprintf('  % *s : %s : %s\n', ...
+                maxstrlen, opt.proplist{k,[1, 4]}, strtrim(curval));
+        end
+        fprintf('\n')
+    end
+
+    function disp(opt)
+        defaults(opt)
     end
     
-    fprintf('Values for %s object, with format\n', class(opt))
-    fprintf('  % *s : [ description {default} ] : current value\n\n', ...
-            maxstrlen, 'name');
-    for k = 1:nump
-      curval = evalc(sprintf('disp(opt.%s)', opt.proplist{k,1}));
-      fprintf('  % *s : %s : %s\n', ...
-              maxstrlen, opt.proplist{k,[1, 4]}, strtrim(curval));
+    function value = get(opt, name)
+       value = opt.(name); 
     end
-    fprintf('\n')
-  end
-  
-  function disp(opt)
-    defaults(opt)
-  end
-  
-  function input = nvpair(opt, varargin)
-    % Parse name-value pairs. See proplist.
-    p = inputParser;
-    for k = 1:size(opt.proplist, 1)
-      if ~isempty(opt.proplist{k,3}) ...
-          && isa(opt.proplist{k,3}, 'function_handle')
-        ix = 1:3;
-      else
-        ix = 1:2;
-      end
-      addParameter(p, opt.proplist{k,ix});
-    end
-    parse(p, varargin{:});
-    input = p.Results;
-  end
-end
 
+    function input = nvpair(opt, varargin)
+        % Parse name-value pairs. See proplist.
+        
+        p = inputParser;
+        for k = 1:size(opt.proplist, 1)
+            if ~isempty(opt.proplist{k,3}) ...
+                    && isa(opt.proplist{k,3}, 'function_handle')
+                ix = 1:3;
+            else
+                ix = 1:2;
+            end
+            addParameter(p, opt.proplist{k,ix});
+        end
+        parse(p, varargin{:});
+        input = p.Results;
+    end
+    
+    function set(opt, varargin)
+        namelist = opt.proplist(:,1);
+        for k = 1:2:numel(varargin)
+            j = find(strcmp(varargin{k}, namelist));
+            if ~j
+                error('CMT:InvalidArgument', ...
+                    'Preference name %s is not valid for class %s.', ...
+                    varargin{k}, class(opt))
+            end
+            pname = namelist{j};
+            if ~isempty(opt.proplist{j,3})
+                % validate!
+            end
+            opt.(pname) = varargin{k+1};
+        end
+    end
+    
+    function args = varargs(opt)
+        % Output cell array of preferences suitable to pass as name/value
+        % pairs in a function call.
+        
+        plist = properties(opt);
+        args = cell(1, 2*numel(plist));
+        for k = 1:numel(plist)
+            args(2*(k-1)+(1:2)) = {plist{k}, opt.(plist{k})};
+        end
+    end
+end
+    
 end

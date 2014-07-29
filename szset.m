@@ -7,9 +7,9 @@ classdef szset < optset
 % Properties:
 %   numCollPts        -- Number of collcation points.
 %   kernSolMethod     -- Solver method.
+%   newtonTol         -- Newton iteration tolerance.
 %   trace             -- Print out solution trace information.
 %   numFourierPts     -- Default size of FFT to employ.
-%   newtonTol         -- Newton iteration tolerance.
 %
 % Methods:
 % defaults(szset)
@@ -25,28 +25,28 @@ classdef szset < optset
 % Written by Everett Kropf, 2014.
 
 properties
-  numCollPts              % Number of collcation points.
-  kernSolMethod           % Solver method.
-  trace                   % Print out solution trace information.
-  numFourierPts           % Default size of FFT to employ.
-  newtonTol               % Newton iteration tolerance.
+    numCollPts              % Number of collcation points.
+    kernSolMethod           % Solver method.
+    newtonTol               % Newton iteration tolerance.
+    trace                   % Print out solution trace information.
+    numFourierPts           % Default size of FFT to employ.
 end
 
 properties(Access=protected)
-  proplist = ...
-    {
-      'numCollPts', 512, [], '[ integer {512} ]'
-      'kernSolMethod', 'auto', [], '[ backslash | orth_resid | {auto} ]'
-      'trace', false, [], '[ true | {false} ]'
-      'numFourierPts', 256, [], '[ integer {256} ]'
-      'newtonTol', 10*eps(2*pi), [], '[ scalar double {10*eps(2*pi)} ]'
-    }
+    proplist = ...
+        {
+        'numCollPts', 512, [], '[ integer {512} ]'
+        'kernSolMethod', 'auto', [], '[ backslash | orth_resid | {auto} ]'
+        'newtonTol', 10*eps(2*pi), [], '[ scalar double {10*eps(2*pi)} ]'
+        'trace', false, [], '[ true | {false} ]'
+        'numFourierPts', 256, [], '[ integer {256} ]'
+        }
 end
 
 methods
-  function opt = szset(varargin)
-    opt = opt@optset(varargin{:});
-  end
+    function opt = szset(varargin)
+        opt = opt@optset(varargin{:});
+    end
 end
-
+    
 end
