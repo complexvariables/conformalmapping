@@ -68,6 +68,10 @@ methods
     function disp(opt)
         defaults(opt)
     end
+    
+    function value = get(opt, name)
+       value = opt.(name); 
+    end
 
     function input = nvpair(opt, varargin)
         % Parse name-value pairs. See proplist.
@@ -84,6 +88,34 @@ methods
         end
         parse(p, varargin{:});
         input = p.Results;
+    end
+    
+    function set(opt, varargin)
+        namelist = opt.proplist(:,1);
+        for k = 1:2:numel(varargin)
+            j = find(strcmp(varargin{k}, namelist));
+            if ~j
+                error('CMT:InvalidArgument', ...
+                    'Preference name %s is not valid for class %s.', ...
+                    varargin{k}, class(opt))
+            end
+            pname = namelist{j};
+            if ~isempty(opt.proplist{j,3})
+                % validate!
+            end
+            opt.(pname) = varargin{k+1};
+        end
+    end
+    
+    function args = varargs(opt)
+        % Output cell array of preferences suitable to pass as name/value
+        % pairs in a function call.
+        
+        plist = properties(opt);
+        args = cell(1, 2*numel(plist));
+        for k = 1:numel(plist)
+            args(2*(k-1)+(1:2)) = {plist{k}, opt.(plist{k})};
+        end
     end
 end
     
