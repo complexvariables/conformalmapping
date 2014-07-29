@@ -46,19 +46,13 @@ methods
         end
 
         if nargin > 2
-            for k = 1:2:numel(varargin)
-                opts.(varargin{k}) = varargin{k+1};
-            end
+            set(opts, varargin{:})
         end
 
         boundary = outer(range);
         
-        plist = properties(opts);
-        szprefs = cell(1, 2*numel(plist));
-        for k = 1:numel(plist)
-           szprefs(2*(k-1)+(1:2)) = {plist{k}, opts.(plist{k})}; 
-        end
-        S = szego(boundary, a, szprefs{:});
+        szargs = varargs(opts);
+        S = szego(boundary, a, szargs{:});
         
         nF = opts.numFourierPts;
         t = invtheta(S, 2*pi*(0:nF-1)'/nF);

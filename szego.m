@@ -77,9 +77,7 @@ methods
         end
         
         if nargin > 2
-           for k = 1:2:numel(varargin)
-              opts.(varargin{k}) = varargin{k+1}; 
-           end
+            set(opts, varargin{:})
         end
         
         kerndat = szego.compute_kernel(C, a, opts);
