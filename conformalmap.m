@@ -1,4 +1,4 @@
-classdef conformalmap
+classdef conformalmap < cmtobject
 % CONFORMALMAP base class.
 %
 % This class has two purposes. As a base class, which would normally be

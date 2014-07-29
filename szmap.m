@@ -24,7 +24,7 @@ properties
 end
 
 methods
-    function f = szmap(range, a, opts)
+    function f = szmap(range, a, varargin)
         if nargin
             if isa(range, 'closedcurve')
                 range = region(range);
@@ -39,20 +39,27 @@ methods
         end
 
         f = f@conformalmap(args{:});
-
+        opts = get(f, szset);
+        
         if ~nargin
             return
         end
 
-        if nargin < 3 || isempty(opts)
-            opts = szset;
-        elseif ~isa(opts, 'szset')
-            error('CMT:InvalidArgument', ...
-                'Second argument must be a szset object.')
+        if nargin > 2
+            for k = 1:2:numel(varargin)
+                opts.(varargin{k}) = varargin{k+1};
+            end
         end
 
         boundary = outer(range);
-        S = szego(boundary, a, opts);
+        
+        plist = properties(opts);
+        szprefs = cell(1, 2*numel(plist));
+        for k = 1:numel(plist)
+           szprefs(2*(k-1)+(1:2)) = {plist{k}, opts.(plist{k})}; 
+        end
+        S = szego(boundary, a, szprefs{:});
+        
         nF = opts.numFourierPts;
         t = invtheta(S, 2*pi*(0:nF-1)'/nF);
         c = flipud(fft(boundary(t))/nF);

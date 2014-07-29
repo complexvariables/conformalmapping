@@ -15,7 +15,7 @@ methods
         prefs = getappdata(0, 'cmt_prefs');
         module = class(this);
 
-        if isempty(prefs)
+        if isempty(prefs) || ~isfield(prefs, module)
             % Set defaults.
             if isa(property, 'optset')
                 set(this, property);
