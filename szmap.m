@@ -79,8 +79,9 @@ methods
             br = inner(r);
             r = region(br);
         end
-
-        g = szmap(br', 0, f.opts_);
+        
+        prefs = varargs(f.opts_);
+        g = szmap(br', 0, prefs{:});
         func = @(z) 1./conj(apply_map_(g, conj(1./z)));
 
         g.domain_ = d;
