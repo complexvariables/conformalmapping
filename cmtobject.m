@@ -17,7 +17,7 @@ methods
 
         if isempty(prefs)
             % Set defaults.
-            if isa(property, 'optset') || isstruct(property)
+            if isa(property, 'optset')
                 set(this, property);
                 prefs = getappdata(0, 'cmt_prefs');
             else
@@ -54,13 +54,13 @@ methods
         module = class(this);
         
         if numel(varargin) == 1
-            if isa(varargin{1}, 'optset') || isstruct(varargin{1})
+            if isa(varargin{1}, 'optset')
                 % Set default.
                 prefs.(module) = varargin{1};
                 varargin = {};
             else
                 error('CMT:InvalidArgument', ...
-                    'Defaults may only be "optset" or "struct".')
+                    'Expected an optset object.')
             end
         end
         
