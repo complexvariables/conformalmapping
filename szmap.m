@@ -46,7 +46,7 @@ methods
         end
 
         if nargin > 2
-            set(opts, varargin{:})
+            opts = set(opts, varargin{:});
         end
 
         boundary = outer(range);

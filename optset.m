@@ -90,7 +90,7 @@ methods
         input = p.Results;
     end
     
-    function set(opt, varargin)
+    function opt = set(opt, varargin)
         namelist = opt.proplist(:,1);
         for k = 1:2:numel(varargin)
             j = find(strcmp(varargin{k}, namelist));
