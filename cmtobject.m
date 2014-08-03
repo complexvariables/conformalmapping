@@ -63,11 +63,8 @@ methods
                     'Expected an optset object.')
             end
         end
-        
-        for k = 1:2:numel(varargin)
-            prefs.(module).(varargin{k}) = varargin{k+1};
-        end
-        
+                
+        prefs.(module) = set(prefs.(module), varargin{:});        
         setappdata(0, 'cmt_prefs', prefs);
     end
 end
