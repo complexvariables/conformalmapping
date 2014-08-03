@@ -57,7 +57,7 @@ properties
 end
 
 methods
-    function S = szego(C, a, varargin)
+    function S = szego(C, varargin)
         % Constructor.
         
         % Make sure defaults are set.
@@ -70,25 +70,20 @@ methods
         if ~isa(C, 'closedcurve')
             error('CMT:InvalidArgument', 'Expected a closedcurve object.')
         end
-        if isempty(a)
-            a = 0;
-        elseif ~isa(a, 'double') && numel(a) ~= 1
-            error('CMT:InvalidArgument', ...
-                'Second argument must be a scalar double.')
-        end
         
         if nargin > 2
             opts = set(opts, varargin{:});
         end
         
-        kerndat = szego.compute_kernel(C, a, opts);
+        a_ = opts.confCenter;
+        kerndat = szego.compute_kernel(C, a_, opts);
         knames = fieldnames(kerndat);
         for k = 1:numel(knames)
             S.(knames{k}) = kerndat.(knames{k});
         end
 
         S.C = C;
-        S.a = a;
+        S.a = a_;
         S.N = opts.numCollPts;
         S.theta0_ = angle(-1i*phi(S, 0)^2*tangent(S.C, 0));
         S.Saa_ = sum(abs(S.phi_.^2))*S.dt_;
@@ -339,7 +334,8 @@ methods(Access=protected, Static)
                 fprintf('orthogonal residuals...\n')
             end
             % Need initial guess; get it via interpolation.
-            tmp = szego(C, a, 'numCollPts', 256);
+            sargs = varargs(opts);
+            tmp = szego(C, sargs{:}, 'numCollPts', 256);
             x = phi(tmp, t);
 
             % Pass guess to solver.

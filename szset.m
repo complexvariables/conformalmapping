@@ -25,6 +25,7 @@ classdef szset < optset
 % Written by Everett Kropf, 2014.
 
 properties
+    confCenter              % Conformal center.
     numCollPts              % Number of collcation points.
     kernSolMethod           % Solver method.
     newtonTol               % Newton iteration tolerance.
@@ -35,11 +36,14 @@ end
 properties(Access=protected)
     proplist = ...
         {
+        'confCenter', 0, ...
+            @szset.isScalarDouble, '[ scalar double {0} ]'
         'numCollPts', 512, ...
             @szset.isPosInteger, '[ integer {512} ]'
         'kernSolMethod', 'auto', ...
             @szset.isOkMethod, '[ backslash | orth_resid | {auto} ]'
-        'newtonTol', 10*eps(2*pi), [], '[ scalar double {10*eps(2*pi)} ]'
+        'newtonTol', 10*eps(2*pi), ...
+            @szset.isScalarDouble, '[ scalar double {10*eps(2*pi)} ]'
         'trace', false, [], '[ true | {false} ]'
         'numFourierPts', 256, ...
             @szset.isPosInteger, '[ integer {256} ]'
@@ -59,6 +63,10 @@ methods(Static, Hidden)
     
     function tf = isOkMethod(s)
         tf = any(strcmp(s, {'backslash', 'orth_resid', 'auto'}));
+    end
+    
+    function tf = isScalarDouble(x)
+        tf = numel(x) == 1 & isa(x, 'double');
     end
 end
     
