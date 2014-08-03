@@ -35,17 +35,30 @@ end
 properties(Access=protected)
     proplist = ...
         {
-        'numCollPts', 512, [], '[ integer {512} ]'
-        'kernSolMethod', 'auto', [], '[ backslash | orth_resid | {auto} ]'
+        'numCollPts', 512, ...
+            @szset.isPosInteger, '[ integer {512} ]'
+        'kernSolMethod', 'auto', ...
+            @szset.isOkMethod, '[ backslash | orth_resid | {auto} ]'
         'newtonTol', 10*eps(2*pi), [], '[ scalar double {10*eps(2*pi)} ]'
         'trace', false, [], '[ true | {false} ]'
-        'numFourierPts', 256, [], '[ integer {256} ]'
+        'numFourierPts', 256, ...
+            @szset.isPosInteger, '[ integer {256} ]'
         }
 end
 
 methods
     function opt = szset(varargin)
         opt = opt@optset(varargin{:});
+    end
+end
+
+methods(Static, Hidden)
+    function tf = isPosInteger(x)
+        tf = (x - fix(x)) == 0 & x > 0;
+    end
+    
+    function tf = isOkMethod(s)
+        tf = any(strcmp(s, {'backslash', 'orth_resid', 'auto'}));
     end
 end
     
