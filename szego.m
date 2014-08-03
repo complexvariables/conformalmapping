@@ -68,12 +68,13 @@ methods
         end
         
         if ~isa(C, 'closedcurve')
-            error(iastr, 'Expected a closedcurve object.')
+            error('CMT:InvalidArgument', 'Expected a closedcurve object.')
         end
         if isempty(a)
             a = 0;
         elseif ~isa(a, 'double') && numel(a) ~= 1
-            error(iastr, 'Second argument must be a scalar double.')
+            error('CMT:InvalidArgument', ...
+                'Second argument must be a scalar double.')
         end
         
         if nargin > 2
