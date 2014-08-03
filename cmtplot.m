@@ -1,5 +1,5 @@
-classdef plotdef
-% PLOTDEF defines CMToolbox plot defaults.
+classdef cmtplot < cmtobject
+% CMTPLOT collects common CMT plot tasks.
 % 
 % This is probably more convoluted than it needs to be.
 
@@ -21,45 +21,53 @@ properties(Constant)
   smoothingon = {'linesmoothing', 'on'}
 end
 
+methods
+    function p = cmtplot
+        % This is here to allow get/set functionality.
+        
+        get(p, plotset);
+    end
+end
+
 methods(Static)
   function args = closedcurveargs()
-    args = [{'color', plotdef.cccolor, ...
-             'linewidth', plotdef.cclinewidth}, ...
-             plotdef.smoothingon];
+    args = [{'color', cmtplot.cccolor, ...
+             'linewidth', cmtplot.cclinewidth}, ...
+             cmtplot.smoothingon];
   end
   
   function c = cccolor()
-    c = plotdef.black;
+    c = cmtplot.black;
   end
   
   function c = cclinewidth()
-    c = plotdef.defaultlinewidth;
+    c = cmtplot.defaultlinewidth;
   end
   
   function args = fillargs()
-    args = {plotdef.fillcolor, 'edgecolor', plotdef.filledgecolor};
+    args = {cmtplot.fillcolor, 'edgecolor', cmtplot.filledgecolor};
   end
   
   function c = fillcolor()
-    c = plotdef.grey;
+    c = cmtplot.grey;
   end
   
   function c = filledgecolor()
-    c = plotdef.none;
+    c = cmtplot.none;
   end
   
   function args = gridargs()
-    args = [{'color', plotdef.gridcolor, ...
-             'linewidth', plotdef.gridlinewidth}, ...
-             plotdef.smoothingon];
+    args = [{'color', cmtplot.gridcolor, ...
+             'linewidth', cmtplot.gridlinewidth}, ...
+             cmtplot.smoothingon];
   end
   
   function c = gridcolor()
-    c = plotdef.grey;
+    c = cmtplot.grey;
   end
   
   function c = gridlinewidth()
-    c = plotdef.defaultlinewidth;
+    c = cmtplot.defaultlinewidth;
   end
   
   function [args, gargs] = pullgridargs(arglist)
