@@ -24,7 +24,7 @@ properties
 end
 
 methods
-    function f = szmap(range, a, varargin)
+    function f = szmap(range, varargin)
         if nargin
             if isa(range, 'closedcurve')
                 range = region(range);
@@ -52,7 +52,7 @@ methods
         boundary = outer(range);
         
         szargs = varargs(opts);
-        S = szego(boundary, a, szargs{:});
+        S = szego(boundary, szargs{:});
         
         nF = opts.numFourierPts;
         t = invtheta(S, 2*pi*(0:nF-1)'/nF);
@@ -81,7 +81,7 @@ methods
         end
         
         prefs = varargs(f.opts_);
-        g = szmap(br', 0, prefs{:});
+        g = szmap(br', prefs{:}, 'confCenter', 0);
         func = @(z) 1./conj(apply_map_(g, conj(1./z)));
 
         g.domain_ = d;
