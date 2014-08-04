@@ -89,7 +89,7 @@ methods
     z = complex(get(h, 'xdata'), get(h, 'ydata'));
     delete(h)
     
-    args = plotdef.fillargs;
+    args = cmtplot.fillargs;
     h = fill(real(z), imag(z), args{:}, varargin{:});
     
     if ~washold
@@ -135,7 +135,7 @@ methods
     newplot
     
     h = plot_(C);
-    args = plotdef.closedcurveargs;
+    args = cmtplot.closedcurveargs;
     set(h, args{:}, varargin{:});
 
     if ~washold

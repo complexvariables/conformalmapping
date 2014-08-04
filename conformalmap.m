@@ -162,12 +162,12 @@ methods
         cah = newplot;
         hold on
 
-        [pargs, gargs] = plotdef.pullgridargs(varargin);
+        [pargs, gargs] = cmtplot.pullgridargs(varargin);
         hg = plot(apply(f, grid(f.domain_, gargs{:})));
         hb = plot(f.range_, pargs{:});
 
         if ~washold
-            plotdef.whitefigure(cah)
+            cmtplot.whitefigure(cah)
             axis(plotbox(f.range_))
             aspectequal
             axis off

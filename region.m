@@ -148,7 +148,7 @@ methods
       hold on
     end
     
-    fillargs = plotdef.fillargs;
+    fillargs = cmtplot.fillargs;
     
     % Fill interiors of any outer boundaries or draw exterior region.
     if hasouter(R)
@@ -169,7 +169,7 @@ methods
       bgcolor = get(gca, 'color');
       for k = 1:R.numinner
         fill(R.innerboundary_{k}, 'facecolor', bgcolor, ...
-             'edgecolor', plotdef.filledgecolor, varargin{:})
+             'edgecolor', cmtplot.filledgecolor, varargin{:})
       end
     end
             
