@@ -178,6 +178,11 @@ methods
     end
   end % fill
   
+  function tf = hasgrid(~)
+      % No default grid.
+      tf = false;
+  end
+  
   function tf = hasinner(R)
     tf = ~isempty(R.innerboundary_);
   end

@@ -131,6 +131,10 @@ methods
 
         gd = gridcurves(curves);
     end
+    
+    function tf = hasgrid(~)
+        tf = true;
+    end
 end
 
 end
