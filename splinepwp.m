@@ -15,11 +15,11 @@ classdef splinepwp < closedcurve
 %
 % This class is mainly for testing corner cases on boundaries that aren't
 % polygons. For instance it is completely arbitrary that the value of the
-% tangent at a corner has the direction of the outgoing tangent, as it
-% were. In fact to create the splines between corners, the endpoint tangent
-% vectors arbitrarily have a magnitude of 5, which was selected because it
-% gives the "nicest, natural" distribution of points for an evenly spaced
-% discrete parameterization.
+% tangent at a corner is the average of the incoming and outgoing tangent
+% vectors. In fact to create the splines between corners, the endpoint
+% tangent vectors arbitrarily have a magnitude of 5, which was selected 
+% because it gives the "nicest, natural" distribution of points for an
+% evenly spaced discrete parameterization.
 
 % This file is a part of the CMToolkit.
 % It is licensed under the BSD 3-clause license.
@@ -29,11 +29,11 @@ classdef splinepwp < closedcurve
 % Written by Everett Kropf, 2014.
 
 properties(SetAccess=protected)
-    knots
-    corners
-    alpha
-    tknots
-    cornerTangent
+    knots               % Complex array of spline knots.
+    corners             % Vector of index values for knots indicating corners.
+    alpha               % Array of calculated corner interior angles.
+    tknots              % Parameter values for knots.
+    cornerTangent       % Incoming/outgoing corner tangent vectors.
 end
 
 properties(Access=protected)
@@ -87,9 +87,15 @@ methods
     end
 
     function zt = tangent(G, t)
-        % Tangent to curve at t.
+        % Tangent to curve at t. With average corner tangents.
 
         zt = paramEval(G, t, 1);
+        cavg = sum(G.cornerTangent, 2)/2;
+        ct = breaks(G);
+        for k = 1:numel(ct)-1
+           ctL = abs(t - ct(k)) < 10*eps;
+           zt(ctL) = cavg(k);
+        end
     end
 end
 
