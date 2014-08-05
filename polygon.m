@@ -567,7 +567,7 @@ methods
     end
   end
   
-  function tangent(~)
+  function zt = tangent(p, t) %#ok<INUSD,STOUT>
     error('CMT:NotImplemented', ...
           'Placeholder function waiting on implementation.')
   end
