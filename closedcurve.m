@@ -64,6 +64,22 @@ methods
     disp(C)
   end
   
+  function R = exterior(C)
+      % EXTERIOR creates an exterior region bounded by curve.
+      %
+      % R = exterior(C)
+      % Creates exterior region R bounded by closed curve C.
+      %
+      % See also closedcurve, region.
+      
+      if ~isa(C, 'closedcurve')
+          error('CMT:InvalidArgument', ...
+              'Function argument must be a closed curve.')
+      end
+      
+      R = region(C, 'exteriorto');
+  end
+  
   function out = fill(C, varargin)
     washold = ishold;
     
@@ -83,6 +99,22 @@ methods
     if nargout
       out = h;
     end
+  end
+  
+  function R = interior(C)
+      % INTERIOR creates a bounded region with boundary C.
+      %
+      % R = exterior(C)
+      % Creates interior region R bounded by closed curve C.
+      %
+      % See also closedcurve, region.
+      
+      if ~isa(C, 'closedcurve')
+          error('CMT:InvalidArgument', ...
+              'Function argument must be a closed curve.')
+      end
+      
+      R = region(C);
   end
   
   function n = length(C)
