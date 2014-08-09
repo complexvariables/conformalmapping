@@ -15,10 +15,6 @@ properties(Constant)
   black = 'k'
   grey = 0.75*[1, 1, 1]
   none = 'none'
-  
-  % line things
-  defaultlinewidth = 0.5;
-  smoothingon = {'linesmoothing', 'on'}
 end
 
 methods
@@ -31,9 +27,9 @@ end
 
 methods(Static)
   function args = closedcurveargs()
-    args = [{'color', cmtplot.cccolor, ...
-             'linewidth', cmtplot.cclinewidth}, ...
-             cmtplot.smoothingon];
+    args = {'color', cmtplot.cccolor, ...
+            'linewidth', get(cmtplot, 'lineWidth'), ...
+            'linesmoothing', get(cmtplot, 'lineSmoothing')};
   end
   
   function c = cccolor()
@@ -41,7 +37,7 @@ methods(Static)
   end
   
   function c = cclinewidth()
-    c = cmtplot.defaultlinewidth;
+    c = get(cmtplot, 'lineWidth');
   end
   
   function args = fillargs()
@@ -57,9 +53,9 @@ methods(Static)
   end
   
   function args = gridargs()
-    args = [{'color', cmtplot.gridcolor, ...
-             'linewidth', cmtplot.gridlinewidth}, ...
-             cmtplot.smoothingon];
+    args = {'color', cmtplot.gridcolor, ...
+            'linewidth', cmtplot.gridlinewidth, ...
+            'linesmoothing', get(cmtplot, 'lineSmoothing')};
   end
   
   function c = gridcolor()
@@ -67,7 +63,7 @@ methods(Static)
   end
   
   function c = gridlinewidth()
-    c = cmtplot.defaultlinewidth;
+    c = get(cmtplot, 'lineWidth');
   end
   
   function [args, gargs] = pullgridargs(arglist)
