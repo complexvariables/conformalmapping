@@ -11,14 +11,14 @@ classdef plotset < optset
 % Written by Everett Kropf, 2014.
 
 properties
-    linewidth
-    linesmoothing
+    lineWidth
+    lineSmoothing
 end
 
 properties(Access=protected)
     proplist = { ...
-        'linewidth', 0.5, @isnumeric, '[ double {0.5} ]'
-        'linesmoothing', 'on', ...
+        'lineWidth', 0.5, @isnumeric, '[ double {0.5} ]'
+        'lineSmoothing', 'on', ...
             @plotset.isOnOff, '[ {on} | off ]'
     }
 end
@@ -26,6 +26,10 @@ end
 methods
     function opt = plotset(varargin)
         opt = opt@optset(varargin{:});
+    end
+    
+    function opt = set.lineSmoothing(opt, value)
+        opt.lineSmoothing = lower(value);
     end
 end
 
