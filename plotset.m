@@ -12,14 +12,18 @@ classdef plotset < optset
 
 properties
     lineWidth
+    lineColor
     lineSmoothing
+    gridColor
 end
 
 properties(Access=protected)
     proplist = { ...
         'lineWidth', 0.5, @isnumeric, '[ double {0.5} ]'
+        'lineColor', cmtplot.black, [], '[ valid colorspec ]'
         'lineSmoothing', 'on', ...
             @plotset.isOnOff, '[ {on} | off ]'
+        'gridColor', cmtplot.grey, [], '[ valid colorspec ]'
     }
 end
 

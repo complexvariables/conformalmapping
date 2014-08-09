@@ -27,19 +27,12 @@ end
 
 methods(Static)
     function args = closedcurveargs()
+        opts = get(cmtplot);
         args = { ...
-            'color', cmtplot.cccolor, ...
-            'linewidth', get(cmtplot, 'lineWidth'), ...
-            'linesmoothing', get(cmtplot, 'lineSmoothing') ...
+            'color', opts.lineColor, ...
+            'linewidth', opts.lineWidth, ...
+            'linesmoothing', opts.lineSmoothing ...
         };
-    end
-
-    function c = cccolor()
-        c = cmtplot.black;
-    end
-
-    function c = cclinewidth()
-        c = get(cmtplot, 'lineWidth');
     end
 
     function args = fillargs()
@@ -55,19 +48,12 @@ methods(Static)
     end
 
     function args = gridargs()
+        opts = get(cmtplot);
         args = {
-            'color', cmtplot.gridcolor, ...
-            'linewidth', cmtplot.gridlinewidth, ...
-            'linesmoothing', get(cmtplot, 'lineSmoothing') ...
+            'color', opts.gridColor, ...
+            'linewidth', opts.lineWidth, ...
+            'linesmoothing', opts.lineSmoothing ...
         };
-    end
-
-    function c = gridcolor()
-        c = cmtplot.grey;
-    end
-
-    function c = gridlinewidth()
-        c = get(cmtplot, 'lineWidth');
     end
 
     function [args, gargs] = pullgridargs(arglist)
