@@ -116,6 +116,11 @@ methods
         end
     end
 
+
+    function tf = hasgrid(~)
+        tf = true;
+    end
+    
     function gd = polarGrid(D, opts)
         nrad = opts.numRadialLines;
         ncirc = opts.numCircularLines;
@@ -135,10 +140,6 @@ methods
         end
 
         gd = gridcurves(curves);
-    end
-    
-    function tf = hasgrid(~)
-        tf = true;
     end
 end
 

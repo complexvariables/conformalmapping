@@ -80,6 +80,10 @@ methods
                     'Grid type "%s" not recognized.', type)
         end
     end
+    
+    function tf = hasgrid(~)
+        tf = true;
+    end
 
     function gd = polarGrid(D, opts)
         nrad = opts.numRadialLines;
