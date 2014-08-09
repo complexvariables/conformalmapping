@@ -1,4 +1,4 @@
-classdef region
+classdef region < cmtobject
 % REGION class.
 %
 % A region is defined by one or more closed curves. The interior of a

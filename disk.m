@@ -48,19 +48,15 @@ methods
         else
             supargs = {C};
         end
+        
         D = D@region(supargs{:});
+        get(D, gridset);
     end
 
-    function gd = carleson(D, levels)
+    function gd = carlesonGrid(D, opts)
         % Generate a basic Carleson grid. Default 5 levels.
 
-        if nargin < 2 || isempty(levels)
-            levels = 5;
-        end
-        if levels <= 0 || (levels - fix(levels)) ~= 0
-            error('CMT:InvalidArgument', ...
-                'Number of levels must be a positive integer.')
-        end
+        levels = opts.numLevels;
 
         nu = 32; % Base radial line number.
         r = 0.6; % Base circle radius.
@@ -102,19 +98,28 @@ methods
             gd = c + r*gd;
         end
     end
-
-    function gd = grid(D, nradial, ncircular)
-        if nargin < 2 || isempty(nradial)
-            nrad = 20;
-        else
-            nrad = nradial;
+    
+    function gd = grid(D, varargin)
+        opts = get(D);
+        opts = set(opts, varargin{:});
+        
+        switch opts.gridType
+            case 'polar'
+                gd = polarGrid(D, opts);
+                
+            case 'carleson'
+                gd = carlesonGrid(D, opts);
+                
+            otherwise
+                error('CMT:NotDefined', ...
+                    'Grid type "%s" not recognized.', type)
         end
-        if nargin < 3 || isempty(ncircular)
-            ncirc = 5;
-        else
-            ncirc = ncircular;
-        end
+    end
 
+    function gd = polarGrid(D, opts)
+        nrad = opts.numRadialLines;
+        ncirc = opts.numCircularLines;
+        
         npt = 200;
         c = center(outer(D));
         r = radius(outer(D));

@@ -51,31 +51,39 @@ methods
         else
             supargs = {C, 'exteriorto'};
         end
+        
         D = D@region(supargs{:});
+        get(D, gridset);
     end
     
-    function gd = carleson(D, levels)
-        if nargin < 2
-            levels = [];
-        end
-        gd = carleson(disk(0, 1), levels);
+    function gd = carlesonGrid(D, opts)
+        gd = carlesonGrid(disk(0, 1), opts);
         
         c = center(inner(D));
         r = radius(inner(D));
         gd = c + r/gd;
     end
+    
+    function gd = grid(D, varargin)
+        opts = get(D);
+        opts = set(opts, varargin{:});
+        
+        switch opts.gridType
+            case 'polar'
+                gd = polarGrid(D, opts);
+                
+            case 'carleson'
+                gd = carlesonGrid(D, opts);
+                
+            otherwise
+                error('CMT:NotDefined', ...
+                    'Grid type "%s" not recognized.', type)
+        end
+    end
 
-    function gd = grid(D, nradial, ncircular)
-        if nargin < 2 || isempty(nradial)
-            nrad = 20;
-        else
-            nrad = nradial;
-        end
-        if nargin < 3 || isempty(ncircular)
-            ncirc = 6;
-        else
-            ncirc = ncircular;
-        end
+    function gd = polarGrid(D, opts)
+        nrad = opts.numRadialLines;
+        ncirc = opts.numCircularLines;
 
         npt = 200;
         c = center(inner(D));
