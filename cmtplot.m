@@ -28,9 +28,9 @@ end
 methods(Static)
     function args = closedcurveargs()
         args = { ...
-            'color', cmtplot.cccolor
-            'linewidth', get(cmtplot, 'lineWidth')
-            'linesmoothing', get(cmtplot, 'lineSmoothing')
+            'color', cmtplot.cccolor, ...
+            'linewidth', get(cmtplot, 'lineWidth'), ...
+            'linesmoothing', get(cmtplot, 'lineSmoothing') ...
         };
     end
 
@@ -56,9 +56,9 @@ methods(Static)
 
     function args = gridargs()
         args = {
-            'color', cmtplot.gridcolor
-            'linewidth', cmtplot.gridlinewidth
-            'linesmoothing', get(cmtplot, 'lineSmoothing')
+            'color', cmtplot.gridcolor, ...
+            'linewidth', cmtplot.gridlinewidth, ...
+            'linesmoothing', get(cmtplot, 'lineSmoothing') ...
         };
     end
 
@@ -79,35 +79,22 @@ methods(Static)
             error('CMT:InvalidArgument', 'Expected name/value pairs.')
         end
 
-        recognized = {'nrad', 'ncirc'};
-        gargs = {[], []};
+        recognized = properties(gridset);
+        gargs = {};
         idx = 1:n;
         for k = 1:2:n-1
-            try
-                match = validatestring(arglist{k}, recognized);
-            catch err
-                if strcmp(err.identifier, ...
-                        'MATLAB:unrecognizedStringChoice')
-                    continue
-                end
-                rethrow(err)
+            match = strcmpi(arglist{k}, recognized);
+            if ~any(match)
+                continue
             end
-
-            switch match
-                case 'nrad'
-                    gargs{1} = arglist{k+1};
-                case 'ncirc'
-                    gargs{2} = arglist{k+1};
-                otherwise
-                    error('CMT:BadThings', 'This should never happen.')
-            end
-
+            gargs(numel(gargs)+(1:2)) = ...
+                {recognized(match), arglist{k+1}}; %#ok<AGROW>
             idx = idx(idx ~= k & idx ~= k+1);
         end
-        if ~isempty(idx)
-            args = arglist{idx};
-        else
+        if isempty(idx)
             args = {};
+        else
+            args = arglist(idx);
         end
     end
 
