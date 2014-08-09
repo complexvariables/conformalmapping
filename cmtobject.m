@@ -37,7 +37,7 @@ methods
         end
         
         if nargin > 1 && ischar(property)
-           if isfield(prefs, property)
+           if isprop(prefs, property)
                prefs = prefs.(property);
            else
                error('CMT:NotDefined', ...
