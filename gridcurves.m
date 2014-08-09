@@ -98,9 +98,9 @@ methods
     
     gctag = sprintf('gridcurve_%s', num2hex(rand));
     hold on
+    args = cmtplot.gridargs;
     for k = 1:numel(gc.curves_)
       zg = gc.curves_{k};
-      args = cmtplot.gridargs;
       line(real(zg), imag(zg), args{:}, varargin{:}, 'tag', gctag)
     end
     
