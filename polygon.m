@@ -160,13 +160,33 @@ methods
     end
   end
   
+  function T = cdt(p)
+      %CDT    Constrained Delaunay triangulation of polygon vertices.
+      %   T = CDT(P) returns a structure representing a constrained Delaunay
+      %   triangulation of the n polygon vertices. T has the fields:
+      %
+      %      T.edge    : 2x(2n-3) matrix of indices of edge endpoints
+      %      T.triedge : 3x(n-2) matrix of triangle edge indices
+      %      T.edgetri : 2x(2n-3) matrix of triangle membership indices for
+      %                  the edges (boundary edges have a zero in 2nd row)
+      %
+      %   See also PLOTCDT.
+      
+      w = p.vertexList;
+      if any(isinf(w))
+          error('CMT:NotDefined', 'CDT not possible for unbounded polygons.')
+      end
+      
+      [e, te, et] = crtriang(w);
+      [e, te, et] = crcdt(w, e, te, et);
+      
+      T = struct('edge', e, 'triedge', te, 'edgetri', et);
+  end
+  
   function d = diam(p)
     %DIAM    Diameter of a polygon.
     %
     %   DIAM(P) returns max_{j,k} |P(j)-P(k)|. This may be infinite.
-    
-    %   Copyright 2002 by Toby Driscoll.
-    %   $Id: diam.m,v 1.1 2002/09/10 19:10:41 driscoll Exp $
     
     w = p.vertexList;
     [w1, w2] = meshgrid(w);
@@ -242,7 +262,7 @@ methods
     
     if ~any(isinf(p.vertexList))
       x = p.vertexList;
-      x = [real(x) imag(x)];
+      x = [real(x), imag(x)];
     else
       x = {[real(p.vertexList), imag(p.vertexList)], p.angleList};
     end
