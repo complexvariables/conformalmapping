@@ -245,7 +245,7 @@ methods
         b2 = blanks(ceil((6 - uv)/2) + 4 + floor((8 - ua)/2));
         str = [repmat(b1, n, 1), vm, repmat(b2, n, 1), am];
 
-        fprintf(['  ' repmat('-',1,wv+4+wa) '\n']);
+        fprintf(['  ' repmat('-', 1, wv+4+wa) '\n']);
         disp(str)
         fprintf('\n\n')
     end % disp
@@ -309,7 +309,100 @@ methods
             H = h;
         end
     end
+    
+    function [hits, loc] = intersect(p, endpt, tol)
+        %INTERSECT  Find intesection of segments with polygon sides.
+        %
+        %   S = INTERSECT(P,ENDPT) checks for intesections between sides of the
+        %   polygon P and the line segments whose endpoints are given in the
+        %   complex M by 2 matrix ENDPT. If P has N sides, on return S is an
+        %   M by N logical matrix with nonzeros at locations indicating
+        %   intersection.
+        %
+        %   INTERSECT(P,ENDPT,TOL) requires that the intersection take place
+        %   more than TOL away (relatively) from the segments' endpoints. By
+        %   default TOL=EPS. To test truly closed segments, use
+        %   INTERSECT(P,ENDPT,0); however, this is a poorly conditioned
+        %   problem.
 
+        n = numel(p);
+        if nargin < 3
+            tol = eps;
+        end
+        
+        m = size(endpt,1);
+        w = vertex(p);
+        beta = angle(p)-1;
+        
+        % Where are the slits?
+        isslit = abs(beta-1) < 2*eps;
+        isslit = isslit | isslit([2:n 1]);
+        
+        % Find two consecutive finite vertices.
+        dw = diff( w([1:n 1]) );
+        K = find(~isinf(dw), 1);
+        % Arguments of polygon sides.
+        argw = ones(n,1);
+        argw([K:n 1:K-1]) = cumsum( [angle(dw(K));-pi*beta([K+1:n 1:K-1])] );
+        
+        % Check each side. Solve for two parameters and check their ranges.
+        hits = false(m, n);
+        loc = nan(m, n);
+        for k = 1:n
+            tangent = exp(1i*argw(k));
+            if ~isinf(w(k))
+                wk = w(k);
+                s1max = abs( w(rem(k,n)+1)-w(k) );  % parameter in [0,s1max]
+            else
+                % Start from next vertex and work back.
+                wk = w(rem(k,n)+1);
+                tangent = -tangent;
+                s1max = Inf;
+            end
+            A(:,1) = [ real(tangent); imag(tangent) ];
+            
+            % Loop over the segments to be tested. The alternative is to solve a
+            % block 2x2 diagonal matrix, but any collinear cases would ruin the
+            % whole batch.
+            for j = 1:m
+                e1e2 = endpt(j,2) - endpt(j,1);
+                A(:,2) = -[ real(e1e2); imag(e1e2) ];
+                if rcond(A) < 2*eps
+                    % Segments are parallel. Check for collinearity using rotation.
+                    e2 = (endpt(j,2)-wk) / tangent;
+                    e1 = (endpt(j,1)-wk) / tangent;
+                    if abs(imag(e1)) < 2*eps
+                        % Check for overlapping.
+                        x1 = min( real([e1 e2]) );
+                        x2 = max( real([e1 e2]) );
+                        % Do these values straddle either of the side's endpoints?
+                        if (x2 >= tol) && (x1 <= s1max-tol)
+                            hits(j,k) = 1;
+                            loc(j,k) = wk;  % pick a place
+                        end
+                    end
+                else
+                    % Generic case. Find intersection.
+                    delta = endpt(j,1) - wk;
+                    s = A \ [real(delta);imag(delta)];
+                    % Check parameter ranges.
+                    if s(1)>=-eps && s(1)<=s1max+eps && s(2)>=tol && s(2)<=1-tol
+                        % If an end of the segment lies on a slit side, check for
+                        % interior vs. exterior.
+                        if isslit(k) && (abs(s(2)) < 10*eps)
+                            normal = 1i*tangent;
+                            if real( conj(e1e2)*normal ) < 0, break, end
+                        elseif isslit(k) && (abs(s(2)-1) < 10*eps)
+                            normal = 1i*tangent;
+                            if real( conj(e1e2)*normal ) > 0, break, end
+                        end
+                        hits(j,k) = 1;
+                        loc(j,k) = wk + s(1)*tangent;
+                    end
+                end
+            end
+        end
+    end
     function t = isempty(p)
         %   Returns true if there are no vertices.
 
@@ -337,9 +430,6 @@ methods
         %   register as inside.
         %
         %   See also POLYGON/WINDING.
-
-        %   Copyright 1998-2003 by Toby Driscoll.
-        %   $Id: isinpoly.m,v 2.3 2003/01/09 14:49:49 driscoll Exp $
 
         idx = logical(winding(p, wp, varargin{:}));
     end
@@ -372,11 +462,9 @@ methods
         %
         %   If the polygon is unbounded, an error results.
 
-        %   Copyright 1998-2002 by Toby Driscoll.
-
         w = p.vertexList;
         if any(isinf(w))
-            error('Invalid on unbounded polygons.')
+            error('CMT:NotDefined', 'Invalid on unbounded polygons.')
         end
 
         n = numel(w);
@@ -406,6 +494,14 @@ methods
             done = mask | done;
         end
     end
+    
+    function [p, indx] = modify(p)
+        %MODIFY Modify a polygon graphically.
+        %   See MODPOLY for usage instructions.
+        
+        [w, beta, indx] = modpoly(vertex(p), angle(p) - 1);
+        p = polygon(w, beta + 1);
+    end
 
     function r = minus(p, q)
         % Translate a polygon, or subtract the vertices of two polygons.
@@ -415,7 +511,8 @@ methods
     function r = mrdivide(p, q)
         % Divide a polygon by a scalar.
         if ~isa(q, 'double') || numel(q) > 1
-            error('mrdivide is only defined for a scalar double.')
+            error('CMT:NotDefined', ...
+                'Right division of a polygon defined only for a scalar double.')
         end
 
         r = p;
@@ -426,7 +523,8 @@ methods
         % Multiply polygon by a scalar.
         if isa(q, 'polygon')
             if isa(p, 'polygon')
-                error('mtimes not defined for two polygon objects.')
+                error('CMT:NotDefined', ...
+                    'Operator "*" not defined for two polygon objects.')
             end
             [q, p] = deal(p, q);
         end
@@ -437,7 +535,6 @@ methods
 
     function L = perimeter(p)
         % PERIMETER Perimeter length of a polygon.
-        % (This should be the length() function. -- EK)
 
         if isinf(p)
             L = inf;
@@ -445,6 +542,39 @@ methods
             w = p.vertexList;
             L = sum(abs(diff(w([1:end, 1]))));
         end
+    end
+    
+    function h = plotcdt(p,T,varargin)
+        %PLOTCDT Plot constrained Delaunay triangulation.
+        %   PLOTCDT(P,T) plots the CDT of P computed by CDT. PLOTCDT(P,T,1) labels
+        %   the edges and vertices.
+        %
+        %   H = PLOTCDT(P,T) returns a vector of handles for the edges.
+        %
+        %   See also CDT.
+
+        han = sctool.plotptri(p.vertex, T.edge, varargin{:});
+        
+        if nargout > 0
+            h = han;
+        end
+    end
+
+    function box = plotbox(p, scale)
+        
+        if nargin < 2 || isempty(scale)
+            scale = 1.2;
+        end
+        atinf = isinf(p.vertexList);
+        zf = p.vertexList(~atinf);
+        box = [min(real(zf)), max(real(zf)), min(imag(zf)), max(imag(zf))];
+        maxdiff = max(diff(box(1:2)), diff(box(3:4)));
+        if maxdiff < 100*eps
+            maxdiff = 1;
+        end
+        fac = scale*(0.5 + 0.125*any(atinf));
+        box(1:2) = mean(box(1:2)) + fac*maxdiff*[-1 1];
+        box(3:4) = mean(box(3:4)) + fac*maxdiff*[-1 1];
     end
 
     function r = plus(p, q)
@@ -470,23 +600,6 @@ methods
                 end
                 r = polygon(p.vertexList + q(:));
         end
-    end
-
-    function box = plotbox(p, scale)
-        % To be renamed to plotbox.
-        if nargin < 2 || isempty(scale)
-            scale = 1.2;
-        end
-        atinf = isinf(p.vertexList);
-        zf = p.vertexList(~atinf);
-        box = [min(real(zf)), max(real(zf)), min(imag(zf)), max(imag(zf))];
-        maxdiff = max(diff(box(1:2)), diff(box(3:4)));
-        if maxdiff < 100*eps
-            maxdiff = 1;
-        end
-        fac = scale*(0.5 + 0.125*any(atinf));
-        box(1:2) = mean(box(1:2)) + fac*maxdiff*[-1 1];
-        box(3:4) = mean(box(3:4)) + fac*maxdiff*[-1 1];
     end
 
     function z = point(p, t)
@@ -520,6 +633,7 @@ methods
 
     function n = size(p, m)
         % Number of vertices.
+        
         if nargin == 1
             n = [numel(p.vertexList), 1];
         elseif m ==1
@@ -536,20 +650,7 @@ methods
             % Single index reference.
             p.vertexList(S.subs{1}) = data;
         else
-            % Property assignment.
-            if strcmp(S(1).type, '.')
-                prop = S(1).subs;
-                idx = strcmp([prop '_'], properties(p));
-                if isempty(idx)
-                    error('Invalid property name %s.', prop)
-                end
-                if length(S) > 1 && strcmp(S(2).type, '()') && length(S(2).subs) == 1
-                    idx = S(2).subs{1};
-                else
-                    idx = ':';
-                end
-                p.([prop '_'])(idx) = data;
-            end
+            p = builtin('subsasgn', p, S, data);
         end
     end
 
@@ -563,28 +664,7 @@ methods
         end
 
         % Property reference.
-        out = [];
-        if strcmp(S(1).type, '.')
-            try
-                out = p.(S(1).subs);
-            catch err
-                if strcmp(err.identifier, 'MATLAB:noSuchMethodOrField')
-                    prop = S(1).subs;
-                    idx = strcmp([prop '_'], properties(p));
-                    if isempty(idx)
-                        error('Invalid property name %s.', prop);
-                    end
-                    out = p.([prop '_']);
-                else
-                    rethrow(err)
-                end
-            end
-
-            % Index on the reference.
-            if length(S) > 1 && strcmp(S(2).type, '()') && length(S(2).subs) == 1
-                out = out(S(2).subs{1});
-            end
-        end
+        out = builtin('subsref', p, S);
     end
 
     function zt = tangent(p, t) %#ok<INUSD,STOUT>
@@ -592,6 +672,100 @@ methods
             'Placeholder function waiting on implementation.')
     end
 
+    function [tri, x, y] = triangulate(p, h)
+        %TRIANGULATE Triangulate the interior of a polygon.
+        %
+        %   [TRI,X,Y] = TRIANGULATE(P,H) attempts to find a reasonable
+        %   triangulation of the interior of polygon P so that the typical
+        %   triangle diameter is about H. If H is not specified, an automatic
+        %   choice is made.
+        %
+        %   If P is unbounded, the polygon is first truncated to fit in a
+        %   square.
+        %
+        %   TRIANGULATE uses DELAUNAY from Qhull, and as such does not have
+        %   guaranteed success for nonconvex regions. However, things should
+        %   go OK unless P has slits.
+        %
+        %   See also TRUNCATE, DELAUNAY.
+        
+        if isinf(p)
+            warning('Truncating an unbounded polygon.')
+            p = truncate(p);
+        end
+        
+        w = vertex(p);
+        n = length(w);
+        
+        if nargin < 2
+            h = diam(p) / 40;
+        end
+        
+        % Find points around boundary.
+        [wb, idx] = linspace(p, h/2);   % smaller spacing to help qhull
+        
+        % On sides of a slit, put on extra points and perturb inward a little.
+        isslit = ( abs(angle(p)-2) < 10*eps );
+        slit = find( isslit | isslit([2:n 1]) );
+        [wbfine, idxfine] = linspace(p, h/6);
+        for k = slit(:)'
+            new = (idxfine==k);
+            old = (idx==k);
+            wb = [ wb(~old); wbfine(new) ];  idx = [ idx(~old); idxfine(new) ];
+            move = find(idx==k);
+            normal = 1i*( w(rem(k,n)+1) - w(k) );
+            wb(move) = wb(move) + 1e-8*normal;
+        end
+        
+        % Take out points that are fairly close to a singularity, because it's
+        % hard to find the inverse mapping there.
+        for k = find(angle(p)<1)'
+            close = abs(wb - w(k)) < h/3;
+            wb(close) = [];  idx(close) = [];
+        end
+        
+        % Add the polygon vertices.
+        wb = [ wb; w ];
+
+% Not used? EK, 14-08-2014.
+%         idx = [ idx; (1:n)'];
+        
+        % Find a hex pattern that covers the interior.
+        xlim = [ min(real(w)) max(real(w)) ];
+        ylim = [ min(imag(w)) max(imag(w)) ];
+        x = linspace(xlim(1),xlim(2),ceil(diff(xlim))/h+1);
+        y = linspace(ylim(1),ylim(2),ceil(diff(ylim))/h+1);
+        [X,Y] = meshgrid(x(2:end-1),y(2:end-1));
+        X(2:2:end,:) = X(2:2:end,:) + (x(2)-x(1))/2;
+        
+        inside = isinpoly(X+1i*Y,p);
+        x = [ real(wb); X(inside) ];
+        y = [ imag(wb); Y(inside) ];
+        
+        % Triangulate using qhull.
+        tri = delaunay(x,y);
+        
+        % Those with a boundary vertex must be examined.
+        nb = length(wb);
+        check = find( any( tri<=nb, 2 ) );
+        
+        % First, check triangle midpoints.
+        idx = tri(check,:);
+        z = x(idx) + 1i*y(idx);
+        out = ~isinpoly( sum(z,2)/3, p );
+        
+        % On the rest, look for edges that cross two slit sides.
+        check2 = find(~out);
+        sect1 = intersect(p,z(check2,[1 2]),1e-6);
+        sect2 = intersect(p,z(check2,[2 3]),1e-6);
+        sect3 = intersect(p,z(check2,[3 1]),1e-6);
+        out(check2( sum(sect1,2) > 1 )) = 1;
+        out(check2( sum(sect2,2) > 1 )) = 1;
+        out(check2( sum(sect3,2) > 1 )) = 1;
+        
+        tri(check(out),:) = [];
+    end
+    
     function q = truncate(p)
         % TRUNCATE Truncate an unbounded polygon.
         %   Q = TRUNCATE(P) returns a polygon whose finite vertices are the same
@@ -599,75 +773,60 @@ methods
         %   several finite ones. The new vertices are chosen by using a
         %   circular "cookie cutter" on P.
 
-        %   Copyright 2002-2006 by Toby Driscoll.
-
         w = p.vertexList;
+        n = numel(w);
         if ~any(isinf(w))
             q = p;
             return
         end
-
-        n = numel(w);
-        tau = p.incoming_;
-
-        % Find a circle containing all of the finite vertices.
+        
+        % Put the finite vertices in a box.
         wf = w(~isinf(w));
-        xbound = [min(real(wf)); max(real(wf))];
-        ybound = [min(imag(wf)); max(imag(wf))];
-        zcen = mean(xbound) + 1i*mean(ybound);
-        delta = norm([diff(xbound), diff(ybound)]/2);
-        if delta < eps
-            delta = 1;
-        end
-        R = 2*norm(delta);
-
-        % Shift the origin to zcen.
-        w = w - zcen;
-
-        % Each infinite side is intersected with the circle. The infinite vertex
-        % is replaced by finite ones on the circle.
+        xbound = [ min(real(wf)); max(real(wf)) ];
+        ybound = [ min(imag(wf)); max(imag(wf)) ];
+        delta = max( diff(xbound), diff(ybound) );
+        xrect = mean(xbound) + [-1;1]*delta;
+        yrect = mean(ybound) + [-1;1]*delta;
+        zrect = xrect([1 1 2 2]') + 1i*yrect([2 1 1 2]');
+        
+        % Find intersections of the box with the unbounded sides.
+        [hit, loc] = intersect(p, [zrect, zrect([2:4, 1])]);
+        
+        % Carry over the finite vertices, inserting to substitute for the
+        % infinite ones.
         atinf = find(isinf(w));
         v = w(1:atinf(1)-1);
         for k = 1:length(atinf)
-            % Indices of this, previous, and next vertices.
-            m = atinf(k);
-            m_prev = mod(m - 2, n) + 1;
-            m_next = mod(m, n) + 1;
-            % Find where the adjacent sides hit the circle.
-            p1 = [abs(tau(m))^2, 2*real(tau(m)'*w(m_prev)), abs(w(m_prev))^2 - R^2];
-            t1 = roots(p1);
-            t1 = t1(t1 > 0);
-            z1 = w(m_prev) + t1*tau(m);
-            p2 = [abs(tau(m_next))^2, 2*real(-tau(m_next)'*w(m_next)), ...
-                abs(w(m_next))^2 - R^2];
-            t2 = roots(p2);
-            t2 = t2(t2 > 0);
-            z2 = w(m_next) - t2*tau(m_next);
-            % Include points at intermediate angles.
-            dphi = mod(angle(z2/z1), 2*pi);
-            phi0 = angle(z1);
-            thetanew = phi0 + unique([(0:pi/4:dphi), dphi]');
-            vnew = R*exp(1i*thetanew);
-            v = [v; vnew]; %#ok<AGROW>
-            % Fill in finite vertices up to the next infinite one.
+            M = atinf(k);
+            M1 = mod(M-2, n) + 1;
+            
+            % Find where the adjacent sides hit the rectangle.
+            rp = loc(logical(hit(:,M1)),M1);
+%             sp = find( hit(:,M1) );
+%             rp = loc(sp,M1);
+            rn = loc(logical(hit(:,M)),M);
+%             sn = find( hit(:,M) );
+%             rn = loc(sn,M);
+            
+            % Include the rectangle corners that are "in between".
+            dt = mod( angle(rn/rp), 2*pi );
+            dr = mod( angle(zrect/rp), 2*pi );
+            [dr,idx] = sort(dr);
+            use = dr<dt;
+            v = [ v; rp; zrect(idx(use)); rn ]; %#ok<AGROW>
             if k < length(atinf)
-                v = [v; w(m + 1:atinf(k + 1) - 1)]; %#ok<AGROW>
+                v = [ v; w(M+1:atinf(k+1)-1) ]; %#ok<AGROW>
             else
-                v = [v; w(m + 1:end)]; %#ok<AGROW>
+                v = [ v; w(M+1:end) ]; %#ok<AGROW>
             end
         end
-
-        % Shift origin back.
-        v = v + zcen;
+        
         q = polygon(v);
     end
 
     function q = uminus(p)
         %   Negate the vertices of a polygon.
         %   This may have surprising consequences if p is unbounded.
-
-        %   Copyright 2003 by Toby Driscoll (driscoll@math.udel.edu).
-        %   $Id: uminus.m,v 1.1 2003/03/03 16:28:04 driscoll Exp $
 
         q = polygon(-p.vertexList, p.angleList);
     end
@@ -679,9 +838,6 @@ methods
         %   [X,Y] = VERTEX(P) returns the vertices as two real vectors.
         %
         %   See also POLYGON.
-
-        %   Copyright 1998 by Toby Driscoll.
-        %   $Id: vertex.m,v 2.1 1998/05/10 04:01:50 tad Exp $
 
         x = p.vertexList;
         if nargout == 2
@@ -702,16 +858,12 @@ methods
         %
         %   See also POLYGON/ISINPOLY.
 
-        %   Copyright 2003 by Toby Driscoll.
-        %   $Id: winding.m,v 1.2 2003/01/09 14:48:25 driscoll Exp $
-
         if isinf(p)
-            warning('Using a truncated version of the polygon.')
+            warning('CMT:BadThings', ...
+                'Using a truncated version of the polygon.')
             p = truncate(p);
         end
 
-        % FIXME: Which isinpoly is this supposed to be? Looks like the non-class
-        % version.
         idx = double(isinpoly(wp, p.vertexList, varargin{:}));
     end
 end
