@@ -1,144 +1,144 @@
 classdef polygon < closedcurve
-% POLYGON Contruct polygon object.
-%   POLYGON(Z) constructs a polygon object whose vertices are the entries
-%   of the complex vector Z. Each vertex should only be supplied once.
+%POLYGON Contruct polygon object.
+%   POLYGON(W) constructs a polygon object whose vertices are specified
+%   by the complex vector W. Cusps and cracks are allowed.
 %   
-%   POLYGON accepts unbounded polygons (vertices at infinity). The
-%   preferred manner of doing this is by using INFVERTEX to specify the
-%   directions of the edges adjacent to infinity. There must always be at
-%   least one finite vertex between infinite ones.
-%
-%   Examples:
-%
-%     polygon(exp(2i*pi*(1:5)/5))  % regular pentagon
-%     polygon([-1 1])  % slit (empty interior)
-%     polygon( [0 infvertex(1,1i)] )  % first quadrant
-%     polygon( [1i 0 infvertex(1,-1)] )  % downward step
-%     polygon( [1 infvertex(1i,1i) 0 infvertex(-1i,-1i)] )  % 0 < Re z < 1
-%
-%   See also POLYGON/VERTEX, POLYGON/ANGLE, POLYGON/PLOT.
+%   POLYGON(X,Y) specifies the vertices with two real vectors.
+%   
+%   POLYGON(W,ALPHA) or POLYGON(X,Y,ALPHA) manually specifies the interior
+%   angles at the vertices, divided by pi.
+%   
+%   POLYGON accepts unbounded polygons (vertices at infinity). However,
+%   you must supply ALPHA, and the vertices must be in counterclockwise
+%   order about the interior.
+%   
+%   See also POLYGON/ANGLE, POLYGON/PLOT.
 
-% This file is a part of the CMToolbox.
+% This file is a part of the CMToolkit.
 % It is licensed under the BSD 3-clause license.
 % (See LICENSE.)
 
 % Copyright Toby Driscoll, 2014.
-% Adapted by Everett Kropf, 2014,
-% from code by Toby Driscoll, originally 1988-20??.
 
 properties
-  vertex_
-  angle_
-  index_
-  hvertex_
-  hindex_
-  incoming_
+  vertexList
+  angleList
 end
 
 methods
-  function P = polygon(z)
-    if ~nargin
-      return
-    end
-    
-    if isa(z, 'polygon')
-      P = z;
-      return
-    end
-    
-    % Find vertices and directions parallel to incoming sides.
-    z = homog(z);
-    m = numel(z);
-    vertex = nan(size(z));
-    zindex = vertex;
-    incoming = vertex;
-    k = 1;
-    n = 0;
-    lastfinite = ~isinf(z(m));
-    while k <= m
-      n = n + 1;
-      vertex(n) = double(z(k));
-      zindex(n) = k;
-      if isinf(vertex(n))
-        if ~lastfinite
-          error('Infinite vertices cannot be adjacent.')
-        end
-        incoming(n) = exp(1i*angle(z(k)));
-        lastfinite = false;
-        k = k + 2;
-      else
-        k1 = mod(k - 2, m) + 1;
-        if lastfinite
-          incoming(n) = vertex(n) - double(z(k1));
-        else
-          incoming(n) = -exp(1i*angle(z(k1)));
-        end
-        lastfinite = true;
-        k = k + 1;
+  function P = polygon(x, y, alpha)
+      if ~nargin
+          return
       end
-    end % while
-    vertex = vertex(~isnan(vertex));
-    zindex = zindex(~isnan(zindex));
-    incoming = incoming(~isnan(incoming));
-    
-    % Compute the interior angles.
-    atinf = isinf(vertex);
-    outgoing = incoming([2:n, 1]);
-    alpha = mod(angle(-incoming.*conj(outgoing))/pi, 2);
-    alpha(atinf) = -mod(angle(-outgoing(atinf).*conj(incoming(atinf)))/pi, 2);
-    
-    % When adjacent edges are antiparallel, more testing needs ot be
-    % done. In the finite case, check i fthe vertex is inside the polygon
-    % defined by the others.
-    isantipar = abs(alpha) < 100*eps | abs(2 - alpha) < 100*eps;
-    for j = find(isantipar & ~atinf)
-      if isinpoly(vertex(j), vertex([1:j-1, j+1:n]))
-        alpha(j) = 2;
-      else
-        alpha(j) = 0;
+
+      if nargin < 3
+          alpha = [];
       end
-    end
-    % In the inf case, truncate the infinity and check the resulting
-    % triangle with its neighbors.
-    for j = find(isantipar & atinf)
-      jj = zindex(j);
-      jp = mod(jj + 1, m) + 1;
-      jm = mod(jj - 2, m) + 1;
-      Z = numer(z(jj))/eps; % truncation of inf
-      s = imag(-Z*conj(double(z(jp) - z(jm)) - Z));
-      if s > 0
-        alpha(j) = 0;
+      if ~isreal(x) || nargin == 1 || (any(isinf(x)) && nargin==2)
+          % Vertices passed as a complex vector
+          w = x(:);
+          % If first point is repeated at the end, delete the second copy
+          % Thanks to Mark Embree for bug fix.
+          if abs(w(end) - w(1)) < 3*eps
+              w(end) = [];
+          end
+          if nargin > 1
+              alpha = y;
+          end
       else
-        alpha(j) = -2;
+          % Vertices passed as two real vectors
+          w = x(:) + 1i*y(:);
+          % If first point is repeated at the end, delete the second copy
+          if abs(w(end) - w(1)) < 3*eps
+              w(end) = [];
+          end
       end
-    end
-    
-    % We will always use a positive (counterclockwise) internal
-    % representation.
-    index = -round(sum(alpha - 1)/2);
-    if index < 0
-      vertex = vertex(end:-1:1);
-      alpha = 2 - alpha(end:-1:1);
-      index = -index;
-    end
-    
-    n = numel(vertex);
-    P.corner_ = corner({(0:n-1)'/n, vertex, alpha});
-    
-    P.vertex_ = vertex(:);
-    P.angle_ = alpha(:);
-    P.index_ = index;
-    P.hvertex_ = z(:);
-    P.hindex_ = zindex;
-    P.incoming_ = incoming;
+      
+      P.vertexList = w(:);
+      P.angleList = alpha(:);
+      
+      n = numel(w);
+      if n > 0
+          [alpha, isccw, index] = angle(P);
+          if ~isccw
+              P.vertexList = flipud(P.vertexList);
+              alpha = flipud(alpha);
+          end
+          P.angleList = alpha;
+          if abs(index) > 1
+              warning('CMT:BadThings', 'Polygon is multiple-sheeted.')
+          end
+      end
   end % ctor
   
-  function alpha = angle(p)
-    % Return polygon angles as a vector.
-    
-    % Original function also calculated angles, but this is done in the
-    % constructor, so we're going to leave all that out. -- EK
-    alpha = p.angle_;
+  function [alpha, isccw, index] = angle(p)
+      %ANGLE Normalized interior angles of a polygon.
+      %   ALPHA = ANGLE(P) returns the interior angles, normalized by pi, of
+      %   the polygon P. 0 < ALPHA(J) <= 2 if vertex J is finite, and -2 <=
+      %   ALPHA(J) <= 0 if J is an infinite vertex. (This is consistent with
+      %   the definition as the angle swept from the exiting side through the
+      %   interior to the incoming side, with the vertices in counterclockwise
+      %   order.) It is impossible to compute angles for an unbounded polygon;
+      %   they must be supplied to the POLYGON constructor to be well-defined.
+      %
+      %   See also POLYGON/POLYGON.
+      
+      w = p.vertexList;
+      n = length(w);
+      
+      if ~isempty(p.angleList)
+          % If angles have been assigned, return them
+          alpha = p.angleList;
+      else
+          if isempty(w)
+              alpha = [];
+              isccw = [];
+              index = [];
+              return
+          end
+          
+          if any(isinf(w))
+              error('CMT:InvalidArgument', ...
+                  'Cannot compute angles for unbounded polygons.')
+          end
+          
+          % Compute angles
+          incoming = w - w([n 1:n-1]);
+          outgoing = incoming([2:n,1]);
+          alpha = mod(angle(-incoming.*conj(outgoing))/pi ,2);
+          
+          % It's ill-posed to determine locally the slits (inward-pointing) from
+          % points (outward-pointing). Check suspicious cases at the tips to see if
+          % they are interior to the rest of the polygon.
+          mask = (alpha < 100*eps) | (2-alpha < 100*eps);
+          if all(mask)
+              % This can happen if all vertices are collinear
+              alpha(:) = 0;
+              isccw = 1;				% irrelevant
+              index = 1;                          % irrelevant
+              return
+          end
+          slit = logical(isinpoly(w(mask), w(~mask)));
+          fmask = find(mask);
+          alpha(fmask(slit)) = 2;
+          alpha(fmask(~slit)) = 0;
+      end
+      
+      % Now test--if incorrect, assume the orientation is clockwise
+      index = sum(alpha-1)/2;                 % should be integer
+      if abs(index - round(index)) > 100*sqrt(n)*eps
+          % Try reversing the interpretation of a crack
+          mask = (alpha < 2*eps) | (2-alpha < 2*eps);
+          alpha(~mask) = 2 - alpha(~mask);
+          index = sum(alpha - 1)/2;                 % should be integer
+          % If still not OK, something is wrong
+          if abs(index - round(index)) > 100*sqrt(n)*eps
+              error('CMT:RuntimeError', 'Invalid polygon.')
+          end
+      end
+      
+      index = round(index);
+      isccw = (index < 0);
   end
   
   function box = boundbox(p)
@@ -152,7 +152,7 @@ methods
     %   $Id: boundingbox.m,v 1.1 2003/04/25 18:46:31 driscoll Exp $
     
     if ~isinf(p)
-      z = p.vertex_;
+      z = p.vertexList;
       box = [min(real(z)), max(real(z)), min(imag(z)), max(imag(z))];
     else
       % We might find some finite bounds. But is there any application for this?
@@ -168,7 +168,7 @@ methods
     %   Copyright 2002 by Toby Driscoll.
     %   $Id: diam.m,v 1.1 2002/09/10 19:10:41 driscoll Exp $
     
-    w = p.vertex_;
+    w = p.vertexList;
     [w1, w2] = meshgrid(w);
     d = max(abs(w1(:) - w2(:)));
   end
@@ -179,7 +179,7 @@ methods
     %   Copyright 1998-2003 by Toby Driscoll.
     %   $Id: display.m,v 2.4 2003/05/08 18:11:36 driscoll Exp $
     
-    w = p.vertex_;
+    w = p.vertexList;
     n = numel(w);
     
     if isempty(w)
@@ -193,7 +193,7 @@ methods
     % here too.
     
     vstr = evalc('disp(w)');
-    astr = evalc('disp(p.angle_)');
+    astr = evalc('disp(p.angleList)');
     
     % Parse into one cell per line.
     vc = textscan(vstr, '%s', n, 'delimiter', '\n');
@@ -240,11 +240,11 @@ methods
     %   Copyright 1998 by Toby Driscoll.
     %   $Id: double.m,v 2.1 1998/05/10 03:51:49 tad Exp $
     
-    if ~any(isinf(p.vertex_))
-      x = p.vertex_;
+    if ~any(isinf(p.vertexList))
+      x = p.vertexList;
       x = [real(x) imag(x)];
     else
-      x = {[real(p.vertex_), imag(p.vertex_)], p.angle_};
+      x = {[real(p.vertexList), imag(p.vertexList)], p.angleList};
     end
   end
   
@@ -259,7 +259,7 @@ methods
     % Copyright 2003 by Toby Driscoll.
     % $Id: fill.m,v 1.3 2004/05/27 13:11:21 driscoll Exp $
     
-    v = p.vertex_;
+    v = p.vertexList;
     vf = v(~isinf(v));
     if any(isinf(v))
       v = vertex(truncate(p));
@@ -296,13 +296,13 @@ methods
     %   Copyright 1998 by Toby Driscoll.
     %   $Id: isempty.m,v 2.1 1998/05/10 03:52:39 tad Exp $
     
-    t = isempty(p.vertex_);
+    t = isempty(p.vertexList);
   end
   
   function tf = isinf(p)
     % Is the polygon unbounded?
     
-    tf = any(isinf(p.vertex_));
+    tf = any(isinf(p.vertexList));
   end
   
   % FIXME: This function looks static.
@@ -327,7 +327,7 @@ methods
   function in = isinside(p, z)
     % Wrapper for builtin INPOLYGON.
     
-    v = p.vertex_;
+    v = p.vertexList;
     in = inpolygon(real(z), imag(z), real(v), imag(v));
   end
   
@@ -336,7 +336,7 @@ methods
     % FIXME: To be consistent with other boundaries, this should return
     % boundary length. Use numel(vertex(p)) instead of this function!
     
-    n = numel(p.vertex_);
+    n = numel(p.vertexList);
   end
   
   function [z, idx] = linspace(p, m)
@@ -354,7 +354,7 @@ methods
     
     %   Copyright 1998-2002 by Toby Driscoll.
     
-    w = p.vertex_;
+    w = p.vertexList;
     if any(isinf(w))
       error('Invalid on unbounded polygons.')
     end
@@ -399,7 +399,7 @@ methods
     end
     
     r = p;
-    r.vertex_ = r.vertex_/q;
+    r.vertexList = r.vertexList/q;
   end
   
   function r = mtimes(p, q)
@@ -412,7 +412,7 @@ methods
     end
     
     r = p;
-    r.vertex_ = r.vertex_*q;
+    r.vertexList = r.vertexList*q;
   end
   
   function L = perimeter(p)
@@ -422,7 +422,7 @@ methods
     if isinf(p)
       L = inf;
     else
-      w = p.vertex_;
+      w = p.vertexList;
       L = sum(abs(diff(w([1:end, 1]))));
     end
   end
@@ -436,19 +436,19 @@ methods
     
     switch class(q)
       case 'polygon'
-        if numel(q.vertex_) ~= numel(p.vertex_)
+        if numel(q.vertexList) ~= numel(p.vertexList)
           error('Polygons mst have the same length to be added.')
         elseif isinf(p) || isinf(q)
           error('Only finite polygons may be added.')
         end
-        r = polygon(p.vertex_ + q.vertex_);
+        r = polygon(p.vertexList + q.vertexList);
         
       case 'double'
-        if numel(q) > 1 && numel(q) ~= numel(p.vertex_)
+        if numel(q) > 1 && numel(q) ~= numel(p.vertexList)
           error(['Only a scalar or identical-length vector may be added ' ...
                  'to a polygon.'])
         end
-        r = polygon(p.vertex_ + q(:));
+        r = polygon(p.vertexList + q(:));
     end
   end
     
@@ -457,8 +457,8 @@ methods
     if nargin < 2 || isempty(scale)
       scale = 1.2;
     end
-    atinf = isinf(p.vertex_);
-    zf = p.vertex_(~atinf);
+    atinf = isinf(p.vertexList);
+    zf = p.vertexList(~atinf);
     box = [min(real(zf)), max(real(zf)), min(imag(zf)), max(imag(zf))];
     maxdiff = max(diff(box(1:2)), diff(box(3:4)));
     if maxdiff < 100*eps
@@ -471,8 +471,8 @@ methods
 
   function z = point(p, t)
     % Boundary point by parameter t in [0, 1].
-    n = numel(p.vertex_);
-    zc = p.vertex_;
+    n = numel(p.vertexList);
+    zc = p.vertexList;
     zh = p.hvertex_;
     zhind = p.hindex_;
     z = nan(size(t));
@@ -501,9 +501,9 @@ methods
   function n = size(p, m)
     % Number of vertices.
     if nargin == 1
-      n = [numel(p.vertex_), 1];
+      n = [numel(p.vertexList), 1];
     elseif m ==1
-      n = numel(p.vertex_);
+      n = numel(p.vertexList);
     else
       n = 1;
     end
@@ -514,7 +514,7 @@ methods
     
     if length(S) == 1 && strcmp(S.type, '()') && length(S.subs) == 1
       % Single index reference.
-      p.vertex_(S.subs{1}) = data;
+      p.vertexList(S.subs{1}) = data;
     else
       % Property assignment.
       if strcmp(S(1).type, '.')
@@ -538,7 +538,7 @@ methods
     
     % Single index reference.
     if length(S) == 1 && strcmp(S.type, '()') && length(S.subs) == 1
-      out = p.vertex_(S.subs{1});
+      out = p.vertexList(S.subs{1});
       return
     end
     
@@ -581,7 +581,7 @@ methods
     
     %   Copyright 2002-2006 by Toby Driscoll.
     
-    w = p.vertex_;
+    w = p.vertexList;
     if ~any(isinf(w))
       q = p;
       return
@@ -649,7 +649,7 @@ methods
     %   Copyright 2003 by Toby Driscoll (driscoll@math.udel.edu).
     %   $Id: uminus.m,v 1.1 2003/03/03 16:28:04 driscoll Exp $
     
-    q = polygon(-p.vertex_, p.angle_);
+    q = polygon(-p.vertexList, p.angleList);
   end
   
   function [x, y] = vertex(p)
@@ -663,7 +663,7 @@ methods
     %   Copyright 1998 by Toby Driscoll.
     %   $Id: vertex.m,v 2.1 1998/05/10 04:01:50 tad Exp $
     
-    x = p.vertex_;
+    x = p.vertexList;
     if nargout == 2
       y = imag(x);
       x = real(x);
@@ -692,7 +692,7 @@ methods
     
     % FIXME: Which isinpoly is this supposed to be? Looks like the non-class
     % version.
-    idx = double(isinpoly(wp, p.vertex_, varargin{:}));
+    idx = double(isinpoly(wp, p.vertexList, varargin{:}));
   end
 end
 
@@ -700,7 +700,7 @@ methods(Hidden)
   function handle = plot_(p, varargin)
     % PLOT a polygon.
     
-    if isempty(p.vertex_)
+    if isempty(p.vertexList)
       return
     end
               
