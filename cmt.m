@@ -37,8 +37,32 @@ methods(Static)
         
         try
             rmappdata(0, 'cmt_prefs')
-        catch
-            % Don't care if it fails, most likely means no prefs set.
+        catch err
+            if strcmp(err.identifier, ...
+                    'MATLAB:HandleGraphics:Appdata:InvalidNameAppdata')
+                % Nothing there, that's ok.
+                return
+            else
+                rethrow(err)
+            end
+        end
+    end
+    
+    function dispPrefs
+        % Preference dump to console.
+        
+        prefs = getappdata(0, 'cmt_prefs');
+        if isempty(prefs)
+            fprintf('No CMT preferences found.\n')
+            return
+        end
+        
+        fn = fieldnames(prefs);
+        for k = 1:numel(fn)
+            fprintf(['\n==========================\n' ...
+                       ' For class %s:\n' ...
+                       '--------------------------\n'], fn{k})
+            disp(prefs.(fn{k}))
         end
     end
 
