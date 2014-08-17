@@ -135,7 +135,7 @@ methods
     newplot
     
     h = plot_(C);
-    [cargs, pargs] = cmtplot.closedcurveargs(varargin{:});
+    [cargs, pargs] = cmtplot.closedcurveArgs(varargin{:});
     set(h, pargs{:}, cargs{:});
 
     if ~washold

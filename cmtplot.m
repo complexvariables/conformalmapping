@@ -26,7 +26,7 @@ methods
 end
 
 methods(Static)
-    function [args, exargs] = closedcurveargs(varargin)
+    function [args, exargs] = closedcurveArgs(varargin)
         opts = get(cmtplot);
         if nargout > 1
             [opts, exargs] = set(opts, varargin{:});
@@ -52,7 +52,7 @@ methods(Static)
         c = cmtplot.none;
     end
 
-    function [args, exargs] = gridargs(varargin)
+    function [args, exargs] = gridArgs(varargin)
         opts = get(cmtplot);
         if nargout < 2
             opts = set(opts, varargin{:});
