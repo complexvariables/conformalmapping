@@ -33,7 +33,7 @@ plot(m1)
 % circles for its domain and range.)
 gd = grid(domain(m1));
 clf, hold on
-plot(m1(gd), 'color', plotdef.grey)
+plot(m1(gd), 'color', cmtplot.grey)
 plot(range(m1), 'color', 'k')
 axis(plotbox(range(m1)))
 aspectequal

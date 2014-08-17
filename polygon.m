@@ -880,9 +880,8 @@ methods(Hidden)
         zplot = vertex(truncate(p));
 
         zplot = zplot([1:end 1]);
-        args = plotdef.closedcurveargs;
-        h = plot(real(zplot), imag(zplot), args{:});
-        set(h, varargin{:});
+        [cargs, pargs] = cmtplot.closedcurveArgs(varargin{:});
+        h = plot(real(zplot), imag(zplot), pargs{:}, cargs{:});
 
         if nargout
             handle = h;

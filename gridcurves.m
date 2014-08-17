@@ -98,10 +98,11 @@ methods
     
     gctag = sprintf('gridcurve_%s', num2hex(rand));
     hold on
+    
+    [gargs, pargs] = cmtplot.gridArgs(varargin{:});
     for k = 1:numel(gc.curves_)
       zg = gc.curves_{k};
-      args = plotdef.gridargs;
-      line(real(zg), imag(zg), args{:}, varargin{:}, 'tag', gctag)
+      line(real(zg), imag(zg), pargs{:}, gargs{:}, 'tag', gctag)
     end
     
     if ~washold

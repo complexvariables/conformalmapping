@@ -1,4 +1,4 @@
-classdef region
+classdef region < cmtobject
 % REGION class.
 %
 % A region is defined by one or more closed curves. The interior of a
@@ -148,7 +148,7 @@ methods
       hold on
     end
     
-    fillargs = plotdef.fillargs;
+    fillargs = cmtplot.fillargs;
     
     % Fill interiors of any outer boundaries or draw exterior region.
     if hasouter(R)
@@ -169,7 +169,7 @@ methods
       bgcolor = get(gca, 'color');
       for k = 1:R.numinner
         fill(R.innerboundary_{k}, 'facecolor', bgcolor, ...
-             'edgecolor', plotdef.filledgecolor, varargin{:})
+             'edgecolor', cmtplot.filledgecolor, varargin{:})
       end
     end
             
@@ -177,6 +177,11 @@ methods
       hold off
     end
   end % fill
+  
+  function tf = hasgrid(~)
+      % No default grid.
+      tf = false;
+  end
   
   function tf = hasinner(R)
     tf = ~isempty(R.innerboundary_);
@@ -300,7 +305,7 @@ methods
   end
 end
 
-methods(Static)
+methods(Static, Hidden)
   function cc = checkcc(suitor)
     % Transform suitor to column cell of closedcurves with verification.
     if numel(suitor) == 1 && ~isa(suitor, 'cell')

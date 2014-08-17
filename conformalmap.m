@@ -154,20 +154,22 @@ methods
     function out = plot(f, varargin)
         washold = ishold;
 
-        if isempty(f.range_) || (~isempty(f.domain_) && isempty(grid(f.domain_)))
+        if isempty(f.range_) || ...
+                ~(isempty(f.domain_) || hasgrid(f.domain_))
             warning('Map range not set or domain has an empty grid. No plot produced.')
             return
         end
 
         cah = newplot;
         hold on
-
-        [pargs, gargs] = plotdef.pullgridargs(varargin);
-        hg = plot(apply(f, grid(f.domain_, gargs{:})));
+        
+        % Separate grid construction and plot 'name'/value pairs.
+        [gargs, pargs] = separateArgs(get(f.domain_), varargin{:}); 
+        hg = plot(apply(f, grid(f.domain_, gargs{:})), pargs{:});
         hb = plot(f.range_, pargs{:});
 
         if ~washold
-            plotdef.whitefigure(cah)
+            cmtplot.whitefigure(cah)
             axis(plotbox(f.range_))
             aspectequal
             axis off
