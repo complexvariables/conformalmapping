@@ -162,9 +162,10 @@ methods
 
         cah = newplot;
         hold on
-
-        [pargs, gargs] = cmtplot.pullgridargs(varargin);
-        hg = plot(apply(f, grid(f.domain_, gargs{:})));
+        
+        [gargs, pargs] = f.domain_.pullGridArgs(varargin{:});
+        [gpargs, pargs] = cmtplot.pullGridArgs(pargs{:});
+        hg = plot(apply(f, grid(f.domain_, gargs{:})), gpargs{:});
         hb = plot(f.range_, pargs{:});
 
         if ~washold

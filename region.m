@@ -306,6 +306,35 @@ methods
 end
 
 methods(Static)
+    function [gargs, args] = pullGridArgs(varargin)
+        % Separate grid args from cell array arglist. Must have an even
+        % number of entries of the {'name', value} pair form.
+        
+        if mod(nargin, 2)
+            error('CMT:InvalidArgument', 'Expected name/value pairs.')
+        end
+        
+        recognized = properties(gridset);
+        gargs = {};
+        idx = 1:nargin;
+        for k = 1:2:nargin-1
+            match = strcmpi(varargin{k}, recognized);
+            if ~any(match)
+                continue
+            end
+            gargs(numel(gargs)+(1:2)) = ...
+                {recognized(match), varargin{k+1}}; %#ok<AGROW>
+            idx = idx(idx ~= k & idx ~= k+1);
+        end
+        if isempty(idx)
+            args = {};
+        else
+            args = varargin(idx);
+        end
+    end
+end
+
+methods(Static, Hidden)
   function cc = checkcc(suitor)
     % Transform suitor to column cell of closedcurves with verification.
     if numel(suitor) == 1 && ~isa(suitor, 'cell')

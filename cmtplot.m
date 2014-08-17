@@ -26,8 +26,9 @@ methods
 end
 
 methods(Static)
-    function args = closedcurveargs()
+    function args = closedcurveargs(varargin)
         opts = get(cmtplot);
+        opts = set(opts, varargin{:});
         args = { ...
             'color', opts.lineColor, ...
             'linewidth', opts.lineWidth, ...
@@ -47,8 +48,9 @@ methods(Static)
         c = cmtplot.none;
     end
 
-    function args = gridargs()
+    function args = gridargs(varargin)
         opts = get(cmtplot);
+        opts = set(opts, varargin{:});
         args = {
             'color', opts.gridColor, ...
             'linewidth', opts.lineWidth, ...
@@ -56,31 +58,30 @@ methods(Static)
         };
     end
 
-    function [args, gargs] = pullgridargs(arglist)
+    function [gargs, args] = pullGridArgs(varargin)
         % Separate grid args from cell array arglist. Must have an even 
         % number of entries of the {'name', value} pair form.
 
-        n = numel(arglist);
-        if mod(n, 2)
+        if mod(nargin, 2)
             error('CMT:InvalidArgument', 'Expected name/value pairs.')
         end
 
-        recognized = properties(gridset);
         gargs = {};
-        idx = 1:n;
-        for k = 1:2:n-1
-            match = strcmpi(arglist{k}, recognized);
-            if ~any(match)
+        idx = 1:nargin;
+        for k = 1:2:nargin-1
+            match = regexpi(varargin{k}, '^grid.*$', 'match');
+            if numel(match) == 0
                 continue
             end
+            match = match{1};
             gargs(numel(gargs)+(1:2)) = ...
-                {recognized(match), arglist{k+1}}; %#ok<AGROW>
+                {match, varargin{k+1}}; %#ok<AGROW>
             idx = idx(idx ~= k & idx ~= k+1);
         end
         if isempty(idx)
             args = {};
         else
-            args = arglist(idx);
+            args = varargin(idx);
         end
     end
 
