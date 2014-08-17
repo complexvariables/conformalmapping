@@ -163,9 +163,9 @@ methods
         cah = newplot;
         hold on
         
-        [gargs, pargs] = f.domain_.pullGridArgs(varargin{:});
-        [gpargs, pargs] = cmtplot.pullGridArgs(pargs{:});
-        hg = plot(apply(f, grid(f.domain_, gargs{:})), gpargs{:});
+        % Separate grid construction and plot 'name'/value pairs.
+        [gargs, pargs] = separateArgs(get(f.domain_), varargin{:}); 
+        hg = plot(apply(f, grid(f.domain_, gargs{:})), pargs{:});
         hb = plot(f.range_, pargs{:});
 
         if ~washold

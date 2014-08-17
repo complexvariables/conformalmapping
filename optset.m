@@ -73,15 +73,56 @@ methods
     function value = get(opt, name)
        value = opt.(name); 
     end
+    
+    function [args, exargs] = separateArgs(opt, varargin)
+        % Separatate 'name'/value pairs which belong to optset object and
+        % those that don't.
+        
+        n = numel(varargin);
+        if mod(n, 2)
+            error('CMT:InvalidArgument', 'Expected name/value pairs.')
+        end
+        
+        recognized = properties(opt);
+        args = {};
+        idx = 1:n;
+        for k = 1:2:n-1
+            match = strcmpi(varargin{k}, recognized);
+            if ~any(match)
+                continue
+            end
+            args(numel(args)+(1:2)) = ...
+                {recognized{match}, varargin{k+1}}; %#ok<AGROW>
+            idx = idx(idx ~= k & idx ~= k+1);
+        end
+        if isempty(idx)
+            exargs = {};
+        else
+            exargs = varargin(idx);
+        end
 
-    function opt = set(opt, varargin)
+    end
+
+    function [opt, exargs] = set(opt, varargin)
+        % Set properties based on 'name'/value pairs.
+        %
+        % opt = set(opt, varargin) errors on unknown properties.
+        % [opt, exargs] = set(opt, varargin) puts unknown properties in the
+        % extargs cell array without generating an error.
+        
         namelist = opt.proplist(:,1);
+        exargs = {};
         for k = 1:2:numel(varargin)
             j = find(strcmp(varargin{k}, namelist));
             if isempty(j)
-                error('CMT:InvalidArgument', ...
-                    'Preference name "%s" is not valid for class %s.', ...
-                    varargin{k}, class(opt))
+                if nargout > 1
+                    exargs(numel(exargs)+(1:2)) = varargin(k+(0:1)); %#ok<AGROW>
+                    continue
+                else
+                    error('CMT:InvalidArgument', ...
+                        'Preference name "%s" is not valid for class %s.', ...
+                        varargin{k}, class(opt))
+                end
             end
             pname = namelist{j};
             isvalid = opt.proplist{j,3};

@@ -135,8 +135,8 @@ methods
     newplot
     
     h = plot_(C);
-    args = cmtplot.closedcurveargs;
-    set(h, args{:}, varargin{:});
+    [cargs, pargs] = cmtplot.closedcurveargs(varargin{:});
+    set(h, pargs{:}, cargs{:});
 
     if ~washold
       axis(plotbox(C, 1.1));
