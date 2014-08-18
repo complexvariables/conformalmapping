@@ -267,6 +267,10 @@ methods
             x = {[real(p.vertexList), imag(p.vertexList)], p.angleList};
         end
     end
+    
+    function j = end(p, ~, ~)
+        j = length(p);
+    end
 
     function H = fill(p, varargin)
         % FILL   Plot a polygon with a filled interior.
@@ -657,9 +661,9 @@ methods
     function out = subsref(p, S)
         % Extract vertices by index or act as property reference.
 
-        % Single index reference.
-        if length(S) == 1 && strcmp(S.type, '()') && length(S.subs) == 1
-            out = p.vertexList(S.subs{1});
+        % Vertex reference.
+        if length(S) == 1 && strcmp(S.type, '()')
+            out = subsref(p.vertexList, S);
             return
         end
 
