@@ -10,9 +10,9 @@ classdef masterTest < matlab.unittest.TestCase
 % Written by Everett Kropf, 2014.
 
 methods(TestClassSetup)
-  function addThePath(test)
-    test.addTeardown(@path, addpath('..'));
-  end
+    function addThePath(test)
+        test.addTeardown(@path, addpath('..'));
+    end
 end
 
 end
