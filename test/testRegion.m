@@ -1,4 +1,4 @@
-classdef test_region < master_test
+classdef testRegion < masterTest
 
 % This file is a part of the CMToolbox.
 % It is licensed under the BSD 3-clause license.
@@ -8,7 +8,7 @@ classdef test_region < master_test
 % Written by Everett Kropf, 2014.
 
 methods(Test)
-  function basic_region_check(test)
+  function basicRegionCheck(test)
     c0 = circle(0, 1);
     c1 = circle(0.41+0.16i, 0.24);
     c2 = circle(-0.53+0.09i, 0.12);

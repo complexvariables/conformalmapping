@@ -1,4 +1,4 @@
-classdef test_mobius < master_test
+classdef testMobius < masterTest
 % Test class for mobius.
 
 % This file is a part of the CMToolbox.

@@ -1,4 +1,4 @@
-classdef master_test < matlab.unittest.TestCase
+classdef masterTest < matlab.unittest.TestCase
 % Common setup/teardown for all tests.
 %   * Set path for running tests.
 
@@ -10,7 +10,7 @@ classdef master_test < matlab.unittest.TestCase
 % Written by Everett Kropf, 2014.
 
 methods(TestClassSetup)
-  function add_the_path(test)
+  function addThePath(test)
     test.addTeardown(@path, addpath('..'));
   end
 end

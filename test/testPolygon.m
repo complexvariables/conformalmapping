@@ -1,4 +1,4 @@
-classdef test_polygon < master_test
+classdef testPolygon < masterTest
 % Test class for polygon class
 
 % This file is a part of the CMToolbox.
@@ -9,7 +9,7 @@ classdef test_polygon < master_test
 % Written by Everett Kropf, 2014.
 
 methods(Test)
-  function basic_polygon_check(test)
+  function basicPolygonCheck(test)
     p1 = polygon([0, 1, 1+1i, 1i]);
     % Took out because polygon temporarily changed to match SCT.
 %     p2 = polygon([0, homog(1, 0), homog(1i, 0)]);
