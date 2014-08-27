@@ -11,8 +11,9 @@ classdef test_polygon < master_test
 methods(Test)
   function basic_polygon_check(test)
     p1 = polygon([0, 1, 1+1i, 1i]);
-    p2 = polygon([0, homog(1, 0), homog(1i, 0)]);
-    cond = sum(angle(p1)) == 2 && sum(angle(p2)) == 0;
+    % Took out because polygon temporarily changed to match SCT.
+%     p2 = polygon([0, homog(1, 0), homog(1i, 0)]);
+    cond = sum(angle(p1)) == 2; % && sum(angle(p2)) == 0;
     test.verifyTrue(cond);
   end
 end

@@ -11,8 +11,8 @@ classdef test_circle < master_test
 methods(Test)
   function three_point_check(test)
     gc = circle([0, 5, 7i]);
-    cond = radius(gc) == hex2num('40113463fa37014d');
-    test.verifyTrue(cond);
+    test.verifyEqual(radius(gc), hex2num('40113463fa37014d'), ...
+        'AbsTol', 1e-15);
   end
   
   function zline_check(test)
