@@ -1,0 +1,263 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage}
+\usepackage{listings}
+\usepackage[]{color}
+\usepackage[]{url}
+\usepackage[]{hyperref}
+
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{dkgreen}{rgb}{.068,.578,.068}
+\definecolor{dkpurple}{rgb}{.320,.064,.680}
+
+% Matlab style, stolen from Chebfun coding style guide.
+\lstset{
+  language=Matlab,
+  keywords={break,case,catch,continue,else,elseif,end,for,function,
+    global,if,otherwise,persistent,return,switch,try,while},
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{dkpurple},
+  backgroundcolor=\color{white},
+  tabsize=4,
+  showspaces=false,
+  showstringspaces=false
+}
+
+\newcommand{\matlab}{MATLAB}
+
+\title{Conformal Mapping Toolkit Developer's Guide}
+\author{E. Kropf and T. Driscoll}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\clearpage
+
+\section{Introduction}
+This guide describes design decisions behind the Conformal Mapping Toolbox (CMToolbox, CMT). It is written in hopes that it will avoid confusion or clashes in later development. There is a version of this software written in the older class style of \matlab; this document covers the code converted to the new \matlab syntax.
+
+\subsection{Language choice}
+The initial version of this software is developed in \matlab. It is hoped that it will be ported to other frameworks in the future.
+
+Why \matlab? Conformal mapping is a calculation game, and MATLAB is a super expensive, glorified calculator. Those generally interested in conformal mapping live in math(s) departments, and thus generally have access to \matlab\ provided, so the cost is an artificial barrier for the target audience.
+
+Why other frameworks? \matlab\ is a frustrating place to write software, and it's demonstrably slower in some unavoidable circumstances.
+
+\section{Code rules}
+Rules listed here are more like strong suggestions. To make things uniform, try to follow them where possible, but \emph{if it makes more sense to do something else}, then by all means do that. The main goal is readability, followed closely by maintainability (ease of diff by the VCS) [and by ease of use?]. Some of what follows is taken from or influenced by \cite{chebfunCodingStyle} and \cite{pythonStyleGuide}. Some of this is made up as needed.
+
+CMT will use only classes defined using \matlab's newer \verb+classdef+ keyword. The old class system, although still in use, is too limited in flexibility.
+
+Each new, non-abstract class defined will also have a test class written to be placed in the \verb+test+ directory. These tests will be called by the \verb+run_tests+ function as a way of checking code functionality. If a developer makes a change to the existing code, \verb+run_tests+ is a way to ensure the system hasn't been broken by the change.
+
+Unless there is a good reason, default to using public properties. A proper property naming scheme is still under discussion. % Class properties will be generally accessed via ``get'' type functions. To make this easier, follow property names with an underscore, and the ``get'' function will use the property name without the underscore. For example the polygon class will have an \verb+angle_+ property, and a method \verb+angle+ by which to retrieve that property.
+
+\subsection{General layout}
+[TODO: Comments needed regarding multiline expressions.]
+
+\begin{description}
+  \item[Indentation] Each level of indentation is given by 4 spaces -- no tab characters. Default indentation behaviour by the \matlab editor should suffice, with one exception. The \verb|method| and \verb|property| blocks within a \verb|classdef| should be flush with the left margin (it is an extreme waste of space otherwise).
+  \item[Line width.] Lines should be less than 80 characters.
+  \item[Command separation.] Giving multiple commands on one line should be avoided, as should placing an \verb|if| block or loop on one line.
+  \item[Assignemnt and logical operators.] These should be surrounded by 1 space.
+  \item[Comma and semicolon.] When indexing an array no space will be used on either side of a comma or semicolon. When separating function arguments, there should be one space following each comma.
+    \begin{lstlisting}[frame=single]
+A(j,k) = C{k,j};          % Array indexing.
+someFunction(arg1, arg2); % Function call.
+    \end{lstlisting}
+    When creating arrays, column entries should be separated by a comma (followed by a space). Semicolons used when creating arrays should also be followed by a space.
+  \item[Parenthesis and brackets.] An open parenthesis or bracket (brace) character, whether starting a function call or defining an array, should not be followed by a space. When a parenthesis is used in a function call for the argument list, there should be no space between the function name and the parenthesis. A closing brace or parenthesis must not be preceded by a space.
+  \item[Binary arithmetic operators.] The binary operators \verb|+| and \verb|-| should be surrounded on either side by a space character. The operators \verb|*| and \verb|/| (and their dotted equivalents) should not be surrounded by a space.
+\end{description}
+
+\subsection{Help text}
+Something about help text formatting.
+
+\subsection{Naming conventions}
+What is the standard for naming variables, functions, classes, properties, etc.?
+
+\paragraph{CamelCase.} Describe the use of camel case for naming.
+
+\section{Concepts}
+\subsection{Apply}
+Let $A$ and $B$ be objects (instantiations of classes). We say ``\emph{apply $A$ to $B$}'' to mean that an object $A$ acts on an object $B$ in a way to be defined by the relationship between the two objects. This should be implemented as follows:
+\begin{itemize}
+  \item Object $A$ should ask object $B$ if $B$ has a preferred way of having $A$ act on it.
+  \item If $B$ has no preference, then $A$ should attempt apply itself in a generic fashion specific to $A$.
+  \item Failing these, there should be an ``$A$ applied to $B$ is not defined'' error.
+\end{itemize}
+
+\noindent In \matlab: \verb+apply(A, B)+ or \verb+A*B+. For example,
+\begin{lstlisting}[frame=single]
+function C = apply(A, B)
+    % C = apply(A, B)
+    % Apply object A to object B for result C.
+    %
+    % See the apply concept in the developer docs for more details.
+    
+    % Try asking the target object first.
+    try
+        C = apply(B, A);
+        return
+    catch err
+        if ~any(strcmp(err.identifier, ...
+                {'MATLAB:UndefinedFunction', 'CMT:NotDefined'}))
+            rethrow(err)
+        end
+    end
+    
+    % Try the default/general apply.
+    try
+        C = applyDefault(A, B);
+    catch err
+        if strcmp(err.identifier, 'MATLAB:UndefinedFunction')
+            msg = sprintf('Applying %s to %s is not defined.', ...
+                class(f), class(z));
+            if ~isempty(err.message)
+                msg = sprintf('%s\n%s', msg, err.message);
+            end
+            error('CMT:NotDefined', msg)
+        else
+            rethrow(err)
+        end
+    end
+end
+\end{lstlisting}
+% \begin{itemize}
+%   \item Object $A$ should try \verb+apply(B, A)+.
+%   \item If $B$ doesn't know about this, then either
+%     \begin{itemize}
+%       \item $B$ hasn't defined an \verb+apply()+ method, which may be checked by \verb+ismethod+ before trying, or
+%       \item $B$ has defined \verb+apply()+, but doesn't know what to do with $A$ and errors with \verb+CMT:NotDefined+.
+%     \end{itemize}
+%   \item Failing this, object $A$ should then call the protected function \verb+apply_map(A, B)+.
+%   \item If object $A$ fails to apply itself to $B$ it errors with \verb+CMT:NotDefined+.
+% \end{itemize}
+
+Having object $A$ ask object $B$ first allows target objects to specialize map applications. (I swear I had something in mind as an example for this when I thought it up, but now \ldots -- EK.) See the \verb+conformalmap+ class for an implemented example of this concept.
+
+
+\section{Class structure}
+Classes listed here are in general base classes, meant to be sub-classed. Some, like the \verb+homog+ class are there to provide functionality for other classes. Properties and methods listed below are not a complete list, and are mainly those that define the `idea' of the class. Implementation details can be found in the code.
+
+\subsection{Homogeneous numbers}
+Class \verb+homog+.
+
+Originally designed by Toby Driscoll, this class was implemented to handle divide by zero warnings generated by \matlab. In addition the class provides a way to meaningfully apply an angle to a point at infinity. Recent versions of \matlab\ have moved to a silent divide by zero, but having an angle for the point at infinity is still clearly useful.
+
+A homogeneous coordinate is defined by two scalar values, $z_1$ and $z_2$, such that $z = z_1/z_2$. Every seemingly non-homogeneous complex number $w$ can be assumed to have the homogeneous value $w/1$. Thus a point at infinity may be defined by $z_1/0$ with $\arg\{z_1/0\} := \arg\{z_1\}$.
+
+\paragraph{Has properties:}
+\begin{itemize}
+  \item A numerator, $z_1$.
+  \item A denominator, $z_2$.
+\end{itemize}
+
+\paragraph{Provides methods:}
+The key to this class is to behave in almost all cases exactly like the built in \matlab\ \verb+double+ class.
+
+\subsection{Closed curves}
+Abstract class \verb+closedcurve+.
+
+Closed curves are simple (non-intersecting), oriented curves in the plane which define an ``inside'' and ``outside'' region. Each curve is parameterized, \textit{e.g.}, by some function $z(t)$ for $0\le t\le 1$ where $z(0) = z(1)$, such that the ``inside'' of the curve is to the left of the tangent vector given by this parameterization.
+
+\paragraph{Has properties:} [Not sure what properties a base closed curve should have. Initially thought there should be a \emph{length} here, so subclasses could choose an arbitrary parameterization length, but not sure what that gains us over just forcing everything to be parameterized on the unit interval. Non-polygon corner information is going to be useful at some point.]
+
+\paragraph{Provides methods:}
+\begin{itemize}
+  \item \verb+point+ -- This is the abstract parameterization function $z(t)$ which expects subclasses to return a vector of points on the curve $z$ for an input vector of values $t$.
+  \item \verb+tangent+ -- This is the abstract tangent function which expects subclasses to return a tangent vector $z'(t)$ for each $t$ given. It is also expected that calculating $z'(t)/|z'(t)|$ gives the unit tangent vector.
+  \item \verb+plot+ -- Provides basic plotting logic that should be common to all closed curves. Calls the function \verb+plot_+ to actually plot the curve. Subclasses should override \verb+plot_+ to provide specific curve plotting instructions.
+  \item \verb+fill+ -- Provide the basic logic to fill the inside of the closed curve; uses \verb+plot+ to do the work.
+  \item \verb+plot_+ -- Simply try to use \verb+adaptplot+ with the \verb+point+ function to plot the curve.
+\end{itemize}
+
+\subsubsection{Generalized circle}
+Class \verb+circle < closedcurve+.
+
+A circle may be defined by a (finite) center and radius, or by 3 points on the boundary of the circle. In the latter case, if the points are collinear, then the circle is a line in the plane, and the circle goes through the north pole of the Riemann sphere.
+
+\paragraph{Uses classes:} The circle uses the \verb+standardmap+ from the M\"obius class to determine geometry when given 3 points. It might seem more sensible to construct a M\"obius object directly to calculate the transformation determined by $[0,1,\infty]\mapsto[z_1, z_2, z_3]$, but the M\"obius object constructs two circles as a domain and range (mainly for plotting purposes), so we have to avoid that bit of vicious circularity.
+
+\paragraph{Has properties:}
+\begin{itemize}
+  \item A \emph{center}, which is \verb+NaN+ if the circle is infinite.
+  \item A \emph{radius} in the interval $(0,\infty)$.
+\end{itemize}
+
+\paragraph{Provides methods:}
+\begin{itemize}
+  \item \verb+plot_+ -- If the circle is finite, the superclass \verb+plot_+ is used. If not, the polygon class (as a line) is used, since its plot routine has truncation built in.
+\end{itemize}
+
+\subsection{Regions}
+Class \verb+region+.
+
+A region is defined by zero or more closed curves. Not sure at this point if we want a region with zero boundary elements to be an empty region, or if we want it to be the entire plane (plus the point at infinity).
+
+\paragraph{Uses classes:} Regions rely heavily on the closed curve classes.
+
+\paragraph{Has properties:}
+\begin{itemize}
+  \item List of outer boundary closed curves.
+  \item List of inner boundary closed curves.
+\end{itemize}
+
+A region with one outer boundary curve and no inner curves is a bounded, simply connected region. One inner boundary and no outer boundary is a simply connected unbounded region. One outer boundary and $n$ inner boundaries, provided the inner boundaries are disjoint and bounded by the outer, is a bounded, $n+1$ connected region. A region with $n$ disjoint inner boundaries is an unbounded, $n$ connected region.
+
+At present, it's completely up to the user to ensure the boundary combinations make any sense. Is there a way to enforce/check allowed boundary conditions?
+
+\paragraph{Provides methods:}
+\begin{itemize}
+  \item \verb+plot+ -- Has logic to plot the boundary curves with proper fill.
+  \item \verb+fill+ -- Has the logic to plot the proper (interior/exterior) fill for the boundary curves.
+\end{itemize}
+
+\subsubsection{Disk}
+Class \verb+disk+.
+
+Defines a region bounded by a finite circle. Currently \verb+unitdisk+ is a wrapper function to call disk with the proper arguments. Does it need its own class definition?
+
+\subsection{Conformal maps}
+Class \verb+conformalmap+.
+
+\paragraph{Has properties:}
+\begin{itemize}
+  \item A \emph{domain} region object.
+  \item A \emph{range} region object.
+\end{itemize}
+
+\paragraph{Provides methods:}
+\begin{itemize}
+  \item \verb+apply+ -- Supplies the logic for the \emph{apply} concept, calls the (hopefully) subclassed \verb+apply_map+ method.
+  \item \verb+plot+ -- Has the plot logic to draw the image under the map of a grid in the domain region, if it exists, on top of the filled region with a boundary.
+\end{itemize}
+
+\subsubsection{M\"obius}
+Class \verb+mobius < conformalmap+.
+
+On construction given two vectors of 3 points, this class creates two circle regions to use as a domain and range for plotting purposes. The map should work for any point in the plane.
+
+\paragraph{Provides methods:}
+\begin{itemize}
+  \item \verb+apply_map+ -- Has logic for applying the M\"obius transformation to a circle or a point (or set of points) in the plane.
+\end{itemize}
+
+
+\begin{thebibliography}{99}
+  \bibitem{chebfunCodingStyle}
+    The Chebfun Team,
+    ``Chebfun Coding Guide for Developers,''
+    Unpublished.
+
+  \bibitem{pythonStyleGuide}
+    G.\ van Rossum, B.\ Warsaw and N.\ Coghlan,
+    ``Style Guide for Python Code,''
+    \url{http://legacy.python.org/dev/peps/pep-0008}.
+
+\end{thebibliography}
+
+\end{document}
