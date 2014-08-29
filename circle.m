@@ -176,12 +176,11 @@ methods
   end
   
   function gc = minus(gc, z)
-    if isinf(z)
-      error('Must translate by a finite number.')
-    end
-    
-    gc.points_ = gc.points_ - z;
-    gc.center_ = gc.center_ - z;
+      if isa(z, 'circle')
+          gc = plus(-gc, z);
+      else
+          gc = plus(gc, -z);
+      end
   end
   
   function gc = mtimes(gc, z)
@@ -199,6 +198,9 @@ methods
   end
   
   function gc = plus(gc, z)
+    if isa(z, 'circle')
+      [z, gc] = deal(gc, z); 
+    end
     if isinf(z)
       error('Must translate by a finite number.')
     end
