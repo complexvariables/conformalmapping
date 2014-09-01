@@ -205,6 +205,11 @@ methods
     
     z = builtin('subsref', C, S);
   end
+  
+  function xy = xypoint(C, t)
+      z = point(C, t);
+      xy = [real(z), imag(z)];
+  end
 end
 
 methods(Abstract=true)
@@ -214,11 +219,7 @@ end
 
 methods(Hidden)
   function h = plot_(C, varargin)
-    function x = xypoint(t)
-      z = point(C, t);
-      x = [real(z), imag(z)];
-    end
-    h = adaptplot(@xypoint, [0, C.length_]);
+    h = adaptplot(@(t) xypoint(C, t), [0, C.length_]);
   end
 end
 
