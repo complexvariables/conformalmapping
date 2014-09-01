@@ -36,6 +36,10 @@ properties(SetAccess=protected)
     cornerTangent       % Incoming/outgoing corner tangent vectors.
 end
 
+properties(Dependent)
+    breaks
+end
+
 properties(Access=protected)
     ppx
     ppy
@@ -76,7 +80,7 @@ methods
         G = calculateSplines(G);
     end
 
-    function tk = breaks(G)
+    function tk = get.breaks(G)
         tk = [G.tknots(G.corners); 1];
     end
 
@@ -91,7 +95,7 @@ methods
 
         zt = paramEval(G, t, 1);
         cavg = sum(G.cornerTangent, 2)/2;
-        ct = breaks(G);
+        ct = G.breaks;
         for k = 1:numel(ct)-1
            ctL = abs(t - ct(k)) < 10*eps;
            zt(ctL) = cavg(k);
@@ -167,7 +171,7 @@ methods(Access=protected)
         t = modparam(G, t);
         z = nan(size(t));
 
-        brks = breaks(G);
+        brks = G.breaks;
         for k = 1:numel(G.corners)
             tL = brks(k) <= t & t < brks(k+1);
             z(tL) = complex(ppval(G.ppx(k,d), t(tL)), ppval(G.ppy(k,d), t(tL)));
