@@ -269,6 +269,11 @@ methods(Access=protected)
             w = f.function_list_{1}(z);
         else
             % Default map is identity.
+            if ~isa(class(f), 'conformalmap')
+                warning('CMT:BadThings', ...
+                    ['Identity map used when conformalmap is subclassed.\n' ...
+                    '(Define apply_map in subclass %s?)'], class(f))
+            end
             w = z;
         end
     end
