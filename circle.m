@@ -97,6 +97,15 @@ methods
     gc.interiorpt_ = interiorpt;
   end
   
+  function gc = apply(gc, m)
+      if ~isa(m, 'mobius')
+          error('CMT:NotDefined', ...
+              'Expected a mobius transformation.')
+      end
+      
+      gc = circle(m(gc.points_));
+  end
+  
   function z = center(gc)
     z = gc.center_;
   end
