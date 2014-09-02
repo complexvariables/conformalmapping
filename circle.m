@@ -80,7 +80,7 @@ methods
           badargs = false;
           
           if radius > 0
-            z3 = center + radius*(1i*pi*[0, 0.5, 1]);
+            z3 = center + radius*exp(1i*pi*[0, 0.5, 1]);
           else
             z3 = []; % Degenerate circle.
           end
