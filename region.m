@@ -97,7 +97,17 @@ methods
     
     % Not clear the best way to do this, especially for multiply
     % connected regions. Just dump for now.
-    b = {R.outerboundary_; R.innerboundary_};
+    if hasouter(R)
+        b = R.outerboundary_;
+    else
+        b = {};
+    end
+    if hasinner(R)
+        b = {b{:}; R.innerboundary_};
+    end
+    if numel(b) == 1
+        b = b{1};
+    end
   end
   
   function disp(R)
