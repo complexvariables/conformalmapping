@@ -153,10 +153,10 @@ methods
   
   function fill(R, varargin)
     % Fill plot of region.
+    
+    newplot
     washold = ishold;
-    if ~washold
-      hold on
-    end
+    hold on
     
     fillargs = cmtplot.fillargs;
     
@@ -185,6 +185,8 @@ methods
             
     if ~washold
       hold off
+      axis(plotbox(R))
+      aspectequal
     end
   end % fill
   
@@ -269,9 +271,9 @@ methods
   
   function out = plot(r, varargin)
     % Plot region without fill.
-    washold = ishold;
-    
+
     newplot
+    washold = ishold;
     hold on
     
     btag = sprintf('boundary_%s', num2hex(rand));
@@ -286,6 +288,8 @@ methods
     
     if ~washold
       hold off
+      axis(plotbox(r))
+      aspectequal
     end
     
     if nargout
