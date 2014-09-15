@@ -68,7 +68,7 @@ methods
             case 'exteriorto'
               R.innerboundary_ = region.checkcc(p);
             otherwise
-              error('String %s unrecognized.')
+              error('CMT:InvalidArgument', 'String "%s" unrecognized.', q)
           end
         else
           R.outerboundary_ = region.checkcc(p);
