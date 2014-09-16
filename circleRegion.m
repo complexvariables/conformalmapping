@@ -24,7 +24,7 @@ classdef circleRegion < region
 % Copyright Toby Driscoll, 2014.
 % E. Kropf, 2014
 
-properties
+properties(SetAccess=protected)
     centers
     radii
 end
@@ -52,33 +52,7 @@ methods
             end
             
             % Check bounded/unbounded/intersect.
-            isinside = false(m-1, 1);
-            intersect = false;
-            for i = 1:m
-                for j = i+1:m
-                    sep = abs(cv(i) - cv(j));
-                    if sep < rv(i)
-                        if rv(i) - sep <= rv(j)
-                            intersect = true;
-                            break
-                        elseif i == 1
-                            isinside(j-1) = true;
-                        end
-                    elseif sep > rv(i)
-                        if sep <= rv(i) + rv(j)
-                            intersect = true;
-                            break
-                        end
-                    else
-                        intersect = true;
-                        break
-                    end
-                end
-                if intersect
-                    error('CMT:InvalidArgument', ...
-                        'Circle intersection detected.')
-                end
-            end
+            isinside = circleRegion.circleCheck(cv, rv);
             if numel(clist) > 1 && all(isinside)
                 args = {clist{1}, clist(2:end)};
             elseif numel(clist) == 1 || ~any(isinside)
@@ -106,6 +80,39 @@ methods
             R = region(C{2:end}, C{1});
         else
             R = region(C, 'interiorto');
+        end
+    end
+end
+
+methods(Static)
+    function isinside = circleCheck(cv, rv)
+        m = numel(rv);
+        isinside = false(m-1, 1);
+        intersect = false;
+        for i = 1:m
+            for j = i+1:m
+                sep = abs(cv(i) - cv(j));
+                if sep < rv(i)
+                    if rv(i) - sep <= rv(j)
+                        intersect = true;
+                        break
+                    elseif i == 1
+                        isinside(j-1) = true;
+                    end
+                elseif sep > rv(i)
+                    if sep <= rv(i) + rv(j)
+                        intersect = true;
+                        break
+                    end
+                else
+                    intersect = true;
+                    break
+                end
+            end
+            if intersect
+                error('CMT:InvalidArgument', ...
+                    'Circle intersection detected.')
+            end
         end
     end
 end
