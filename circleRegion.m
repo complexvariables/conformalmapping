@@ -51,11 +51,32 @@ methods
                 rv(j) = clist{j}.radius;
             end
             
-            % Check bounded/unbounded.
-            isinside(1:m-1,1) = false;
-            for j = 2:m
-                if abs(cv(1) - cv(j)) + rv(j) < rv(1)
-                    isinside(j-1) = true;
+            % Check bounded/unbounded/intersect.
+            isinside = false(m-1, 1);
+            intersect = false;
+            for i = 1:m
+                for j = i+1:m
+                    sep = abs(cv(i) - cv(j));
+                    if sep < rv(i)
+                        if rv(i) - sep <= rv(j)
+                            intersect = true;
+                            break
+                        elseif i == 1
+                            isinside(j-1) = true;
+                        end
+                    elseif sep > rv(i)
+                        if sep <= rv(i) + rv(j)
+                            intersect = true;
+                            break
+                        end
+                    else
+                        intersect = true;
+                        break
+                    end
+                end
+                if intersect
+                    error('CMT:InvalidArgument', ...
+                        'Circle intersection detected.')
                 end
             end
             if numel(clist) > 1 && all(isinside)
@@ -65,7 +86,7 @@ methods
             else
                 error('CMT:InvalidArgument', ...
                     ['The circles given do not define an expected region.' ...
-                    'See help.\n'])
+                    ' See help.'])
             end
         end
         
