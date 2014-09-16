@@ -7,17 +7,15 @@ classdef circleRegion < region
 % region otherwise.
 %
 % This class represents one of two types of regions:
-%   1. A region bounded by a circle which contains zero or more circular
+%   1. A region bounded by a circle which contains one or more circular
 %   holes.
 %   2. An unbounded region containing one or more circular holes.
 % In either case none of the circular boundaries intersect, including
-% tangengialy.
-% A region exterior to a single circle is not currently handled by this
-% class. For this use
+% tangentialy.
+% A region interior to a single circle is not currently handled by this
+% class. For this use the unitdisk class.
 %
-%     exterior(circle(c, r))
-%
-% See also circle, region.
+% See also circle, region, unitdisk.
 
 % This file is a part of the CMToolit.
 % It is licensed under the BSD 3-clause license.
@@ -35,12 +33,16 @@ methods
     function R = circleRegion(clist)
         args = {};
         if nargin
-            if ~(isa(clist, 'cell') ...
-                    && all(cellfun(@(x) isa(x, 'circle'), clist)))
+            if (iscell(clist) ...
+                    && ~all(cellfun(@(x) isa(x, 'circle'), clist))) ...
+                    || ~isa(clist, 'circle')
                 error('CMT:InvalidArgument', ...
-                    'Expected a cell array of circles.')
+                    'Expected a single circle or cell array of circles.')
             end
             
+            if ~iscell(clist)
+                clist = {clist};
+            end
             m = numel(clist);
             cv(m,1) = 1i;
             rv(m,1) = 0;
@@ -56,9 +58,9 @@ methods
                     isinside(j-1) = true;
                 end
             end
-            if all(isinside)
+            if numel(clist) > 1 && all(isinside)
                 args = {clist{1}, clist(2:end)};
-            elseif ~any(isinside)
+            elseif numel(clist) == 1 || ~any(isinside)
                 args = {clist, 'exteriorto'};
             else
                 error('CMT:InvalidArgument', ...
