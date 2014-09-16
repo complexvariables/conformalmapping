@@ -32,7 +32,7 @@ end
 methods
     function R = circleRegion(clist)
         args = {};
-        if nargin
+        if nargin && ~isempty(clist)
             cliscell = iscell(clist);
             if (cliscell && ~all(cellfun(@(x) isa(x, 'circle'), clist))) ...
                     || (~cliscell && ~isa(clist, 'circle'))
@@ -91,7 +91,7 @@ methods
         end
         
         R = R@region(args{:});
-        if ~nargin
+        if ~nargin || isempty(clist)
             return
         end
         
