@@ -82,6 +82,20 @@ methods
             R = region(C, 'interiorto');
         end
     end
+    
+    function replicate(R)
+        fprintf('%s = circleRegion({...\n', inputname(1))
+        m = numel(R.radii);
+        for j = 1:m
+            fprintf('    circle(%s, %s)', ...
+                num2str(R.centers(j), '%.6g'), num2str(R.radii(j), '%.6g'))
+            if j < m
+                fprintf(', ...\n')
+            else
+                fprintf('});\n')
+            end
+        end
+    end
 end
 
 methods(Static)
