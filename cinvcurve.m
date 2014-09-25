@@ -10,16 +10,25 @@ classdef cinvcurve < closedcurve
 
 properties
   curve_
+  confCenter = 0
 end
 
 methods
-  function C = cinvcurve(curve)
+  function C = cinvcurve(curve, confCenter)
     if ~nargin
       return
     end
     
     if ~isa(curve, 'closedcurve')
       error('CMT:InvalidArgument', 'Expected a closedcurve object.')
+    end
+    if nargin > 1
+        if numel(confCenter) == 1 && isfinite(confCenter)
+            C.confCenter = confCenter;
+        else
+            error('CMT:InvalidArgument', ...
+                'Expected a finite scalar for a conformal center.')
+        end
     end
     
     C.curve_ = curve;
@@ -31,7 +40,7 @@ methods
   end
   
   function z = point(C, t)
-    z = 1./conj(point(C.curve_, t));
+    z = 1./conj(point(C.curve_, t) - C.confCenter);
   end
   
   function zt = tangent(C, t)
