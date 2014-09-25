@@ -81,7 +81,8 @@ methods
         end
         
         prefs = varargs(f.opts_);
-        g = szmap(br', prefs{:}, 'confCenter', 0);
+        g = szmap(cinvcurve(br, f.opts_.confCenter), ...
+            prefs{:}, 'confCenter', 0);
         func = @(z) 1./conj(apply_map_(g, conj(1./z)));
 
         g.domain_ = d;
