@@ -83,17 +83,22 @@ methods
         end
     end
     
-    function replicate(R)
-        fprintf('%s = circleRegion({...\n', inputname(1))
+    function str = replicate(R)
+        s = sprintf('%s = circleRegion({...\n', inputname(1));
         m = numel(R.radii);
         for j = 1:m
-            fprintf('    circle(%s, %s)', ...
-                num2str(R.centers(j), '%.6g'), num2str(R.radii(j), '%.6g'))
+            s = sprintf('%s    circle(%s, %s)', s, ...
+                num2str(R.centers(j), '%.6g'), num2str(R.radii(j), '%.6g'));
             if j < m
-                fprintf(', ...\n')
+                s = sprintf('%s, ...\n', s);
             else
-                fprintf('});\n')
+                s = sprintf('%s});\n', s);
             end
+        end
+        if nargout
+            str = s;
+        else
+            fprintf('%s', s)
         end
     end
 end
