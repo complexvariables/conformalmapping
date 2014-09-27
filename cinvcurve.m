@@ -44,7 +44,8 @@ methods
   end
   
   function zt = tangent(C, t)
-    zt = -conj(tangent(C.curve_, t))./conj(point(C.curve_, t)).^2;
+    zt = -conj(tangent(C.curve_, t))./...
+        conj(point(C.curve_, t) - C.confCenter).^2;
   end
 end
 
