@@ -39,6 +39,7 @@ properties
 end
 
 properties(Dependent)
+  m
   numinner
   numouter
 end
@@ -110,6 +111,10 @@ methods
     end
   end
   
+  function m = connectivity(R)
+      m = R.numinner + R.numouter;
+  end
+  
   function disp(R)
     if isempty(R)
       fprintf('empty region\n\n')
@@ -141,6 +146,10 @@ methods
   function gd = grid(~)
     % Default empty grid.
     gd = [];
+  end
+  
+  function m = get.m(R)
+      m = connectivity(R);
   end
   
   function n = get.numinner(R)
