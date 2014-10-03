@@ -111,6 +111,18 @@ methods
     end
   end
   
+  function box = boundbox(R)
+      zi = zeros(4*R.numinner, 1);
+      for k = 1:R.numinner
+          zi(4*(k - 1) + (1:4)) = cmt.bb2z(boundbox(R.innerboundary_{k}));
+      end
+      zo = zeros(4*R.numouter, 1);
+      for k = 1:R.numouter
+          zo(4*(k - 1) + (1:4)) = cmt.bb2z(boundbox(R.outerboundary_{k}));
+      end
+      box = cmt.boundbox([zi; zo]);
+  end
+  
   function m = connectivity(R)
       m = R.numinner + R.numouter;
   end
@@ -316,15 +328,7 @@ methods
       return
     end
     
-    zi = zeros(4*R.numinner, 1);
-    for k = 1:R.numinner
-      zi(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.innerboundary_{k}, 1));
-    end
-    zo = zeros(4*R.numouter, 1);
-    for k = 1:R.numouter
-      zo(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.outerboundary_{k}, 1));
-    end
-    box = cmt.plotbox([zi; zo], scale);
+    box = cmt.plotbox(cmt.bb2z(boundbox(R)), scale);
   end
 end
 
