@@ -9,11 +9,11 @@ classdef splinep < closedcurve
 % Written by Everett Kropf, 2014.
 
 properties
-  xk_                               % knot x-coordinates
-  yk_                               % knot y-coordinates
+  knotX                     % knot x-coordinates
+  knotY                     % knot y-coordinates
   
-  pp_                               % piecewise polynomial array
-  chordal_arclength_ = 0            % total chordal arclength
+  ppArray                   % piecewise polynomial array
+  chordal_arclength_ = 0    % total chordal arclength
 end
 
 properties(Dependent)
@@ -35,8 +35,8 @@ methods
       case 1
         tmp = varargin{1};
         if isa(varargin{1}, 'splinep')
-          xk = tmp.xk_;
-          yk = tmp.yk_;
+          xk = tmp.knotX;
+          yk = tmp.knotY;
         elseif isempty(tmp) || (numel(tmp) == 1 && ...
             ishghandle(tmp(1)) && strcmp(get(tmp, 'type'), 'figure'))
           % Need to prompt for points.
@@ -74,9 +74,9 @@ methods
     % Superclass constructor here.
     
     % Spline data.
-    S.xk_ = xk;
-    S.yk_ = yk;
-    [S.pp_, S.chordal_arclength_] = splinep.spline_(xk, yk);
+    S.knotX = xk;
+    S.knotY = yk;
+    [S.ppArray, S.chordal_arclength_] = splinep.spline_(xk, yk);
   end
   
   function out = apply(S, op)
@@ -99,21 +99,21 @@ methods
   
   function disp(S)
     fprintf('splinep object:\n\n')
-    fprintf('  defined with %d spline knots,\n', numel(S.xk_))
+    fprintf('  defined with %d spline knots,\n', numel(S.knotX))
     lstr = strtrim(evalc('disp(arclength(S))'));
     fprintf('  total chordal arc length %s\n\n', lstr)
   end
   
   function x = get.xpts(S)
-    x = S.xk_;
+    x = S.knotX;
   end
   
   function y = get.ypts(S)
-    y = S.yk_;
+    y = S.knotY;
   end
   
   function z = get.zpts(S)
-    z = complex(S.xk_, S.yk_);
+    z = complex(S.knotX, S.knotY);
   end
   
   function S = minus(S, z)
@@ -158,8 +158,8 @@ methods
   
   function z = point(S, t)
     t = modparam(S, t)*S.chordal_arclength_;
-    z = complex(ppval(S.pp_{1,1}, t), ...
-                ppval(S.pp_{2,1}, t));
+    z = complex(ppval(S.ppArray{1,1}, t), ...
+                ppval(S.ppArray{2,1}, t));
   end
   
   function replicate(S)
@@ -190,14 +190,14 @@ methods
   
   function z2 = second(S, t)
     t = modparam(S, t)*S.chordal_arclength_;
-    z2 = complex(ppval(S.pp_{1,3}, t), ...
-                 ppval(S.pp_{2,3}, t))*arclength(S)^2;
+    z2 = complex(ppval(S.ppArray{1,3}, t), ...
+                 ppval(S.ppArray{2,3}, t))*arclength(S)^2;
   end
   
   function zt = tangent(S, t)
     t = modparam(S, t)*arclength(S);
-    zt = complex(ppval(S.pp_{1,2}, t), ...
-                 ppval(S.pp_{2,2}, t))*arclength(S);
+    zt = complex(ppval(S.ppArray{1,2}, t), ...
+                 ppval(S.ppArray{2,2}, t))*arclength(S);
   end
   
   function S = uminus(S)
