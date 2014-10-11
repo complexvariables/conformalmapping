@@ -10,8 +10,8 @@ classdef closedcurve
 % adapted from Toby Driscoll's code, originally 20??.
 
 properties
-  corner_                               % Placeholder.
-  length_ = 1                           % Parameter length.
+  cornerList                % Placeholder.
+  paramLength = 1           % Parameter length.
 end
 
 methods
@@ -19,7 +19,7 @@ methods
   
   function box = boundbox(C)
     % Return bounding box for curve using evenly spaced points.
-    t = C.length_*(0:199)'/200;
+    t = C.paramLength*(0:199)'/200;
     box = cmt.boundbox(point(C, t));
   end
   
@@ -28,7 +28,7 @@ methods
     % change drastically in the future. Haven't found it being used yet in any
     % of Toby's code examples. -- EK
     % Other than being set in the polygon constructor. -- EK
-    v = C.corner_;
+    v = C.cornerList;
     
     % Classes of input args?
     inclass = cellfun(@class, varargin, 'uniformoutput', false);
@@ -119,13 +119,13 @@ methods
   
   function n = length(C)
     % Curve parameter length.
-    n = C.length_;
+    n = C.paramLength;
   end
   
   function t = modparam(C, t)
-    % Ensures parameter satisfies 0 <= t < C.length_.
-    if any(t < 0 | 1 <= C.length_)
-      t = mod(t, C.length_);
+    % Ensures parameter satisfies 0 <= t < C.paramLength.
+    if any(t < 0 | 1 <= C.paramLength)
+      t = mod(t, C.paramLength);
     end
   end
   
@@ -157,7 +157,7 @@ methods
     if nargin < 2
       scale = [];
     end
-    t = C.length_*(0:199)'/200;
+    t = C.paramLength*(0:199)'/200;
     box = cmt.plotbox(point(C, t), scale);
   end
 
@@ -179,7 +179,7 @@ methods
       [x1, x2, x3] = c2rs(z);
       x = [x1, x2, x3];
     end
-    h = adaptplot(@rspoint, [0, C.length_]);
+    h = adaptplot(@rspoint, [0, C.paramLength]);
     set(h, varargin{:});
     
     if ~washold
@@ -219,7 +219,7 @@ end
 
 methods(Hidden)
   function h = plot_(C, varargin)
-    h = adaptplot(@(t) xypoint(C, t), [0, C.length_]);
+    h = adaptplot(@(t) xypoint(C, t), [0, C.paramLength]);
   end
 end
 
