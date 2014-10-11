@@ -250,14 +250,14 @@ methods
 end
 
 methods(Hidden)
-  function h = plot_(gc, varargin)
+  function h = plotCurve(gc, varargin)
     if isinf(gc)
       % For a line, we will use a polygon. This employs the truncation
       % mechanism that gives us something usable with plotting regions.
       h = plot(polygon([gc.points_(1), infvertex(tangent(gc), -tangent(gc))]));
     else
       % Use defualt plot.
-      h = plot_@closedcurve(gc);
+      h = plotCurve@closedcurve(gc);
     end
   end  
 end

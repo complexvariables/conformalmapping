@@ -134,7 +134,7 @@ methods
     washold = ishold;
     newplot
     
-    h = plot_(C);
+    h = plotCurve(C);
     [cargs, pargs] = cmtplot.closedcurveArgs(varargin{:});
     set(h, pargs{:}, cargs{:});
 
@@ -218,7 +218,7 @@ methods(Abstract=true)
 end
 
 methods(Hidden)
-  function h = plot_(C, varargin)
+  function h = plotCurve(C, varargin)
     h = adaptplot(@(t) xypoint(C, t), [0, C.length_]);
   end
 end

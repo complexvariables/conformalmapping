@@ -206,7 +206,7 @@ methods
 end
 
 methods(Access=protected)
-  function h = dumb_plot_(S, varargin)
+  function h = dumbPlot(S, varargin)
     t = (0:200)'/200;
     h = plot(point(S, t), varargin{:});
   end
@@ -252,7 +252,7 @@ methods(Access=protected, Static)
         delete(sh);
       end
       if numel(x) > 1
-        sh = dumb_plot_(splinep(x, y), 'k');
+        sh = dumbPlot(splinep(x, y), 'k');
       end
       text(xi, yi, ['  ' int2str(np)], 'EraseMode', 'background');
     end

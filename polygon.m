@@ -873,7 +873,7 @@ methods
 end
 
 methods(Hidden)
-    function handle = plot_(p, varargin)
+    function handle = plotCurve(p, varargin)
         % PLOT a polygon.
 
         if isempty(p.vertexList)
