@@ -16,10 +16,10 @@ classdef circle < closedcurve
 % adapted from code by Toby Driscoll, originally 20??.
 
 properties
-  points_
-  center_
-  radius_
-  interiorpt_
+  points
+  circCenter
+  circRadius
+  interiorPoint
 end
 
 methods
@@ -91,10 +91,10 @@ methods
       error('Circle takes a vector of 3 points or a center and radius.')
     end
     
-    gc.points_ = z3;
-    gc.center_ = center;
-    gc.radius_ = radius;
-    gc.interiorpt_ = interiorpt;
+    gc.points = z3;
+    gc.circCenter = center;
+    gc.circRadius = radius;
+    gc.interiorPoint = interiorpt;
   end
   
   function gc = apply(gc, m)
@@ -103,11 +103,11 @@ methods
               'Expected a mobius transformation.')
       end
       
-      gc = circle(m(gc.points_));
+      gc = circle(m(gc.points));
   end
   
   function z = center(gc)
-    z = gc.center_;
+    z = gc.circCenter;
   end
   
   function disp(gc)
@@ -115,24 +115,24 @@ methods
       fprintf('circle (generalized) as a line,\n')
     else
       fprintf('circle with center %s and radius %s,\n', ...
-              num2str(gc.center_), num2str(gc.radius_))
+              num2str(gc.circCenter), num2str(gc.circRadius))
     end
-    if isempty(gc.points_)
+    if isempty(gc.points)
       fprintf('\n(degenerate circle)\n\n')
     else
       fprintf('\npassing through points:\n\n')
-      disp(gc.points_(:))
+      disp(gc.points(:))
     end
   end
   
   function d = dist(gc, z)
     % Distance between point and circle.
     if ~isinf(gc)
-      v = z - gc.center_;
-      d = abs(abs(v) - gc.radius_);
+      v = z - gc.circCenter;
+      d = abs(abs(v) - gc.circRadius);
     else
-      v = z - gc.points_(1);
-      s = sign(1i*diff(gc.points_(1:2)));
+      v = z - gc.points(1);
+      s = sign(1i*diff(gc.points(1:2)));
       d = abs(real(v)*real(s) + imag(v)*imag(s));
     end
   end
@@ -146,7 +146,7 @@ methods
     if isinf(gc)
       % Intersect real axis with a line.
       tau = tangent(gc);
-      p = gc.points_(1);
+      p = gc.points(1);
       if abs(imag(tau)) > 100*eps
         t = -imag(p)/imag(tau);
         z = real(p) + t*real(tau);
@@ -158,7 +158,7 @@ methods
       z = [z, inf];
     else
       % Intersect real axis with a circle.
-      rat = -imag(gc.center_)/gc.radius_;
+      rat = -imag(gc.circCenter)/gc.circRadius;
       if abs(abs(rat) - 1) < 100*eps
         warning(['Circles are close to tangency.\nIntersection', ...
                  ' problem is not well conditioned.'])
@@ -166,21 +166,21 @@ methods
       theta = asin(rat);                    % find one intersection
       theta = theta(isreal(theta));         % may not have one
       theta = unique([theta, pi - theta]);  % may have a second
-      z = real(gc.center_ + gc.radius_*exp(1i*theta));
+      z = real(gc.circCenter + gc.circRadius*exp(1i*theta));
     end
     z = feval(inv(M), z);
   end
   
   function tf = isinf(gc)
-    tf = isinf(gc.radius_);
+    tf = isinf(gc.circRadius);
   end
   
   function tf = isinside(gc, z)
     if isinf(gc)
-      z = (z - gc.points_(1))/tangent(gc, z);
+      z = (z - gc.points(1))/tangent(gc, z);
       tf = imag(z) > 0;
     else
-      tf = abs(z - gc.center_) < gc.radius_;
+      tf = abs(z - gc.circCenter) < gc.circRadius;
     end
   end
   
@@ -201,9 +201,9 @@ methods
       error('Must scale by a finite number.')
     end
     
-    gc.points_ = gc.points_*z;
-    gc.center_ = gc.center_*z;
-    gc.radius_ = gc.radius_*abs(z);
+    gc.points = gc.points*z;
+    gc.circCenter = gc.circCenter*z;
+    gc.circRadius = gc.circRadius*abs(z);
   end
   
   function gc = plus(gc, z)
@@ -214,38 +214,38 @@ methods
       error('Must translate by a finite number.')
     end
     
-    gc.points_ = gc.points_ + z;
-    gc.center_ = gc.center_ + z;
+    gc.points = gc.points + z;
+    gc.circCenter = gc.circCenter + z;
   end
   
   function z = point(gc, t)
-    if ~isinf(gc.radius_)
-      theta = angle(gc.points_(1) - gc.center_) + 2*pi*t;
-      z = gc.center_ + gc.radius_*exp(1i*theta);
+    if ~isinf(gc.circRadius)
+      theta = angle(gc.points(1) - gc.circCenter) + 2*pi*t;
+      z = gc.circCenter + gc.circRadius*exp(1i*theta);
     else
       % Use homogeneous coordinates to define a reasonable interpolant.
-      tangent = diff(gc.points_(1:2)); % must be finite
+      tangent = diff(gc.points(1:2)); % must be finite
       upper = 2*tangent*(t - 1/2);
       lower = 4*t.*(1 - t);
-      z = double(homog(gc.points_(1)) + homog(upper, lower));
+      z = double(homog(gc.points(1)) + homog(upper, lower));
     end
   end
     
   function r = radius(gc)
-    r = gc.radius_;
+    r = gc.circRadius;
   end
   
   function zt = tangent(gc, t)
     if isinf(gc)
-      zt = diff(gc.points_(1:2));
+      zt = diff(gc.points(1:2));
     else
-      zt = 1i*(point(gc, t) - gc.center_);
+      zt = 1i*(point(gc, t) - gc.circCenter);
     end
   end
   
   function gc = uminus(gc)
-    gc.points_ = -gc.points_;
-    gc.center_ = -gc.center_;
+    gc.points = -gc.points;
+    gc.circCenter = -gc.circCenter;
   end
 end
 
@@ -254,7 +254,7 @@ methods(Hidden)
     if isinf(gc)
       % For a line, we will use a polygon. This employs the truncation
       % mechanism that gives us something usable with plotting regions.
-      h = plot(polygon([gc.points_(1), infvertex(tangent(gc), -tangent(gc))]));
+      h = plot(polygon([gc.points(1), infvertex(tangent(gc), -tangent(gc))]));
     else
       % Use defualt plot.
       h = plot_@closedcurve(gc);
