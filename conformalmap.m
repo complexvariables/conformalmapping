@@ -20,9 +20,9 @@ classdef conformalmap < cmtobject
 % Written by Everett Kropf, 2014.
 
 properties
-    domain_                           % Region object.
-    range_                            % Region object.
-    function_list_
+    theDomain                           % Region object.
+    theRange                            % Region object.
+    functionList
 end
 
 methods
@@ -56,14 +56,14 @@ methods
         end
 
         if composition
-            f.function_list_ = [{domain, range}, varargin];
-            f.domain_ = f.function_list_{1}.domain;
-            f.range_ = f.function_list_{end}.range;
+            f.functionList = [{domain, range}, varargin];
+            f.theDomain = f.functionList{1}.domain;
+            f.theRange = f.functionList{end}.range;
         else
-            f.domain_ = domain;
-            f.range_ = range;
+            f.theDomain = domain;
+            f.theRange = range;
             if anonymous
-                f.function_list_ = varargin;
+                f.functionList = varargin;
             end
         end
     end
@@ -77,8 +77,8 @@ methods
         if iscomposition(f)
             % f is a composition, apply each map in turn.
             w = z;
-            for k = 1:numel(f.function_list_)
-                w = apply(f.function_list_{k}, w);
+            for k = 1:numel(f.functionList)
+                w = apply(f.functionList{k}, w);
             end
             return
         end
@@ -120,42 +120,42 @@ methods
 
     function disp(f)
         fprintf('** conformalmap object **\n\n')
-        if ~isempty(f.domain_)
+        if ~isempty(f.theDomain)
             fprintf('---\nhas domain\n')
-            disp(f.domain_)
+            disp(f.theDomain)
         end
-        if ~isempty(f.range_)
+        if ~isempty(f.theRange)
             fprintf('---\nhas range\n')
-            disp(f.range_)
+            disp(f.theRange)
         end
 
         if iscomposition(f)
             fprintf('---\nthis map is a composition of:\n(in order of application)\n')
-            for k = 1:numel(f.function_list_)
-                disp(f.function_list_{k})
+            for k = 1:numel(f.functionList)
+                disp(f.functionList{k})
             end
         end
     end
 
     function d = domain(f)
         % Return map domain region.
-        d = f.domain_;
+        d = f.theDomain;
     end
 
     function tf = isanonymous(f)
-        tf = numel(f.function_list_) == 1 ...
-            && isa(f.function_list_{1}, 'function_handle');
+        tf = numel(f.functionList) == 1 ...
+            && isa(f.functionList{1}, 'function_handle');
     end
 
     function tf = iscomposition(f)
-        tf = numel(f.function_list_) > 1;
+        tf = numel(f.functionList) > 1;
     end
 
     function out = plot(f, varargin)
         washold = ishold;
 
-        if isempty(f.range_) || ...
-                ~(isempty(f.domain_) || hasgrid(f.domain_))
+        if isempty(f.theRange) || ...
+                ~(isempty(f.theDomain) || hasgrid(f.theDomain))
             warning('Map range not set or domain has an empty grid. No plot produced.')
             return
         end
@@ -164,13 +164,13 @@ methods
         hold on
         
         % Separate grid construction and plot 'name'/value pairs.
-        [gargs, pargs] = separateArgs(get(f.domain_), varargin{:}); 
-        hg = plot(apply(f, grid(f.domain_, gargs{:})), pargs{:});
-        hb = plot(f.range_, pargs{:});
+        [gargs, pargs] = separateArgs(get(f.theDomain), varargin{:}); 
+        hg = plot(apply(f, grid(f.theDomain, gargs{:})), pargs{:});
+        hb = plot(f.theRange, pargs{:});
 
         if ~washold
             cmtplot.whitefigure(cah)
-            axis(plotbox(f.range_))
+            axis(plotbox(f.theRange))
             aspectequal
             axis off
             hold off
@@ -183,7 +183,7 @@ methods
 
     function r = range(f)
         % Return map range region.
-        r = f.range_;
+        r = f.theRange;
     end
 
     function varargout = subsref(f, S)
@@ -266,7 +266,7 @@ end
 methods(Access=protected)
     function w = apply_map(f, z)
         if isanonymous(f)
-            w = f.function_list_{1}(z);
+            w = f.functionList{1}(z);
         else
             % Default map is identity.
             if ~isa(class(f), 'conformalmap')

@@ -85,9 +85,9 @@ methods
         g = szmap(cinvcurve(br, a), prefs{:}, 'confCenter', 0);
         func = @(z) 1./conj(apply_map_(g, conj(1./z))) + a;
 
-        g.domain_ = d;
-        g.range_ = r;
-        g.function_list_ = {func};
+        g.theDomain = d;
+        g.theRange = r;
+        g.functionList = {func};
     end
 
     function S = kernel(f)

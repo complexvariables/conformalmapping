@@ -222,8 +222,8 @@ methods
       M2 = tmp;
     elseif isa(M2, 'mobius')
       M = mobius(M1.matrix_*M2.matrix_);
-      M.domain_ = domain(M2);
-      M.range_ = range(M1);
+      M.theDomain = domain(M2);
+      M.theRange = range(M1);
       return
     elseif isa(M2, 'conformalmap')
       M = mtimes@conformalmap(M2, M1);
