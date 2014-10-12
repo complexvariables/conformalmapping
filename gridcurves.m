@@ -19,7 +19,7 @@ classdef gridcurves
 % adapted from an idea by Toby Driscoll, 20??.
 
 properties
-  curves_
+  curveList
 end
 
 methods
@@ -33,19 +33,19 @@ methods
             'Expected a cell array of individual grid curves.')
     end
     
-    gc.curves_ = curves;
+    gc.curveList = curves;
   end
   
   function gc = conj(gc)
     % Complex conjugation.
-    for k = 1:numel(gc.curves_)
-      gc.curves_{k} = conj(gc.curves_{k});
+    for k = 1:numel(gc.curveList)
+      gc.curveList{k} = conj(gc.curveList{k});
     end
   end
   
   function disp(gd)
     fprintf('gridcurves object:\n\n')
-    fprintf('  with %d gridlines.\n\n', numel(gd.curves_))
+    fprintf('  with %d gridlines.\n\n', numel(gd.curveList))
   end
   
   function gc = minus(gc, b)
@@ -54,8 +54,8 @@ methods
       return
     end
     gc.scalaronly(b)
-    for k = 1:numel(gc.curves_)
-      gc.curves_{k} = gc.curves_{k} - b;
+    for k = 1:numel(gc.curveList)
+      gc.curveList{k} = gc.curveList{k} - b;
     end
   end
   
@@ -64,8 +64,8 @@ methods
       [gc, b] = deal(b, gc);
     end
     gc.scalaronly(b)
-    for k = 1:numel(gc.curves_)
-      gc.curves_{k} = b*gc.curves_{k};
+    for k = 1:numel(gc.curveList)
+      gc.curveList{k} = b*gc.curveList{k};
     end
   end
   
@@ -76,7 +76,7 @@ methods
   function n = numel(gc, varargin)
     % Overloaded for subsref.
     
-    n = numel(gc.curves_, varargin{:});
+    n = numel(gc.curveList, varargin{:});
   end
     
   function gc = rdivide(gc, b)
@@ -86,8 +86,8 @@ methods
     else
       [gc, b] = deal(b, gc);
       gc.scalaronly(b)
-      for k = 1:numel(gc.curves_)
-        gc.curves_{k} = b./gc.curves_{k};
+      for k = 1:numel(gc.curveList)
+        gc.curveList{k} = b./gc.curveList{k};
       end
     end
   end
@@ -100,8 +100,8 @@ methods
     hold on
     
     [gargs, pargs] = cmtplot.gridArgs(varargin{:});
-    for k = 1:numel(gc.curves_)
-      zg = gc.curves_{k};
+    for k = 1:numel(gc.curveList)
+      zg = gc.curveList{k};
       line(real(zg), imag(zg), pargs{:}, gargs{:}, 'tag', gctag)
     end
     
@@ -119,8 +119,8 @@ methods
       [gc, b] = deal(b, gc);
     end
     gc.scalaronly(b)
-    for k = 1:numel(gc.curves_)
-      gc.curves_{k} = gc.curves_{k} + b;
+    for k = 1:numel(gc.curveList)
+      gc.curveList{k} = gc.curveList{k} + b;
     end
   end
     
@@ -133,7 +133,7 @@ methods
         if S(1).type(1) == '('
           S(1).type = '{}';
         end
-        [varargout{1:nargout}] = subsref(gc.curves_, S);
+        [varargout{1:nargout}] = subsref(gc.curveList, S);
         
       otherwise
         [varargout{1:nargout}] = builtin('subsref', gc, S);
@@ -141,8 +141,8 @@ methods
   end
   
   function gc = uminus(gc)
-    for k = 1:numel(gc.curves_)
-      gc.curves_{k} = -gc.curves_{k};
+    for k = 1:numel(gc.curveList)
+      gc.curveList{k} = -gc.curveList{k};
     end
   end
 end

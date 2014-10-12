@@ -13,7 +13,7 @@ properties
   knotY                     % knot y-coordinates
   
   ppArray                   % piecewise polynomial array
-  chordal_arclength_ = 0    % total chordal arclength
+  chordalArclength = 0    % total chordal arclength
 end
 
 properties(Dependent)
@@ -63,7 +63,7 @@ methods
     end
     
     if needpts
-      [xk, yk] = splinep.get_pts_(tofignum);
+      [xk, yk] = splinep.getPts(tofignum);
     end
     
     if xk(1) ~= xk(end)
@@ -76,7 +76,7 @@ methods
     % Spline data.
     S.knotX = xk;
     S.knotY = yk;
-    [S.ppArray, S.chordal_arclength_] = splinep.spline_(xk, yk);
+    [S.ppArray, S.chordalArclength] = splinep.makeSpline(xk, yk);
   end
   
   function out = apply(S, op)
@@ -94,7 +94,7 @@ methods
   end
   
   function L = arclength(S)
-    L = S.chordal_arclength_;
+    L = S.chordalArclength;
   end
   
   function disp(S)
@@ -157,7 +157,7 @@ methods
   end
   
   function z = point(S, t)
-    t = modparam(S, t)*S.chordal_arclength_;
+    t = modparam(S, t)*S.chordalArclength;
     z = complex(ppval(S.ppArray{1,1}, t), ...
                 ppval(S.ppArray{2,1}, t));
   end
@@ -189,7 +189,7 @@ methods
   end
   
   function z2 = second(S, t)
-    t = modparam(S, t)*S.chordal_arclength_;
+    t = modparam(S, t)*S.chordalArclength;
     z2 = complex(ppval(S.ppArray{1,3}, t), ...
                  ppval(S.ppArray{2,3}, t))*arclength(S)^2;
   end
@@ -213,7 +213,7 @@ methods(Access=protected)
 end
 
 methods(Access=protected, Static)
-  function [x, y] = get_pts_(tofignum)
+  function [x, y] = getPts(tofignum)
     fprintf(['\n' ...
              '    Left mouse button picks points.\n' ...
              '    Right mouse button picks last point,\n' ...
@@ -261,7 +261,7 @@ methods(Access=protected, Static)
     y = [y(:); y(1)];
   end
   
-  function [pp, tl] = spline_(x, y)
+  function [pp, tl] = makeSpline(x, y)
     % This algorithm is from " PERIODIC CUBIC SPLINE INTERPOLATION USING    
     % PARAMETRIC SPLINES" by W.D. Hoskins and P.R. King, Algorithm 73, The
     % Computer Journal, 15, 3(1972) P282-283. Fits a parametric periodic
