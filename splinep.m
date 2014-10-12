@@ -9,11 +9,11 @@ classdef splinep < closedcurve
 % Written by Everett Kropf, 2014.
 
 properties
-  xk_                               % knot x-coordinates
-  yk_                               % knot y-coordinates
+  knotX                     % knot x-coordinates
+  knotY                     % knot y-coordinates
   
-  pp_                               % piecewise polynomial array
-  chordal_arclength_ = 0            % total chordal arclength
+  ppArray                   % piecewise polynomial array
+  chordalArclength = 0    % total chordal arclength
 end
 
 properties(Dependent)
@@ -35,8 +35,8 @@ methods
       case 1
         tmp = varargin{1};
         if isa(varargin{1}, 'splinep')
-          xk = tmp.xk_;
-          yk = tmp.yk_;
+          xk = tmp.knotX;
+          yk = tmp.knotY;
         elseif isempty(tmp) || (numel(tmp) == 1 && ...
             ishghandle(tmp(1)) && strcmp(get(tmp, 'type'), 'figure'))
           % Need to prompt for points.
@@ -63,7 +63,7 @@ methods
     end
     
     if needpts
-      [xk, yk] = splinep.get_pts_(tofignum);
+      [xk, yk] = splinep.getPts(tofignum);
     end
     
     if xk(1) ~= xk(end)
@@ -74,9 +74,9 @@ methods
     % Superclass constructor here.
     
     % Spline data.
-    S.xk_ = xk;
-    S.yk_ = yk;
-    [S.pp_, S.chordal_arclength_] = splinep.spline_(xk, yk);
+    S.knotX = xk;
+    S.knotY = yk;
+    [S.ppArray, S.chordalArclength] = splinep.makeSpline(xk, yk);
   end
   
   function out = apply(S, op)
@@ -94,26 +94,26 @@ methods
   end
   
   function L = arclength(S)
-    L = S.chordal_arclength_;
+    L = S.chordalArclength;
   end
   
   function disp(S)
     fprintf('splinep object:\n\n')
-    fprintf('  defined with %d spline knots,\n', numel(S.xk_))
+    fprintf('  defined with %d spline knots,\n', numel(S.knotX))
     lstr = strtrim(evalc('disp(arclength(S))'));
     fprintf('  total chordal arc length %s\n\n', lstr)
   end
   
   function x = get.xpts(S)
-    x = S.xk_;
+    x = S.knotX;
   end
   
   function y = get.ypts(S)
-    y = S.yk_;
+    y = S.knotY;
   end
   
   function z = get.zpts(S)
-    z = complex(S.xk_, S.yk_);
+    z = complex(S.knotX, S.knotY);
   end
   
   function S = minus(S, z)
@@ -157,9 +157,9 @@ methods
   end
   
   function z = point(S, t)
-    t = modparam(S, t)*S.chordal_arclength_;
-    z = complex(ppval(S.pp_{1,1}, t), ...
-                ppval(S.pp_{2,1}, t));
+    t = modparam(S, t)*S.chordalArclength;
+    z = complex(ppval(S.ppArray{1,1}, t), ...
+                ppval(S.ppArray{2,1}, t));
   end
   
   function replicate(S)
@@ -189,15 +189,15 @@ methods
   end
   
   function z2 = second(S, t)
-    t = modparam(S, t)*S.chordal_arclength_;
-    z2 = complex(ppval(S.pp_{1,3}, t), ...
-                 ppval(S.pp_{2,3}, t))*arclength(S)^2;
+    t = modparam(S, t)*S.chordalArclength;
+    z2 = complex(ppval(S.ppArray{1,3}, t), ...
+                 ppval(S.ppArray{2,3}, t))*arclength(S)^2;
   end
   
   function zt = tangent(S, t)
     t = modparam(S, t)*arclength(S);
-    zt = complex(ppval(S.pp_{1,2}, t), ...
-                 ppval(S.pp_{2,2}, t))*arclength(S);
+    zt = complex(ppval(S.ppArray{1,2}, t), ...
+                 ppval(S.ppArray{2,2}, t))*arclength(S);
   end
   
   function S = uminus(S)
@@ -213,7 +213,7 @@ methods(Access=protected)
 end
 
 methods(Access=protected, Static)
-  function [x, y] = get_pts_(tofignum)
+  function [x, y] = getPts(tofignum)
     fprintf(['\n' ...
              '    Left mouse button picks points.\n' ...
              '    Right mouse button picks last point,\n' ...
@@ -261,7 +261,7 @@ methods(Access=protected, Static)
     y = [y(:); y(1)];
   end
   
-  function [pp, tl] = spline_(x, y)
+  function [pp, tl] = makeSpline(x, y)
     % This algorithm is from " PERIODIC CUBIC SPLINE INTERPOLATION USING    
     % PARAMETRIC SPLINES" by W.D. Hoskins and P.R. King, Algorithm 73, The
     % Computer Journal, 15, 3(1972) P282-283. Fits a parametric periodic

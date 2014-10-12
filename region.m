@@ -34,8 +34,8 @@ classdef region < cmtobject
 % adapted from code by Toby Driscoll, 20??.
 
 properties
-  outerboundary_
-  innerboundary_
+  outerboundary
+  innerboundary
 end
 
 properties(Dependent)
@@ -58,32 +58,32 @@ methods
     switch nargin
       case 1
         p = varargin{1};
-        R.outerboundary_ = region.checkcc(p);
+        R.outerboundary = region.checkcc(p);
         
       case 2
         [p, q] = varargin{:};
         if ischar(q)
           switch q
             case 'interiorto'
-              R.outerboundary_ = region.checkcc(p);
+              R.outerboundary = region.checkcc(p);
             case 'exteriorto'
-              R.innerboundary_ = region.checkcc(p);
+              R.innerboundary = region.checkcc(p);
             otherwise
               error('CMT:InvalidArgument', 'String "%s" unrecognized.', q)
           end
         else
-          R.outerboundary_ = region.checkcc(p);
-          R.innerboundary_ = region.checkcc(q);
+          R.outerboundary = region.checkcc(p);
+          R.innerboundary = region.checkcc(q);
         end
         
       case 4
         [p, pstr, q, qstr] = varargin{:};        
         if strcmp(pstr, 'interiorto') && strcmp(qstr, 'exteriorto')
-          R.outerboundary_ = region.checkcc(p);
-          R.innerboundary_ = region.checkcc(q);
+          R.outerboundary = region.checkcc(p);
+          R.innerboundary = region.checkcc(q);
         elseif strcmp(qstr, 'interiorto') && strcmp(pstr, 'exteriorto')
-          R.outerboundary_ = region.checkcc(q);
-          R.innerboundary_ = region.checkcc(p);
+          R.outerboundary = region.checkcc(q);
+          R.innerboundary = region.checkcc(p);
         else
           error('Invalid arguemts. Seek help.')
         end
@@ -99,12 +99,12 @@ methods
     % Not clear the best way to do this, especially for multiply
     % connected regions. Just dump for now.
     if hasouter(R)
-        b = R.outerboundary_;
+        b = R.outerboundary;
     else
         b = {};
     end
     if hasinner(R)
-        b = {b{:}; R.innerboundary_};
+        b = {b{:}; R.innerboundary};
     end
     if numel(b) == 1
         b = b{1};
@@ -114,11 +114,11 @@ methods
   function box = boundbox(R)
       zi = zeros(4*R.numinner, 1);
       for k = 1:R.numinner
-          zi(4*(k - 1) + (1:4)) = cmt.bb2z(boundbox(R.innerboundary_{k}));
+          zi(4*(k - 1) + (1:4)) = cmt.bb2z(boundbox(R.innerboundary{k}));
       end
       zo = zeros(4*R.numouter, 1);
       for k = 1:R.numouter
-          zo(4*(k - 1) + (1:4)) = cmt.bb2z(boundbox(R.outerboundary_{k}));
+          zo(4*(k - 1) + (1:4)) = cmt.bb2z(boundbox(R.outerboundary{k}));
       end
       box = cmt.boundbox([zi; zo]);
   end
@@ -134,8 +134,8 @@ methods
     
     fprintf('region')
     
-    outer = R.outerboundary_;
-    inner = R.innerboundary_;
+    outer = R.outerboundary;
+    inner = R.innerboundary;
     
     if ~isempty(outer)
       fprintf(' interior to:\n')
@@ -165,11 +165,11 @@ methods
   end
   
   function n = get.numinner(R)
-    n = numel(R.innerboundary_);
+    n = numel(R.innerboundary);
   end
   
   function n = get.numouter(R)
-    n = numel(R.outerboundary_);
+    n = numel(R.outerboundary);
   end
   
   function fill(R, varargin)
@@ -184,12 +184,12 @@ methods
     % Fill interiors of any outer boundaries or draw exterior region.
     if hasouter(R)
       for k = 1:R.numouter
-        fill(R.outerboundary_{k}, varargin{:})
+        fill(R.outerboundary{k}, varargin{:})
       end
     elseif isexterior(R)
       zb = zeros(4*R.numinner, 1);
       for k = 1:R.numinner
-        zb(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.innerboundary_{k}, 1));
+        zb(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.innerboundary{k}, 1));
       end
       zb = cmt.bb2z(cmt.plotbox(zb, 2));
       fill(real(zb), imag(zb), fillargs{:}, varargin{:});
@@ -199,7 +199,7 @@ methods
     if hasinner(R)
       bgcolor = get(gca, 'color');
       for k = 1:R.numinner
-        fill(R.innerboundary_{k}, 'facecolor', bgcolor, ...
+        fill(R.innerboundary{k}, 'facecolor', bgcolor, ...
              'edgecolor', cmtplot.filledgecolor, varargin{:})
       end
     end
@@ -217,24 +217,24 @@ methods
   end
   
   function tf = hasinner(R)
-    tf = ~isempty(R.innerboundary_);
+    tf = ~isempty(R.innerboundary);
   end
   
   function tf = hasouter(R)
-    tf = ~isempty(R.outerboundary_);
+    tf = ~isempty(R.outerboundary);
   end
   
   function b = inner(R)
     if R.numinner == 1
-      b = R.innerboundary_{1};
+      b = R.innerboundary{1};
     else
-      b = R.innerboundary_;
+      b = R.innerboundary;
     end
   end
   
   function tf = isempty(R)
     % Empty region?
-    tf = isempty(R.outerboundary_) & isempty(R.innerboundary_);
+    tf = isempty(R.outerboundary) & isempty(R.innerboundary);
   end
   
   function tf = isexterior(R)
@@ -244,21 +244,21 @@ methods
   
   function tf = isin(R, z)
     % Is point z in region?
-    if isempty(R.outerboundary_)
+    if isempty(R.outerboundary)
       outin = true;
     else
-      outin = isinside(R.outerboundary_{1}, z);
-      for k = 2:numel(R.outerboundary_)
-        outin = outin & isinside(R.outerboundary_{k}, z);
+      outin = isinside(R.outerboundary{1}, z);
+      for k = 2:numel(R.outerboundary)
+        outin = outin & isinside(R.outerboundary{k}, z);
       end
     end
     
-    if isempty(R.innerboundary_)
+    if isempty(R.innerboundary)
       inin = true;
     else
-      inin = ~isinside(R.innerboundary_{1}, z);
-      for k = 2:numel(R.innerboundary_)
-        inin = inin & ~isinside(R.innerboundary_{k}, z);
+      inin = ~isinside(R.innerboundary{1}, z);
+      for k = 2:numel(R.innerboundary)
+        inin = inin & ~isinside(R.innerboundary{k}, z);
       end
     end
     
@@ -284,9 +284,9 @@ methods
   
   function b = outer(R)
     if R.numouter == 1
-      b = R.outerboundary_{1};
+      b = R.outerboundary{1};
     else
-      b = R.outerboundary_;
+      b = R.outerboundary;
     end
   end
   
@@ -298,11 +298,11 @@ methods
     hold on
     
     btag = sprintf('boundary_%s', num2hex(rand));
-    inner = r.innerboundary_;
+    inner = r.innerboundary;
     for k = 1:numel(inner)
       plot(inner{k}, varargin{:}, 'tag', btag)
     end
-    outer = r.outerboundary_;
+    outer = r.outerboundary;
     for k = 1:numel(outer)
       plot(outer{k}, varargin{:}, 'tag', btag)
     end

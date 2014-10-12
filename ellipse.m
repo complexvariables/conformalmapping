@@ -15,7 +15,7 @@ properties
 end
 
 properties(Access=protected)
-  e_
+  eVar
 end
 
 methods
@@ -29,14 +29,14 @@ methods
       
       E.a = 1 + e;
       E.b = 1 - e;
-      E.e_ = e;
+      E.eVar = e;
     elseif nargin >= 2
       if nargin > 3
         error('CMT:InvalidArgument', 'Too many arguments.')
       end
       [E.a, E.b] = varargin{1:2};
       if abs(E.a + E.b - 2) < 10*eps(2)
-        E.e_ = E.a - 1;
+        E.eVar = E.a - 1;
       end
       if nargin > 2
         E.r = varargin{3};
@@ -49,8 +49,8 @@ methods
     fprintf('\tmajor axis   %f\n', E.a)
     fprintf('\tminor axis   %f\n', E.b)
     fprintf('\teccentricity %f\n', E.a/E.b)
-    if ~isempty(E.e_)
-      fprintf('\tepsilon      %f\n', E.e_)
+    if ~isempty(E.eVar)
+      fprintf('\tepsilon      %f\n', E.eVar)
     end
     fprintf('\n')
   end
@@ -75,10 +75,10 @@ methods
     % Boundary correspondence of conformal map to circle.
     % Exact to machine precision.
     % See Henrici, vol. 3, p. 391, equation for theta at bottom of page.
-    if isempty(E.e_)
+    if isempty(E.eVar)
       error('Must define ellipse with epsilon parameter.')
     end
-    if E.e_ > 0.95
+    if E.eVar > 0.95
       warning('This is not accurate for epsilon > 0.95.')
     end
     
@@ -87,7 +87,7 @@ methods
     % ellipse term magnitude function
     emf = @(m, e) e.^m./(1 + e.^(2*m))./m;
     % term function
-    termfun = @(t, m) (-1).^m.*emf(m, E.e_).*sin(2*m.*t);
+    termfun = @(t, m) (-1).^m.*emf(m, E.eVar).*sin(2*m.*t);
     
     % Keep adding terms, 20 at a time, until too tiny to make a change. Good
     % up to about e = 0.95.
@@ -95,7 +95,7 @@ methods
     for k = 1:60
       m = (k-1)*20 + (1:20);
       th = th + 2*sum(bsxfun(termfun, t, m), 2);
-      if all(emf(m(end), E.e_) < eps(th))
+      if all(emf(m(end), E.eVar) < eps(th))
         break
       end
     end

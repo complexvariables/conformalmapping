@@ -1,17 +1,17 @@
 classdef szego < cmtobject
 % SZEGO class represents a Szego kernel.
 %
-% S = szego(C, a)
-%   C - closedcurve object
+% S = szego(curve, a)
+%   curve - closedcurve object
 %   a - point such that f(a) = 0 where f is map to disk.
 %
-% szego(C, a, 'name', value, ...)
+% szego(curve, a, 'name', value, ...)
 %   Uses preferences specified by name/value pairs. See szset for valid
 %   name/value pairs.
 %
 % s = theta(S, t) - boundary correspondence function gives angle on the unit
-%     circle of the image of a point on C given by parameter t,
-%          th(t) = angle(-1i*phi(t).^2.*tangent(C, t)),
+%     circle of the image of a point on curve given by parameter t,
+%          th(t) = angle(-1i*phi(t).^2.*tangent(curve, t)),
 %     normalized so that th(0) = 0.
 %
 % sp = thetap(S, t) - derivative of th(t),
@@ -22,7 +22,7 @@ classdef szego < cmtobject
 %     tol is 1e-12.
 %
 % v = phi(S, t) - Szego kernel interpolation
-%          phi(t) := sqrt(abs(tangent(C, t))).*S(point(C, t), a)
+%          phi(t) := sqrt(abs(tangent(curve, t))).*S(point(curve, t), a)
 %     where S(z, a) is the computed Szego kernel.
 %
 % Trummer, M. "An efficient implementation of a conformal mapping method based
@@ -38,26 +38,26 @@ classdef szego < cmtobject
 % Written by Everett Kropf, 2014.
 
 properties
-    C                 % Closed curve where kernel is defined.
-    a = 0             % Point that goes to origin under Riemann map.
-    N                 % Number of collocation points.
+    curve             % Closed curve where kernel is defined.
+    confCenter = 0    % Point that goes to origin under Riemann map.
+    numCollPts        % Number of collocation points.
 
-    phi_              % Collcation phi values.
-    theta0_           % Rotation constant.
-    Saa_              % Szego kernel value S(a,a).
-    relresid_         % Collocation solution relative residual.
+    phiColl           % Collcation phi values.
+    theta0            % Rotation constant.
+    Saa               % Szego kernel value S(a,a).
+    relResid          % Collocation solution relative residual.
 
-    z_                % Stored collocation points.
-    zt_               % Stored collocation tangents.
-    zT_               % Stored collocation unit tangents.
-    dt_ = 0           % dt
+    zPts              % Stored collocation points.
+    zTan              % Stored collocation tangents.
+    zUnitTan          % Stored collocation unit tangents.
+    dtColl = 0        % Collocation differential.
 
-    newtTol_          % Newton iteration tolerance.
-    noisy_ = false    % Logical; informational output?
+    newtTol           % Newton iteration tolerance.
+    beNoisy = false    % Logical; informational output?
 end
 
 methods
-    function S = szego(C, varargin)
+    function S = szego(curve, varargin)
         % Constructor.
         
         % Make sure defaults are set.
@@ -67,7 +67,7 @@ methods
             return
         end
         
-        if ~isa(C, 'closedcurve')
+        if ~isa(curve, 'closedcurve')
             error('CMT:InvalidArgument', 'Expected a closedcurve object.')
         end
         
@@ -75,42 +75,42 @@ methods
             opts = set(opts, varargin{:});
         end
         
-        a_ = opts.confCenter;
-        kerndat = szego.compute_kernel(C, a_, opts);
+        a = opts.confCenter;
+        kerndat = szego.compute_kernel(curve, a, opts);
         knames = fieldnames(kerndat);
         for k = 1:numel(knames)
             S.(knames{k}) = kerndat.(knames{k});
         end
 
-        S.C = C;
-        S.a = a_;
-        S.N = opts.numCollPts;
-        S.theta0_ = angle(-1i*phi(S, 0)^2*tangent(S.C, 0));
-        S.Saa_ = sum(abs(S.phi_.^2))*S.dt_;
-        S.newtTol_ = opts.newtonTol;
-        S.noisy_ = opts.trace;
+        S.curve = curve;
+        S.confCenter = a;
+        S.numCollPts = opts.numCollPts;
+        S.theta0 = angle(-1i*phi(S, 0)^2*tangent(S.curve, 0));
+        S.Saa = sum(abs(S.phiColl.^2))*S.dtColl;
+        S.newtTol = opts.newtonTol;
+        S.beNoisy = opts.trace;
     end
 
     function disp(S)
         fprintf('Szego kernel object:\n\n')
-        astr = strtrim(evalc('disp(S.a)'));
+        astr = strtrim(evalc('disp(S.confCenter)'));
         fprintf('with a = %s,\n', astr)
-        resstr = strtrim(evalc('disp(S.relresid_)'));
+        resstr = strtrim(evalc('disp(S.relResid)'));
         fprintf('and kernel solution relative residual\n\t%s,\n', resstr)
         fprintf('computed over curve\n')
-        disp(S.C)
+        disp(S.curve)
     end
 
     function A = kerz_stein(S, t)
         % Calculate Kerzmann-Stein kernel.
         t = t(:);
-        w = point(S.C, t);
-        wt = tangent(S.C, t);
+        w = point(S.curve, t);
+        wt = tangent(S.curve, t);
         wT = wt./abs(wt);
 
-        z = S.z_;
-        zt = S.zt_;
-        zT = S.zT_;
+        z = S.zPts;
+        zt = S.zTan;
+        zT = S.zUnitTan;
         separation = 10*eps(max(abs(z)));
 
         function A = KS_by_idx(wi, zi)
@@ -122,23 +122,24 @@ methods
         % Function bsxfun will call KS_by_idx with single wi and a vector of zi.
         % Column vector w and row vector z determines shape of resulting
         % matrix A.
-        A = bsxfun(@KS_by_idx, (1:numel(w))', 1:S.N);
+        A = bsxfun(@KS_by_idx, (1:numel(w))', 1:S.numCollPts);
     end
 
     function v = phi(S, t)
         % Calculate scaled Szego kernel.
-        v = psi(S, t) - kerz_stein(S, t)*S.phi_*S.dt_;
+        v = psi(S, t) - kerz_stein(S, t)*S.phiColl*S.dtColl;
     end
 
     function y = psi(S, t)
         % Calculate integral equation RHS.
-        wt = tangent(S.C, t(:));
-        y = 1i/(2*pi)./sqrt(abs(wt)) .* conj(wt./(point(S.C, t(:)) - S.a));
+        wt = tangent(S.curve, t(:));
+        y = 1i/(2*pi)./sqrt(abs(wt)) .* ...
+            conj(wt./(point(S.curve, t(:)) - S.confCenter));
     end
 
     function th = theta(S, t)
         % Give unit circle correspondence angle.
-        th = angle(-1i.*phi(S, t).^2.*tangent(S.C, t(:))) - S.theta0_;
+        th = angle(-1i.*phi(S, t).^2.*tangent(S.curve, t(:))) - S.theta0;
         % KLUDGE: Roundoff allows theta(S, 0) ~= 0. "Fix" this.
         th(t == 0) = 0;
     end
@@ -149,7 +150,7 @@ methods
         % This should really be more modularised. -- EK
 
         if nargin < 3 || isempty(tol)
-            ntol = S.newtTol_;
+            ntol = S.newtTol;
         else
             ntol = tol;
         end
@@ -179,7 +180,7 @@ methods
         bmaxiter = 20;      % No runaways!
 
         % Using convergence rate of bisection method to get an initial partition of
-        % [0, length(C)) so bisection finishes closeish to 5 steps. There ends up
+        % [0, length(curve)) so bisection finishes closeish to 5 steps. There ends up
         % being an evaluation at a large number of points, but it's only once.
         nb = max(ceil(1/(2^4*btol)), numel(t));
         if nb > numel(t)
@@ -199,7 +200,7 @@ methods
         % Bisect.
         done = abs(f(t, s)) < btol;
         biter = 0;
-        if S.noisy_
+        if S.beNoisy
             fprintf('%s: Starting bisection ...\n', trace_label)
         end
         while ~all(done) && biter < bmaxiter
@@ -212,7 +213,7 @@ methods
             right(~done) = isneg.*t(~done) + ~isneg.*right(~done);
             done(~done) = abs(fk) < btol;
         end
-        if S.noisy_
+        if S.beNoisy
             fprintf('%s: Bisection finished in %d steps.\n', ...
                 trace_label, biter)
         end
@@ -226,7 +227,7 @@ methods
         prev_update = nan(size(update));
 
         niter = 0;
-        if S.noisy_
+        if S.beNoisy
             fprintf('%s: Starting Newton iteration ...\n', trace_label)
         end
         while ~all(done) && niter < nmaxiter
@@ -244,13 +245,13 @@ methods
             done(~done) = abs(fval(~done)) < ntol;
             update(done) = 0;
         end
-        if S.noisy_
+        if S.beNoisy
             fprintf('%s: Newton finished in %d steps.\n', ...
                 trace_label, niter)
         end
 
         maxerr = max(abs(fval));
-        if S.noisy_
+        if S.beNoisy
             fprintf('%s: %d/%d points with |f| > eps, max|f| = %.4e.\n\n', ...
                 trace_label, sum(~done), numel(t), max(abs(fval)))
         end
@@ -271,32 +272,32 @@ methods
 
     function thp = thetap(S, t)
         % Derivative of theta.
-        thp = 2*pi/S.Saa_*abs(phi(S, t(:)).^2);
+        thp = 2*pi/S.Saa*abs(phi(S, t(:)).^2);
     end
 end
 
 methods(Access=protected, Static)
-    function out = compute_kernel(C, a, opts)
+    function out = compute_kernel(curve, a, opts)
         noisy = opts.trace;
-        N_ = opts.numCollPts;
+        N = opts.numCollPts;
 
-        % Parameter length should be 1, if not this should be length(C)/N.
-        dt = 1/N_;
-        t = (0:N_-1)'*dt;
-        z = point(C, t);
-        zt = tangent(C, t);
+        % Parameter length should be 1, if not this should be length(curve)/N.
+        dt = 1/N;
+        t = (0:N-1)'*dt;
+        z = point(curve, t);
+        zt = tangent(curve, t);
         zT = zt./abs(zt);
 
         if noisy
             fprintf('\nSzego constructor:\n\n')
 
             fprintf('  Creating Kerzmann-Stein kernel for %d collocation points...', ...
-                N_);
+                N);
         end
 
         % IpA = I + A, where A is the Kerzmann-Stein kernel.
-        IpA = ones(N_);
-        for j = 2:N_
+        IpA = ones(N);
+        for j = 2:N
             cols = 1:j-1;
             zc_zj = z(cols) - z(j);
             IpA(j,cols) = (conj(zT(j)./zc_zj) ...
@@ -316,7 +317,7 @@ methods(Access=protected, Static)
         end
 
         if strcmp(opts.kernSolMethod, 'auto')
-            if N_ < 2048
+            if N < 2048
                 method = 'bs';
             else
                 method = 'or';
@@ -335,7 +336,7 @@ methods(Access=protected, Static)
             end
             % Need initial guess; get it via interpolation.
             sargs = varargs(opts);
-            tmp = szego(C, sargs{:}, 'numCollPts', 256);
+            tmp = szego(curve, sargs{:}, 'numCollPts', 256);
             x = phi(tmp, t);
 
             % Pass guess to solver.
@@ -358,12 +359,12 @@ methods(Access=protected, Static)
             fprintf('  Kernel solution relative residual is %.4e.\n\n', relresid)
         end
 
-        out.phi_ = x;
-        out.dt_ = dt;
-        out.z_ = z;
-        out.zt_ = zt;
-        out.zT_ = zT;
-        out.relresid_ = relresid;
+        out.phiColl = x;
+        out.dtColl = dt;
+        out.zPts = z;
+        out.zTan = zt;
+        out.zUnitTan = zT;
+        out.relResid = relresid;
     end
 
     function x = orthog_resid(A, x, y, noisy)

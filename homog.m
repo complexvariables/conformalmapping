@@ -15,8 +15,8 @@ classdef homog
 % adapted to new classdef from Toby Driscoll's code, originally 20??.
 
 properties
-  numer_
-  denom_
+  numerator
+  denominator
 end
 
 methods
@@ -49,8 +49,8 @@ methods
       z1(idx) = sign(real(z1(idx))) + 1i*sign(imag(z1(idx)));
       z2(idx) = 0;
       
-      zeta.numer_ = z1;
-      zeta.denom_ = z2;
+      zeta.numerator = z1;
+      zeta.denominator = z2;
     end
   end % ctor
   
@@ -61,7 +61,8 @@ methods
   
   function theta = angle(zeta)
     % Return phase angle, standardised to [-pi, pi).
-    theta = mod(angle(zeta.numer_) - angle(zeta.denom_) + pi, 2*pi) - pi;
+    theta = mod(angle(zeta.numerator) - ...
+        angle(zeta.denominator) + pi, 2*pi) - pi;
   end
   
   function zeta = cat(dim, varargin)
@@ -70,8 +71,8 @@ methods
     denoms = numers;
     for n = 1:nargin - 1
       h = homog(varargin{n});
-      numers{n} = h.numer_;
-      denoms{n} = h.denom_;
+      numers{n} = h.numerator;
+      denoms{n} = h.denominator;
     end
     
     try
@@ -83,28 +84,28 @@ methods
   
   function zetbar = conj(zeta)
     % Complex conjugate.
-    zetbar = homog(conj(zeta.numer_), conj(zeta.denom_));
+    zetbar = homog(conj(zeta.numerator), conj(zeta.denominator));
   end
   
   function eta = ctranspose(zeta)
     % Complex transpose.
-    eta = homog(ctranspose(zeta.numer_), ctranspose(zeta.denom_));
+    eta = homog(ctranspose(zeta.numerator), ctranspose(zeta.denominator));
   end
   
   function z2 = denom(zeta)
     % Return denominator.
-    z2 = zeta.denom_;
+    z2 = zeta.denominator;
   end
   
   function display(zeta)
     % Format for viewing pleasure.
-    n = size(zeta.numer_);
+    n = size(zeta.numerator);
     fprintf('\n\t%s array of homogenous coordinates:\n\n', ...
             [sprintf('%i-by-', n(1:end-1)), sprintf('%i', n(end))])
     fprintf('numerator = \n\n')
-    disp(zeta.numer_)
+    disp(zeta.numerator)
     fprintf('\ndenominator = \n\n')
-    disp(zeta.denom_)
+    disp(zeta.denominator)
   end
   
   function z = double(zeta)
@@ -113,7 +114,7 @@ methods
     % Driscoll's original turned of divide by zero warning. Do we still need
     % this? Newer versions of MATLAB don't give this warning.
     
-    z = zeta.numer_./zeta.denom_;
+    z = zeta.numerator./zeta.denominator;
     % Ensure imag(z(isinf(z))) = 0 reliably.
     z(isinf(z)) = Inf;
   end
@@ -121,7 +122,7 @@ methods
   function e = end(zeta, k, n)
     % Return array end indexes.
     if n == 1
-      e = length(zeta.numer_);
+      e = length(zeta.numerator);
     else
       e = size(zeta.numer, k);
     end
@@ -134,16 +135,16 @@ methods
   
   function z = inv(zeta)
     % Return 1/zeta.
-    z = homog(zeta.denom_, zeta.numer_);
+    z = homog(zeta.denominator, zeta.numerator);
   end
     
   function tf = isinf(zeta)
-    tf = zeta.denom_ == 0 & zeta.numer_ ~= 0; 
+    tf = zeta.denominator == 0 & zeta.numerator ~= 0; 
   end
   
   function n = length(zeta)
     % Length of zeta.
-    n = length(zeta.numer_);
+    n = length(zeta.numerator);
   end
   
   function c = minus(a, b)
@@ -169,16 +170,16 @@ methods
     if isfloat(b)
       b = homog(b);
     end
-    c = homog(a.numer_*b.numer_, a.denom_*b.denom_);
+    c = homog(a.numerator*b.numerator, a.denominator*b.denominator);
   end
   
   function n = numel(zeta, varargin)
-    n = numel(zeta.numer_, varargin{:});
+    n = numel(zeta.numerator, varargin{:});
   end
   
   function z1 = numer(zeta)
     % Return numerator.
-    z1 = zeta.numer_;
+    z1 = zeta.numerator;
   end
   
   function c = plus(a, b)
@@ -189,7 +190,8 @@ methods
     if isfloat(b)
       b = homog(b);
     end
-    c = homog(a.numer_*b.denom_ + a.denom_*b.numer_, a.denom_*b.denom_);
+    c = homog(a.numerator*b.denominator + a.denominator*b.numerator, ...
+        a.denominator*b.denominator);
   end
   
   function c = rdivide(a, b)
@@ -206,7 +208,7 @@ methods
     % Provide double-like indexing.
     switch s.type
       case '()'
-        zeta = homog(subsref(zeta.numer_, s), subsref(zeta.denom_, s));
+        zeta = homog(subsref(zeta.numerator, s), subsref(zeta.denominator, s));
       otherwise
         error('This type of indexing is not supported by homog objects.')
     end
@@ -220,8 +222,8 @@ methods
           zeta = homog(zeta);
           val = homog(val);
           index = s.subs{1};
-          zeta.numer_(index) = val.numer_;
-          zeta.denom_(index) = val.denom_;
+          zeta.numerator(index) = val.numerator;
+          zeta.denominator(index) = val.denominator;
         else
           error('HOMOG objects support linear indexing only.')
         end
@@ -237,12 +239,12 @@ methods
     if isfloat(b)
       b = homog(b);
     end
-    c = homog(a.numer_.*b.numer_, a.denom.*b.denom_);
+    c = homog(a.numerator.*b.numerator, a.denom.*b.denominator);
   end
   
   function eta = transpose(zeta)
     % Provide basic transpose.
-    eta = homog(transpose(zeta.numer_), transpose(zeta.denom_));
+    eta = homog(transpose(zeta.numerator), transpose(zeta.denominator));
   end
   
   function zeta = vertcat(varargin)
@@ -252,7 +254,7 @@ methods
   
   function b = uminus(a)
     % Unitary minus.
-    b = homog(-a.numer_, a.denom_);
+    b = homog(-a.numerator, a.denominator);
   end
 end
 

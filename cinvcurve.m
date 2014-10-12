@@ -9,7 +9,7 @@ classdef cinvcurve < closedcurve
 % Written by Everett Kropf, 2014.
 
 properties
-  curve_
+  theCurve
   confCenter = 0
 end
 
@@ -31,21 +31,21 @@ methods
         end
     end
     
-    C.curve_ = curve;
+    C.theCurve = curve;
   end
   
   function disp(C)
     fprintf('conjugate inverse of curve:\n')
-    disp(C.curve_)
+    disp(C.theCurve)
   end
   
   function z = point(C, t)
-    z = 1./conj(point(C.curve_, t) - C.confCenter);
+    z = 1./conj(point(C.theCurve, t) - C.confCenter);
   end
   
   function zt = tangent(C, t)
-    zt = -conj(tangent(C.curve_, t))./...
-        conj(point(C.curve_, t) - C.confCenter).^2;
+    zt = -conj(tangent(C.theCurve, t))./...
+        conj(point(C.theCurve, t) - C.confCenter).^2;
   end
 end
 

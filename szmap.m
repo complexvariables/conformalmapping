@@ -18,9 +18,9 @@ classdef szmap < conformalmap
 % Written by Everett Kropf, 2014.
 
 properties
-    kernel_
-    coefs_
-    opts_
+    theKernel
+    coefficients
+    sopts
 end
 
 methods
@@ -58,9 +58,9 @@ methods
         t = invtheta(S, 2*pi*(0:nF-1)'/nF);
         c = flipud(fft(boundary(t))/nF);
 
-        f.kernel_ = S;
-        f.coefs_ = c;
-        f.opts_ = opts;
+        f.theKernel = S;
+        f.coefficients = c;
+        f.sopts = opts;
     end
 
     function g = ctranspose(f)
@@ -80,18 +80,18 @@ methods
             r = region(br);
         end
         
-        prefs = varargs(f.opts_);
-        a = f.opts_.confCenter;
+        prefs = varargs(f.sopts);
+        a = f.sopts.confCenter;
         g = szmap(cinvcurve(br, a), prefs{:}, 'confCenter', 0);
         func = @(z) 1./conj(apply_map_(g, conj(1./z))) + a;
 
-        g.domain_ = d;
-        g.range_ = r;
-        g.function_list_ = {func};
+        g.theDomain = d;
+        g.theRange = r;
+        g.functionList = {func};
     end
 
     function S = kernel(f)
-        S = f.kernel_;
+        S = f.theKernel;
     end
 end
 
@@ -107,7 +107,7 @@ end
 
 methods(Access=private)
     function w = apply_map_(f, z)
-        w = polyval(f.coefs_, z);
+        w = polyval(f.coefficients, z);
     end
 end
 

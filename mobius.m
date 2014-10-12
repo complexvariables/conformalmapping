@@ -21,7 +21,7 @@ classdef mobius < conformalmap
 % adapted from code by Toby Driscoll, originally 20??.
 
 properties
-  matrix_
+  theMatrix
 end
 
 methods
@@ -78,7 +78,7 @@ methods
       supargs = {domain, range};
     end
     M = M@conformalmap(supargs{:});
-    M.matrix_ = matrix;
+    M.theMatrix = matrix;
   end % ctor
     
   function out = char(map)
@@ -88,7 +88,7 @@ methods
 
     % Numerator
     num = '';
-    a = map.matrix_(1,1);
+    a = map.theMatrix(1,1);
     if a~=0
       if a~=1
         if isreal(a)
@@ -101,7 +101,7 @@ methods
       end
       num = [num 'z'];
     end
-    a = map.matrix_(1,2);
+    a = map.theMatrix(1,2);
     if a~=0
       if ~isempty(num)
         s = sign(real(a));
@@ -124,7 +124,7 @@ methods
     
     % Denominator
     den = '';
-    a = map.matrix_(2,1);
+    a = map.theMatrix(2,1);
     if a~=0
       if a~=1
         if isreal(a)
@@ -137,7 +137,7 @@ methods
       end
       den = [den 'z'];
     end
-    a = map.matrix_(2,2);
+    a = map.theMatrix(2,2);
     if a~=0
       if ~isempty(den)
         s = sign(real(a));
@@ -168,7 +168,7 @@ methods
   end % char
   
   function disp(f)
-    if isempty(f.matrix_)
+    if isempty(f.theMatrix)
       fprintf('\n\tempty transformation matrix\n\n')
     else
       disp(char(f))
@@ -185,11 +185,11 @@ methods
     
     % Original code turned off builtin singular matrix warning and supplied
     % a repeat of warning supplied in constructor. Skipping here.
-    Minv = mobius(inv(M.matrix_));
+    Minv = mobius(inv(M.theMatrix));
   end
   
   function A = matrix(M)
-    A = M.matrix_;
+    A = M.theMatrix;
   end
   
   function M = mrdivide(M1, M2)
@@ -202,10 +202,10 @@ methods
     
     if isequal(M1, 1)
       % Exchange numerator and denominator
-      A = M2.matrix_;
+      A = M2.theMatrix;
       M = mobius(A([2, 1],:));
     elseif isa(M2, 'double') && length(M2) == 1
-      A = M1.matrix_;
+      A = M1.theMatrix;
       M = mobius([1, 0; 0, M2]*A);
     else
       error('Division not defined for these operands.')
@@ -221,16 +221,16 @@ methods
       M1 = M2;
       M2 = tmp;
     elseif isa(M2, 'mobius')
-      M = mobius(M1.matrix_*M2.matrix_);
-      M.domain_ = domain(M2);
-      M.range_ = range(M1);
+      M = mobius(M1.theMatrix*M2.theMatrix);
+      M.theDomain = domain(M2);
+      M.theRange = range(M1);
       return
     elseif isa(M2, 'conformalmap')
       M = mtimes@conformalmap(M2, M1);
       return
     end
     
-    A = M1.matrix_;
+    A = M1.theMatrix;
     if isa(M2, 'double') && length(M2) == 1
       A(1,:) = A(1,:)*M2;
       M = mobius(A);
@@ -241,7 +241,7 @@ methods
   
   function z = pole(M)
     % Return the pole of the Moebius map.
-    A = M.matrix_;
+    A = M.theMatrix;
     z = double(homog(-A(2,2)/A(2,1)));
   end
   
@@ -260,7 +260,7 @@ methods
     %   Copyright (c) 2004, 2006 by Toby Driscoll.
     %   $Id$
     
-    A = M.matrix_;
+    A = M.theMatrix;
     
     % Normalization
     if nargin==1
@@ -288,7 +288,7 @@ methods
 
   function z = zero(M)
     % Return the zero of the Mobius map.
-    A = M.matrix_;
+    A = M.theMatrix;
     z = double(homog(-A(1,2)/A(1,1)));
   end
 end
@@ -320,7 +320,7 @@ methods(Access=protected)
         Z = [numer(z(:)).'; denom(z(:)).'];
         
         % Apply map
-        W = M.matrix_*Z;
+        W = M.theMatrix*Z;
         
         % Convert to complex without DBZ warnings
         w(:) = double(homog(W(1,:), W(2,:)));

@@ -9,7 +9,7 @@ classdef diskex < region
 % Written by Everett Kropf, 2014.
 
 properties
-    extent_ = 2             % Default grid extent.
+    extent = 2             % Default grid extent.
 end
 
 methods
@@ -21,7 +21,7 @@ methods
 
             case 1
                 if isa(center, 'disk') || isa(center, 'diskex')
-                    C = center.outerboundary_;
+                    C = center.outerboundary;
                 elseif isa(center, 'double') && numel(center) == 3
                     C = circle(center);
                 elseif isa(center, 'circle') && ~isinf(center)
@@ -94,7 +94,7 @@ methods
         r = radius(inner(D));
 
         % Grid extent radius extension.
-        re = D.extent_*r - r;
+        re = D.extent*r - r;
 
         curves = cell(nrad + ncirc, 1);
         zg = re*(1:npt)'/(npt+1);

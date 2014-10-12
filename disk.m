@@ -18,7 +18,7 @@ methods
 
             case 1
                 if isa(center, 'disk')
-                    C = center.outerboundary_;
+                    C = center.outerboundary;
                 elseif isa(center, 'double') && numel(center) == 3
                     C = circle(center);
                 elseif isa(center, 'circle') && ~isinf(center)
