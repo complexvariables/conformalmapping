@@ -177,7 +177,7 @@ methods
   
   function w = feval(M, z)
     warning('mobius.feval() is depricated, use mobius.apply() instead.')
-    w = apply_map(M, z);
+    w = applyMap(M, z);
   end
   
   function Minv = inv(M)
@@ -294,7 +294,7 @@ methods
 end
 
 methods(Access=protected)
-  function w = apply_map(M, z)
+  function w = applyMap(M, z)
     % Evaluate Mobius transformation.
     
     %   Copyright (c) 2006 by Toby Driscoll.
@@ -304,11 +304,11 @@ methods(Access=protected)
         zp = pole(M);
         if dist(z, zp) < 10*eps(zp)
           % Result appears to be a line.
-          zp = apply_map(M, point(z, [0.5, 1.5]*pi));
+          zp = applyMap(M, point(z, [0.5, 1.5]*pi));
           w = zline(zp);
         else
           % Find new circle using three points.
-          zp = apply_map(M, point(z, [0.5, 1, 1.5]*pi));
+          zp = applyMap(M, point(z, [0.5, 1, 1.5]*pi));
           w = circle(zp);
         end
         

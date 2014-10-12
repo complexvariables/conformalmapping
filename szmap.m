@@ -83,7 +83,7 @@ methods
         prefs = varargs(f.sopts);
         a = f.sopts.confCenter;
         g = szmap(cinvcurve(br, a), prefs{:}, 'confCenter', 0);
-        func = @(z) 1./conj(apply_map_(g, conj(1./z))) + a;
+        func = @(z) 1./conj(applyMapPrivate(g, conj(1./z))) + a;
 
         g.theDomain = d;
         g.theRange = r;
@@ -96,17 +96,17 @@ methods
 end
 
 methods(Access=protected)
-    function w = apply_map(f, z)
+    function w = applyMap(f, z)
         if isanonymous(f)
-            w = apply_map@conformalmap(f, z);
+            w = applyMap@conformalmap(f, z);
         else
-            w = apply_map_(f, z);
+            w = applyMapPrivate(f, z);
         end
     end
 end
 
 methods(Access=private)
-    function w = apply_map_(f, z)
+    function w = applyMapPrivate(f, z)
         w = polyval(f.coefficients, z);
     end
 end

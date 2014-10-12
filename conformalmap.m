@@ -99,11 +99,11 @@ methods
             if isa(z, 'gridcurves')
                 w = cell(numel(z), 1);
                 for k = 1:numel(w)
-                    w{k} = apply_map(f, z{k});
+                    w{k} = applyMap(f, z{k});
                 end
                 w = gridcurves(w);
             else
-                w = apply_map(f, z);
+                w = applyMap(f, z);
             end
         catch err
             if strcmp(err.identifier, 'MATLAB:UndefinedFunction')
@@ -264,7 +264,7 @@ methods
 end
 
 methods(Access=protected)
-    function w = apply_map(f, z)
+    function w = applyMap(f, z)
         if isanonymous(f)
             w = f.functionList{1}(z);
         else
@@ -272,7 +272,7 @@ methods(Access=protected)
             if ~isa(class(f), 'conformalmap')
                 warning('CMT:BadThings', ...
                     ['Identity map used when conformalmap is subclassed.\n' ...
-                    '(Define apply_map in subclass %s?)'], class(f))
+                    '(Define applyMap in subclass %s?)'], class(f))
             end
             w = z;
         end
