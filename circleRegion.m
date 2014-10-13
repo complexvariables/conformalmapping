@@ -30,7 +30,7 @@ properties(SetAccess=protected)
 end
 
 methods
-    function R = circleRegion(clist)
+    function R = circleRegion(clist, varargin)
         args = {};
         if nargin && ~isempty(clist)
             cliscell = iscell(clist);
@@ -51,16 +51,18 @@ methods
                 rv(j) = clist{j}.radius;
             end
             
-            % Check bounded/unbounded/intersect.
-            isinside = circleRegion.circleCheck(cv, rv);
-            if numel(clist) > 1 && all(isinside)
-                args = {clist{1}, clist(2:end)};
-            elseif numel(clist) == 1 || ~any(isinside)
-                args = {clist, 'exteriorto'};
-            else
-                error('CMT:InvalidArgument', ...
-                    ['The circles given do not define an expected region.' ...
-                    ' See help.'])
+            if numel(varargin) == 0 || ~strcmp(varargin{1}, 'noCheck')
+                % Check bounded/unbounded/intersect.
+                isinside = circleRegion.circleCheck(cv, rv);
+                if numel(clist) > 1 && all(isinside)
+                    args = {clist{1}, clist(2:end)};
+                elseif numel(clist) == 1 || ~any(isinside)
+                    args = {clist, 'exteriorto'};
+                else
+                    error('CMT:InvalidArgument', ...
+                        ['The circles given do not define an expected region.' ...
+                        ' See help.'])
+                end
             end
         end
         
