@@ -169,7 +169,7 @@ methods
         hb = plot(f.theRange, pargs{:});
 
         if ~washold
-            cmtplot.whitefigure(cah)
+            cmtplot.whitefigure(get(cah, 'parent'))
             axis(plotbox(f.theRange))
             aspectequal
             axis off
