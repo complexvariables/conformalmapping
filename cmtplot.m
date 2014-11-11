@@ -35,9 +35,11 @@ methods(Static)
         end
         args = { ...
             'color', opts.lineColor, ...
-            'linewidth', opts.lineWidth, ...
-            'linesmoothing', opts.lineSmoothing ...
+            'linewidth', opts.lineWidth ...
         };
+        if ~cmtplot.hasNewGraphics
+            args(5:6) = {'linesmoothing', opts.lineSmoothing};
+        end
     end
 
     function args = fillargs()
@@ -61,9 +63,28 @@ methods(Static)
         end
         args = {
             'color', opts.gridColor, ...
-            'linewidth', opts.lineWidth, ...
-            'linesmoothing', opts.lineSmoothing ...
+            'linewidth', opts.lineWidth ...
         };
+        if ~cmtplot.hasNewGraphics
+            args(5:6) = {'linesmoothing', opts.lineSmoothing};
+        end
+    end
+    
+    function tf = hasNewGraphics()
+        tf = ~verLessThan('matlab', '8.4');
+    end
+    
+    function tf = isFigHandle(val)
+        if exist('isgraphics', 'builtin') == 5
+            tf = isgraphics(val, 'figure');
+        else
+            % Revert to older way.
+            if ishghandle(tmp)
+            	tf = strcmp(get(tmp, 'type'), 'figure');
+            else
+                tf = false;
+            end
+        end
     end
     
     function whitefigure(fig)

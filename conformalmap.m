@@ -172,6 +172,13 @@ methods
             cmtplot.whitefigure(get(cah, 'parent'))
             axis(plotbox(f.theRange))
             aspectequal
+            if cmtplot.hasNewGraphics
+                % Bug in new graphics won't show smoothed lines if this
+                % isn't done when drawing on a figure created by the plot
+                % call. Just need some way to force a redraw after
+                % the lines are put up.
+                drawnow
+            end
             axis off
             hold off
         end

@@ -13,8 +13,12 @@ function clearPrefs
 try
     rmappdata(0, 'cmt_prefs')
 catch err
-    if strcmp(err.identifier, ...
-            'MATLAB:HandleGraphics:Appdata:InvalidNameAppdata')
+    if verLessThan('matlab', '8.4')
+        msgid = 'MATLAB:HandleGraphics:Appdata:InvalidNameAppdata';
+    else
+        msgid = 'MATLAB:HandleGraphics:Appdata:InvalidPropertyName';
+    end
+    if strcmp(err.identifier, msgid)
         % Nothing there, that's ok.
         return
     else

@@ -37,8 +37,7 @@ methods
         if isa(varargin{1}, 'splinep')
           xk = tmp.knotX;
           yk = tmp.knotY;
-        elseif isempty(tmp) || (numel(tmp) == 1 && ...
-            ishghandle(tmp(1)) && strcmp(get(tmp, 'type'), 'figure'))
+        elseif isempty(tmp) || (numel(tmp) == 1 && cmtplot.isFigHandle(tmp))
           % Need to prompt for points.
           needpts = true;
           tofignum = tmp;
@@ -254,7 +253,7 @@ methods(Access=protected, Static)
       if numel(x) > 1
         sh = dumbPlot(splinep(x, y), 'k');
       end
-      text(xi, yi, ['  ' int2str(np)], 'EraseMode', 'background');
+      text(xi, yi, ['  ' int2str(np)]);
     end
     
     x = [x(:); x(1)];

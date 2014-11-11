@@ -44,12 +44,12 @@ if nargout < 2
   % holding issues.
   makeplot = true;
   if ndim < 3
-    allhand = plot(NaN,NaN,'k.-','erasemode','back');
+    allhand = plot(NaN,NaN,'k.-'); %,'erasemode','back');
   else
-    allhand = plot3(NaN,NaN,NaN,'k.-','erasemode','back');
+    allhand = plot3(NaN,NaN,NaN,'k.-'); %,'erasemode','back');
   end
-  badhand = line(NaN,NaN,'color','r','marker','.','linestyle','none',...
-    'erasemode','none');  
+  badhand = line(NaN,NaN,'color','r','marker','.','linestyle','none'); %,...
+%     'erasemode','none');  
 else
   makeplot = false;
 end
@@ -125,9 +125,10 @@ end
 
 %% Wrap up
 if makeplot
-  set(allhand,'erasemode','normal','marker','none','color','b')
+  set(allhand,'marker','none','color','b')
+%   set(allhand,'erasemode','normal','marker','none','color','b')
   updateplot(allhand,t,x,ndim)
-  set(badhand,'erasemode','normal')
+%   set(badhand,'erasemode','normal')
   delete(badhand)
 end
 
