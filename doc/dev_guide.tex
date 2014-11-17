@@ -24,8 +24,6 @@
   showstringspaces=false
 }
 
-\newcommand{\matlab}{MATLAB}
-
 \title{Conformal Mapping Toolkit Developer's Guide}
 \author{E. Kropf and T. Driscoll}
 \date{\today}
@@ -37,19 +35,19 @@
 \clearpage
 
 \section{Introduction}
-This guide describes design decisions behind the Conformal Mapping Toolbox (CMToolbox, CMT). It is written in hopes that it will avoid confusion or clashes in later development. There is a version of this software written in the older class style of \matlab; this document covers the code converted to the new \matlab syntax.
+This guide describes design decisions behind the Conformal Mapping Toolbox (CMToolbox, CMT). It is written in hopes that it will avoid confusion or clashes in later development. There is a version of this software written in the older class style of MATLAB; this document covers the code converted to the new MATLAB syntax.
 
 \subsection{Language choice}
-The initial version of this software is developed in \matlab. It is hoped that it will be ported to other frameworks in the future.
+The initial version of this software is developed in MATLAB. It is hoped that it will be ported to other frameworks in the future.
 
-Why \matlab? Conformal mapping is a calculation game, and MATLAB is a super expensive, glorified calculator. Those generally interested in conformal mapping live in math(s) departments, and thus generally have access to \matlab\ provided, so the cost is an artificial barrier for the target audience.
+Why MATLAB? Conformal mapping is a calculation game, and MATLAB is a super expensive, glorified calculator. Those generally interested in conformal mapping live in math(s) departments, and thus generally have access to MATLAB provided, so the cost is an artificial barrier for the target audience.
 
-Why other frameworks? \matlab\ is a frustrating place to write software, and it's demonstrably slower in some unavoidable circumstances.
+Why other frameworks? MATLAB is a frustrating place to write software, and it's demonstrably slower in some unavoidable circumstances.
 
 \section{Code rules}
 Rules listed here are more like strong suggestions. To make things uniform, try to follow them where possible, but \emph{if it makes more sense to do something else}, then by all means do that. The main goal is readability, followed closely by maintainability (ease of diff by the VCS) [and by ease of use?]. Some of what follows is taken from or influenced by \cite{chebfunCodingStyle} and \cite{pythonStyleGuide}. Some of this is made up as needed.
 
-CMT will use only classes defined using \matlab's newer \verb+classdef+ keyword. The old class system, although still in use, is too limited in flexibility.
+CMT will use only classes defined using MATLAB's newer \verb+classdef+ keyword. The old class system, although still in use, is too limited in flexibility.
 
 Each new, non-abstract class defined will also have a test class written to be placed in the \verb+test+ directory. These tests will be called by the \verb+run_tests+ function as a way of checking code functionality. If a developer makes a change to the existing code, \verb+run_tests+ is a way to ensure the system hasn't been broken by the change.
 
@@ -59,11 +57,11 @@ Unless there is a good reason, default to using public properties. A proper prop
 [TODO: Comments needed regarding multiline expressions.]
 
 \begin{description}
-  \item[Indentation] Each level of indentation is given by 4 spaces -- no tab characters. Default indentation behaviour by the \matlab editor should suffice, with one exception. The \verb|method| and \verb|property| blocks within a \verb|classdef| should be flush with the left margin (it is an extreme waste of space otherwise).
+  \item[Indentation] Each level of indentation is given by 4 spaces -- no tab characters. Default indentation behaviour by the MATLAB editor should suffice, with one exception. The \verb|method| and \verb|property| blocks within a \verb|classdef| should be flush with the left margin (it is an extreme waste of space otherwise).
   \item[Line width.] Lines should be less than 80 characters.
   \item[Command separation.] Giving multiple commands on one line should be avoided, as should placing an \verb|if| block or loop on one line.
   \item[Assignemnt and logical operators.] These should be surrounded by 1 space.
-  \item[Comma and semicolon.] When indexing an array no space will be used on either side of a comma or semicolon. When separating function arguments, there should be one space following each comma.
+  \item[Comma and semicolon.] When indexing an array, no space will be used on either side of a comma or semicolon. When separating function arguments, there should be one space following each comma.
     \begin{lstlisting}[frame=single]
 A(j,k) = C{k,j};          % Array indexing.
 someFunction(arg1, arg2); % Function call.
@@ -74,12 +72,13 @@ someFunction(arg1, arg2); % Function call.
 \end{description}
 
 \subsection{Help text}
-Something about help text formatting.
+Every function and class definition file should have help text. At a minimum a function should document its inputs and outputs. The class file should at a minimum describe the class, the constructor arguments, and major properties and methods.
 
 \subsection{Naming conventions}
-What is the standard for naming variables, functions, classes, properties, etc.?
 
-\paragraph{CamelCase.} Describe the use of camel case for naming.
+A corrupt version of camel case will be used to name functions, classes, properties and methods. Unless otherwise stated, all camel case names will start with a lowercase letter. This will probably never be otherwise stated.
+
+In contrast to the statement in the previous paragraph, major classes and functions, \textit{i.e.}, things called from the command line, will be defined using all lowercase letters and should be as short is practically possible. This is an attempt to follow the style of MATLAB command line usage with which most people are familiar. This also keeps typing at the command line to a minimum, although this justification is probably questionable. For and example consider the simply-connected Szeg\"o map. Instead of \verb+szegoMap+, which follows the camel case convention, we use \verb+szmap+, which is easier to type. (Is it easier to remember?)
 
 \section{Concepts}
 \subsection{Apply}
@@ -90,7 +89,7 @@ Let $A$ and $B$ be objects (instantiations of classes). We say ``\emph{apply $A$
   \item Failing these, there should be an ``$A$ applied to $B$ is not defined'' error.
 \end{itemize}
 
-\noindent In \matlab: \verb+apply(A, B)+ or \verb+A*B+. For example,
+\noindent In MATLAB: \verb+apply(A, B)+ or \verb+A*B+. For example,
 \begin{lstlisting}[frame=single]
 function C = apply(A, B)
     % C = apply(A, B)
@@ -146,7 +145,7 @@ Classes listed here are in general base classes, meant to be sub-classed. Some, 
 \subsection{Homogeneous numbers}
 Class \verb+homog+.
 
-Originally designed by Toby Driscoll, this class was implemented to handle divide by zero warnings generated by \matlab. In addition the class provides a way to meaningfully apply an angle to a point at infinity. Recent versions of \matlab\ have moved to a silent divide by zero, but having an angle for the point at infinity is still clearly useful.
+Originally designed by Toby Driscoll, this class was implemented to handle divide by zero warnings generated by MATLAB. In addition the class provides a way to meaningfully apply an angle to a point at infinity. Recent versions of MATLAB have moved to a silent divide by zero, but having an angle for the point at infinity is still clearly useful.
 
 A homogeneous coordinate is defined by two scalar values, $z_1$ and $z_2$, such that $z = z_1/z_2$. Every seemingly non-homogeneous complex number $w$ can be assumed to have the homogeneous value $w/1$. Thus a point at infinity may be defined by $z_1/0$ with $\arg\{z_1/0\} := \arg\{z_1\}$.
 
@@ -157,7 +156,7 @@ A homogeneous coordinate is defined by two scalar values, $z_1$ and $z_2$, such 
 \end{itemize}
 
 \paragraph{Provides methods:}
-The key to this class is to behave in almost all cases exactly like the built in \matlab\ \verb+double+ class.
+The key to this class is to behave in almost all cases exactly like the built in MATLAB \verb+double+ class.
 
 \subsection{Closed curves}
 Abstract class \verb+closedcurve+.
