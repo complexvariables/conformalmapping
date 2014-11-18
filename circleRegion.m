@@ -2,6 +2,7 @@ classdef circleRegion < region
 %circleRegion represents a region bounded by circles
 %
 % C = circleRegion(clist)
+% C = circleRegion(circle1, circle2, ...)
 % Uses circles in cell array clist to create region. If clist{1} bounds the
 % following circles, the region is considered bounded. It's an unbounded
 % region otherwise.
@@ -24,25 +25,36 @@ classdef circleRegion < region
 % Copyright Toby Driscoll, 2014.
 % E. Kropf, 2014
 
+% UNDOCUMENTED:
+% C = circleRegion(..., 'nocheck')
+% Skips the bounded/unbounded/intersect check. Use with extreme caution, as
+% this breaks the intended class representation.
+
 properties(SetAccess=protected)
     centers
     radii
 end
 
 methods
-    function R = circleRegion(clist, varargin)
+    function R = circleRegion(varargin)
         args = {};
-        if nargin && ~isempty(clist)
-            cliscell = iscell(clist);
-            if (cliscell && ~all(cellfun(@(x) isa(x, 'circle'), clist))) ...
-                    || (~cliscell && ~isa(clist, 'circle'))
-                error('CMT:InvalidArgument', ...
-                    'Expected a single circle or cell array of circles.')
+        if nargin % && ~isempty(clist)
+            if ischar(varargin{nargin})
+                clist = varargin(1:nargin-1);
+                varargin = varargin(nargin);
+            else
+                clist = varargin;
+                varargin = {};
+            end
+            if numel(clist) == 1 && isa(clist{1}, 'cell')
+                clist = clist{1};
             end
             
-            if ~iscell(clist)
-                clist = {clist};
+            if isempty(clist) || any(cellfun(@(x) ~isa(x, 'circle'), clist))
+                error('CMT:InvalidArgument', ...
+                    'Expected one or more circles.')
             end
+            
             m = numel(clist);
             cv(m,1) = 1i;
             rv(m,1) = 0;
