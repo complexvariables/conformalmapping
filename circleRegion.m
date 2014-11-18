@@ -38,7 +38,7 @@ end
 methods
     function R = circleRegion(varargin)
         args = {};
-        if nargin % && ~isempty(clist)
+        if nargin
             if ischar(varargin{nargin})
                 clist = varargin(1:nargin-1);
                 varargin = varargin(nargin);
@@ -91,10 +91,33 @@ methods
         % Invert circle region; inner and outer boundaries change roles.
         C = boundary(R);
         if hasouter(R)
-            R = region(C{2:end}, C{1});
+            R = region(C(2:end), C{1});
         else
             R = region(C, 'interiorto');
         end
+    end
+    
+    function invfill(R, varargin)
+        newplot
+        washold = ishold;
+        hold on
+        
+        if isbounded(R)
+            fill(region(R.outerboundary{1}, 'exteriorto'))
+            fill(region(R.innerboundary, 'interiorto'))
+        else
+            fill(inv(R))
+        end
+        
+        if ~washold
+            hold off
+            axis(plotbox(R))
+            aspectequal
+        end
+    end
+    
+    function tf = isbounded(R)
+        tf = hasouter(R) & hasinner(R);
     end
     
     function str = replicate(R)
