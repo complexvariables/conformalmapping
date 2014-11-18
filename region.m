@@ -104,7 +104,7 @@ methods
         b = {};
     end
     if hasinner(R)
-        b = {b{:}; R.innerboundary};
+        b = [b(:); R.innerboundary(:)];
     end
     if numel(b) == 1
         b = b{1};
