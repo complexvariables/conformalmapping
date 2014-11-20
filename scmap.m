@@ -20,8 +20,11 @@ classdef scmap < conformalmap
 % Copyright Toby Driscoll, 2014.
 
 properties(SetAccess=protected)
-    polygon         % Polygon for the map.
     options         % Option structure for the map.
+end
+
+properties(Dependent)
+    polygon         % Polygon for the map.
 end
 
 methods
@@ -42,7 +45,7 @@ methods
             end
         end
        
-        map.polygon = poly;
+        map.theRange = poly;
         map.options = sctool.scmapopt(opt);
     end
     
@@ -137,6 +140,10 @@ methods
         end
     end
     
+    function p = get.polygon(M)
+        p = M.theRange;
+    end
+    
     function M = hplmap(M)
         %HPLMAP Convert generic Schwarz-Christoffel map object to half-plane map.
         %   HPLMAP(M) creates a hplmap object based on the polygon and
@@ -177,11 +184,12 @@ methods
         % Usually this will be invoked by a child object, which needs to adjust
         % its own constant as well.
         
-        % May need to swap arguments
-        if isa(M,'double') && isa(c,'scmap')
-            tmp = M;
-            M = c;
-            c = tmp;
+        if ~isa(M, 'scmap')
+            [M, c] = deal(c, M);
+        end
+        if ~isnumeric(c)
+            M = mtimes@conformalmap(M, c);
+            return
         end
         
         M.polygon = c*M.polygon;
@@ -189,18 +197,19 @@ methods
     
     function M = plus(M,a)
         %   Add a constant to the image of an SC map (i.e., translate image).
-        
-        % May need to swap arguments
-        if isa(M,'double') && isa(a,'scmap')
-            tmp = M;
-            M = a;
-            a = tmp;
+
+        if ~isa(M, 'scmap')
+            [M, a] = deal(a, M);
+        end
+        if ~isnumeric(a)
+            M = plus@conformalmap(M, a);
         end
         
         if length(a)==1 && isa(a,'double')
             M.polygon = M.polygon + a;
         else
-            error('Addition is not defined for these operands.')
+            error('CMT:RuntimeError', ...
+                'Addition is not defined for these operands.')
         end
     end
     
@@ -233,22 +242,6 @@ methods
         M = stripmap(M.polygon,M.options);
     end
     
-    function wp = subsref(M,S)
-        %SUBSREF Evaluate map by subscript notation.
-        %   M(ZP), where M is a SC map and ZP is a vector of points in the
-        %   canonical domain of the map, returns the image of the points in ZP.
-        %
-        %   This just a synonym for FEVAL(M,ZP).
-        %
-        %   See also FEVAL, SCMAP.
-        
-        if length(S) == 1 && strcmp(S.type,'()')
-            wp = feval(M,S.subs{1});
-        else
-            error('Only syntax for SCMAP is a single parenthesized subscript.')
-        end
-    end
-    
     function M = uminus(M)
         %   Negate the image of an SC map.
         
@@ -256,6 +249,12 @@ methods
     end
     
     function M = uplus(M)
+    end
+end
+
+methods(Access=protected)
+    function w = applyMap(f, z)
+        w = feval(f, z);
     end
 end
 
