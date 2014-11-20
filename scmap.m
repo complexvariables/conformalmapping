@@ -70,7 +70,7 @@ methods
     
     function disp(f)
         s = char(f);
-        if isstr(s)
+        if ischar(s)
             disp(s)
         elseif iscell(s)
             fprintf('\n  SC %s:\n\n',class(f));
@@ -78,11 +78,6 @@ methods
                 disp(s{n})
             end
         end
-    end
-    
-    function display(f)
-        fprintf('\n%s =\n',inputname(1))
-        disp(f)
     end
     
     function M = extermap(M)
@@ -133,7 +128,7 @@ methods
                             m = struct(map);
                             varargout{j} = m.(lower(varargin{j}));
                         catch
-                            warning(sprintf('Field ''%s'' not recognized.\n',varargin{j}))
+                            warning('Field ''%s'' not recognized.\n', varargin{j})
                             varargout{j} = [];
                         end
                 end
@@ -183,7 +178,7 @@ methods
         % its own constant as well.
         
         % May need to swap arguments
-        if isa(M,'double') & isa(c,'scmap')
+        if isa(M,'double') && isa(c,'scmap')
             tmp = M;
             M = c;
             c = tmp;
@@ -196,13 +191,13 @@ methods
         %   Add a constant to the image of an SC map (i.e., translate image).
         
         % May need to swap arguments
-        if isa(M,'double') & isa(a,'scmap')
+        if isa(M,'double') && isa(a,'scmap')
             tmp = M;
             M = a;
             a = tmp;
         end
         
-        if length(a)==1 & isa(a,'double')
+        if length(a)==1 && isa(a,'double')
             M.polygon = M.polygon + a;
         else
             error('Addition is not defined for these operands.')
@@ -216,8 +211,7 @@ methods
         if strmatch('prevertex',fieldnames(tmp))
             z = tmp.prevertex;
         else
-            msg = sprintf('Prevertices not defined for map of class %s\n',class(M));
-            error(msg)
+            error('Prevertices not defined for map of class %s\n', class(M))
         end
     end
     
@@ -244,12 +238,12 @@ methods
         %   M(ZP), where M is a SC map and ZP is a vector of points in the
         %   canonical domain of the map, returns the image of the points in ZP.
         %
-        %   This just a synonym for EVAL(M,ZP).
+        %   This just a synonym for FEVAL(M,ZP).
         %
-        %   See also EVAL, SCMAP.
+        %   See also FEVAL, SCMAP.
         
-        if length(S) == 1 & strcmp(S.type,'()')
-            wp = eval(M,S.subs{1});
+        if length(S) == 1 && strcmp(S.type,'()')
+            wp = feval(M,S.subs{1});
         else
             error('Only syntax for SCMAP is a single parenthesized subscript.')
         end
