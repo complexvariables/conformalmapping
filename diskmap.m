@@ -329,7 +329,7 @@ methods
         out = L;
     end
     
-    function out = display(M)
+    function out = disp(M)
         %DISPLAY Display parameters of a Schwarz-Christoffel disk map.
         
         p = polygon(M);
