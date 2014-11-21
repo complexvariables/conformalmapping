@@ -427,7 +427,7 @@ methods
         c = M.constant;
         beta = angle(M.polygon) - 1;
         
-        fp = dderiv(zp,z,beta,c);
+        fp = M.dderiv(zp,z,beta,c);
     end
     
     function [zp,flag] = evalinv(M,wp,tol,z0)
@@ -742,6 +742,67 @@ methods(Static)
 end
 
 methods(Hidden,Static)
+    function fprime = dderiv(zp,z,beta,c)
+        %DDERIV Derivative of the disk map.
+        %   DDERIV(ZP,Z,BETA,C) returns the derivative at the points of ZP of
+        %   the Schwarz-Christoffel disk map defined by Z, BETA, and C.
+        %
+        %   See also DPARAM, DMAP.
+        
+        % Support old syntax
+        if nargin < 4
+            c = 1;
+        end
+        
+        z = z(:);
+        beta = beta(:);
+        zprow = zp(:).';
+        fprime = zeros(size(zp));
+        
+        npts = length(zp(:));
+        terms = 1 - zprow(ones(length(beta),1),:)./z(:,ones(npts,1));
+        fprime(:) = c*exp(sum(log(terms).*beta(:,ones(npts,1))));
+    end
+    
+    function ddisp(w,beta,z,c)
+        %DDISP  Display results of Schwarz-Christoffel disk parameter problem.
+        %   DDISP(W,BETA,Z,C) displays the results of DPARAM in a pleasant way.
+        %
+        %   See also DPARAM, DPLOT.
+        
+        disp(' ')
+        disp('      vertex [w]          beta        prevertex [z]         arg(z)/pi')
+        disp(' -----------------------------------------------------------------------')
+        u = real(w);
+        v = imag(w);
+        x = real(z);
+        y = imag(z);
+        ang = angle(z)/pi;
+        ang(ang<=0) = ang(ang<=0) + 2;
+        for j = 1:length(w)
+            if v(j) < 0
+                s1 = '-';
+            else
+                s1 = '+';
+            end
+            if y(j) < 0
+                s2 = '-';
+            else
+                s2 = '+';
+            end
+            disp(sprintf(' %8.5f %c %7.5fi    %8.5f   %8.5f %c %7.5fi    %14.12f',...
+                u(j),s1,abs(v(j)),beta(j),x(j),s2,abs(y(j)),ang(j)));
+            
+        end
+        disp(' ')
+        if imag(c) < 0
+            s = '-';
+        else
+            s = '+';
+        end
+        disp(sprintf('  c = %.8g %c %.8gi\n',real(c),s,abs(imag(c))))
+    end
+    
     function [z,c,qdat] = dparam(w,beta,z0,options)
         %DPARAM Schwarz-Christoffel disk parameter problem.
         %   [Z,C,QDAT] = DPARAM(W,BETA) solves the Schwarz-Christoffel mapping
@@ -1155,67 +1216,6 @@ methods(Hidden,Static)
 end
 
 methods(Access=private)
-    function fprime = dderiv(zp,z,beta,c)
-        %DDERIV Derivative of the disk map.
-        %   DDERIV(ZP,Z,BETA,C) returns the derivative at the points of ZP of
-        %   the Schwarz-Christoffel disk map defined by Z, BETA, and C.
-        %
-        %   See also DPARAM, DMAP.
-        
-        % Support old syntax
-        if nargin < 4
-            c = 1;
-        end
-        
-        z = z(:);
-        beta = beta(:);
-        zprow = zp(:).';
-        fprime = zeros(size(zp));
-        
-        npts = length(zp(:));
-        terms = 1 - zprow(ones(length(beta),1),:)./z(:,ones(npts,1));
-        fprime(:) = c*exp(sum(log(terms).*beta(:,ones(npts,1))));
-    end
-    
-    function ddisp(w,beta,z,c)
-        %DDISP  Display results of Schwarz-Christoffel disk parameter problem.
-        %   DDISP(W,BETA,Z,C) displays the results of DPARAM in a pleasant way.
-        %
-        %   See also DPARAM, DPLOT.
-        
-        disp(' ')
-        disp('      vertex [w]          beta        prevertex [z]         arg(z)/pi')
-        disp(' -----------------------------------------------------------------------')
-        u = real(w);
-        v = imag(w);
-        x = real(z);
-        y = imag(z);
-        ang = angle(z)/pi;
-        ang(ang<=0) = ang(ang<=0) + 2;
-        for j = 1:length(w)
-            if v(j) < 0
-                s1 = '-';
-            else
-                s1 = '+';
-            end
-            if y(j) < 0
-                s2 = '-';
-            else
-                s2 = '+';
-            end
-            disp(sprintf(' %8.5f %c %7.5fi    %8.5f   %8.5f %c %7.5fi    %14.12f',...
-                u(j),s1,abs(v(j)),beta(j),x(j),s2,abs(y(j)),ang(j)));
-            
-        end
-        disp(' ')
-        if imag(c) < 0
-            s = '-';
-        else
-            s = '+';
-        end
-        disp(sprintf('  c = %.8g %c %.8gi\n',real(c),s,abs(imag(c))))
-    end
-    
     function [y,d] = dfixwc(w,beta,z,c,wc,tol)
         %DFIXWC Fix conformal center of disk map.
         %   The conformal center WC of a Schwarz-Christoffel interior disk map
@@ -1261,7 +1261,7 @@ methods(Access=private)
         lenzp = lenyp/2;
         zp = (yp(1:lenzp)+sqrt(-1)*yp(lenzp+1:lenyp));
         
-        f = scale./dderiv(zp,z,beta,c);
+        f = scale./diskmap.dderiv(zp,z,beta,c);
         zdot = [real(f);imag(f)];        
     end
     
