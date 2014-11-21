@@ -86,6 +86,22 @@ methods
         R.centers = cv;
         R.radii = rv;
     end
+
+    function R = apply(R, M)
+        % Apply Mobius map to circle region.
+        
+        if ~isa(M, 'mobius')
+            error('CMT:NotDefined', ...
+                'Applying class %s to circleRegion is not defined.', ...
+                class(M))
+        end
+        
+        C = boundary(R);
+        for j = 1:numel(C)
+            C{j} = M(C{j});
+        end
+        R = circleRegion(C);
+    end
     
     function R = inv(R)
         % Invert circle region; inner and outer boundaries change roles.
