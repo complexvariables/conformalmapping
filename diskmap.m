@@ -125,7 +125,7 @@ methods
             [w,beta] = scfix('d',vertex(poly),angle(poly)-1);
             poly = polygon(w,beta+1);             % in case polygon was altered
             
-            [z,c,qdata] = dparam(w,beta,opt.InitialGuess,opt);
+            [z,c,qdata] = diskmap.dparam(w,beta,opt.InitialGuess,opt);
         end
         
         if isempty(qdata)
@@ -140,7 +140,8 @@ methods
             beta = angle(poly)-1;
             idx = 1 + find(~isinf(z(2:end)), 1 );
             mid = mean(z([1 idx]));
-            I = dquad(z(1),mid,1,z,beta,qdata) - dquad(z(idx),mid,idx,z,beta,qdata);
+            I = diskmap.dquad(z(1),mid,1,z,beta,qdata) ...
+                - diskmap.dquad(z(idx),mid,idx,z,beta,qdata);
             c = diff(w([1 idx]))/I;
         end
         
@@ -157,10 +158,10 @@ methods
         end
         
         % Find conformal center
-        map.center = center(map);
+        map.centerVal = center(map);
         
         % Fill in apparent accuracy
-        map.accuracy = accuracy(map);        
+        map.accuracyVal = accuracy(map);        
     end
     
     function acc = accuracy(M)
@@ -173,13 +174,13 @@ methods
         %   See also DISKMAP.
         
         % If an accuracy has been assigned, don't question it
-        if ~isempty(M.accuracy)
-            acc = M.accuracy;
+        if ~isempty(M.accuracyVal)
+            acc = M.accuracyVal;
             return
         end
         
         % Get data for low-level functions
-        p = polygon(M);
+        p = M.polygon;
         w = vertex(p);
         beta = angle(p) - 1;
         z = M.prevertex;
@@ -202,8 +203,8 @@ methods
         mid = zeros(length(idx),1);
         
         % Do the integrations
-        I = dquad(z(idx(:,1)),mid,idx(:,1),z,beta,qdata) - ...
-            dquad(z(idx(:,2)),mid,idx(:,2),z,beta,qdata);
+        I = M.dquad(z(idx(:,1)),mid,idx(:,1),z,beta,qdata) - ...
+            M.dquad(z(idx(:,2)),mid,idx(:,2),z,beta,qdata);
         
         acc = max(abs( c*I - diff(wf([1:end 1])) ));
     end
@@ -224,14 +225,14 @@ methods
             % Return center
             wc = map.centerVal;
             if isempty(wc)
-                p = polygon(map);
-                wc = dmap(0,vertex(p),angle(p)-1,...
+                p = map.polygon;
+                wc = map.dmap(0,vertex(p),angle(p)-1,...
                     map.prevertex,map.constant,map.qdata);
             end
             
         else
             % Set center
-            p = polygon(map);
+            p = map.polygon;
             qdata = map.qdata;
             z = map.prevertex;
             w = vertex(p);
@@ -242,16 +243,16 @@ methods
                 plot(p)
                 title('Click at conformal center')
                 [xc,yc] = ginput(1);
-                wc = xc + i*yc;
+                wc = xc + 1i*yc;
                 delete(fig)
             end
             
-            if ~any(isinf(w)) & ~isinpoly(wc,p)
+            if ~any(isinf(w)) && ~isinpoly(wc,p)
                 error('Conformal center must be inside polygon.')
             end
             
             % Find inverse image of wc under current map
-            zc = dinvmap(wc,w,beta,z,map.constant,qdata);
+            zc = map.dinvmap(wc,w,beta,z,map.constant,qdata);
             
             % Use Moebius transform to reset prevertices
             y = ((1-zc')/(1-zc))*(z-zc)./(1-zc'*z);
@@ -260,7 +261,8 @@ methods
             
             % Recalculate constant
             mid = mean(y(1:2));
-            I = dquad(y(1),mid,1,y,beta,qdata) - dquad(y(2),mid,2,y,beta,qdata);
+            I = map.dquad(y(1),mid,1,y,beta,qdata) ...
+                - map.dquad(y(2),mid,2,y,beta,qdata);
             c = diff(w(1:2))/I;
             
             % Assign new values
@@ -276,7 +278,7 @@ methods
     function out = char(f)
         %CHAR   Pretty-print a Schwarz-Christoffel disk map.
         
-        p = polygon(f);
+        p = f.polygon;
         w = vertex(p);
         alpha = angle(p);
         z = f.prevertex;
@@ -323,7 +325,7 @@ methods
         end
         L{end+1}=sprintf('  Conformal center at %.4f %c %.4fi',real(wc),s,abs(imag(wc)));
         
-        L{end+1} = sprintf('  Apparent accuracy is %.2e',f.accuracy);
+        L{end+1} = sprintf('  Apparent accuracy is %.2e',f.accuracyVal);
         L{end+1} = ' ';
         
         out = L;
@@ -332,7 +334,7 @@ methods
     function out = disp(M)
         %DISPLAY Display parameters of a Schwarz-Christoffel disk map.
         
-        p = polygon(M);
+        p = M.polygon;
         w = vertex(p);
         alpha = angle(p);
         z = M.prevertex;
@@ -380,7 +382,7 @@ methods
         L{end+1}=sprintf('  Conformal center at %.4f %c %.4fi',real(wc),s,abs(imag(wc)));
         
         L{end+1} = ' ';
-        L{end+1} = sprintf('  Apparent accuracy is %.2e',M.accuracy);
+        L{end+1} = sprintf('  Apparent accuracy is %.2e',M.accuracyVal);
         L{end+1} = ' ';
         
         
@@ -407,10 +409,11 @@ methods
             qdata = tol;
         end
         
-        p = polygon(M);
+        p = M.polygon;
         wp = NaN*zp;
         idx = abs(zp) <= 1+eps;
-        wp(idx) = dmap(zp(idx),vertex(p),angle(p)-1,M.prevertex,M.constant,qdata);
+        wp(idx) = ...
+            M.dmap(zp(idx),vertex(p),angle(p)-1,M.prevertex,M.constant,qdata);
     end
     
     function fp = evaldiff(M,zp)
@@ -422,7 +425,7 @@ methods
         
         z = M.prevertex;
         c = M.constant;
-        beta = angle(polygon(M)) - 1;
+        beta = angle(M.polygon) - 1;
         
         fp = dderiv(zp,z,beta,c);
     end
@@ -466,7 +469,7 @@ methods
             end
         else
             qdata = M.qdata;
-            tol = M.accuracy;
+            tol = M.accuracyVal;
         end
         
         if ~isempty(z0)
@@ -478,7 +481,7 @@ methods
             end
         end
         
-        p = polygon(M);
+        p = M.polygon;
         [zp,flag] = dinvmap(wp,vertex(p),angle(p)-1,M.prevertex,M.constant,...
             qdata,z0,[0 tol]);
     end
@@ -502,7 +505,7 @@ methods
         %   original polygon that was supplied.
         
         z = map.prevertex;
-        alpha = angle(polygon(map));
+        alpha = angle(map.polygon);
         c = map.constant;
         
         n = length(z);
@@ -522,8 +525,8 @@ methods
         mid = zeros(length(idx),1);
         
         % Integrations
-        I = dquad(z(idx(:,1)),mid,idx(:,1),z,alpha-1,qdata) - ...
-            dquad(z(idx(:,2)),mid,idx(:,2),z,alpha-1,qdata);
+        I = map.dquad(z(idx(:,1)),mid,idx(:,1),z,alpha-1,qdata) - ...
+            map.dquad(z(idx(:,2)),mid,idx(:,2),z,alpha-1,qdata);
         
         % Deduce vertices
         w(~atinf) = c*cumsum([0;I]);
@@ -561,7 +564,7 @@ methods
     function M1 = hplmap(M)
         %HPLMAP Convert Schwarz-Christoffel disk map to a map from the half-plane.
         
-        p = polygon(M);
+        p = M.polygon;
         [z1,c1] = disk2hp(vertex(p),angle(p)-1,M.prevertex,M.constant);
         M1 = hplmap(p,scmapopt(M),z1,c1);
     end
@@ -605,7 +608,7 @@ methods
         %
         %   See also DISKMAP, EVAL.
         
-        p = polygon(M);
+        p = M.polygon;
         w = vertex(p);
         beta = angle(p) - 1;
         z = M.prevertex;
@@ -738,114 +741,188 @@ methods(Static)
     end
 end
 
-methods(Access=private)
-    function fprime = dderiv(zp,z,beta,c)
-        %DDERIV Derivative of the disk map.
-        %   DDERIV(ZP,Z,BETA,C) returns the derivative at the points of ZP of
-        %   the Schwarz-Christoffel disk map defined by Z, BETA, and C.
+methods(Hidden,Static)
+    function [z,c,qdat] = dparam(w,beta,z0,options)
+        %DPARAM Schwarz-Christoffel disk parameter problem.
+        %   [Z,C,QDAT] = DPARAM(W,BETA) solves the Schwarz-Christoffel mapping
+        %   parameter problem with the disk as fundamental domain and the
+        %   polygon specified by W as the target. W must be a vector of the
+        %   vertices of the polygon, specified in counterclockwise order, and
+        %   BETA should be a vector of the turning angles of the polygon; see
+        %   SCANGLE for details. If successful, DPARAM will return Z, a vector
+        %   of the pre-images of W; C, the multiplicative constant of the
+        %   conformal map; and QDAT, an optional matrix of quadrature data used
+        %   by some of the other S-C routines.
         %
-        %   See also DPARAM, DMAP.
+        %   [Z,C,QDAT] = DPARAM(W,BETA,Z0) uses Z0 as an initial guess for Z.
+        %
+        %   [Z,C,QDAT] = DPARAM(W,BETA,TOL) attempts to find an answer within
+        %   tolerance TOL. (Also see SCPAROPT.)
+        %
+        %   [Z,C,QDAT] = DPARAM(W,BETA,Z0,OPTIONS) uses a vector of control
+        %   parameters. See SCPAROPT.
+        %
+        %   See also SCPAROPT, DRAWPOLY, DDISP, DPLOT, DMAP, DINVMAP.
         
-        % Support old syntax
-        if nargin < 4
-            c = 1;
-        end
+        %   Copyright 1998-2001 by Toby Driscoll.
+        %   $Id: dparam.m 199 2002-09-13 18:54:27Z driscoll $
         
-        z = z(:);
+        import sctool.*
+        
+        n = length(w);				% no. of vertices
+        w = w(:);
         beta = beta(:);
-        zprow = zp(:).';
-        fprime = zeros(size(zp));
         
-        npts = length(zp(:));
-        terms = 1 - zprow(ones(length(beta),1),:)./z(:,ones(npts,1));
-        fprime(:) = c*exp(sum(log(terms).*beta(:,ones(npts,1))));
-    end
-    
-    function ddisp(w,beta,z,c)
-        %DDISP  Display results of Schwarz-Christoffel disk parameter problem.
-        %   DDISP(W,BETA,Z,C) displays the results of DPARAM in a pleasant way.
-        %
-        %   See also DPARAM, DPLOT.
+        % Set up defaults for missing args
+        if nargin < 4
+            options = [];
+            if nargin < 3
+                z0 = [];
+            end
+        end
         
-        disp(' ')
-        disp('      vertex [w]          beta        prevertex [z]         arg(z)/pi')
-        disp(' -----------------------------------------------------------------------')
-        u = real(w);
-        v = imag(w);
-        x = real(z);
-        y = imag(z);
-        ang = angle(z)/pi;
-        ang(ang<=0) = ang(ang<=0) + 2;
-        for j = 1:length(w)
-            if v(j) < 0
-                s1 = '-';
-            else
-                s1 = '+';
-            end
-            if y(j) < 0
-                s2 = '-';
-            else
-                s2 = '+';
-            end
-            disp(sprintf(' %8.5f %c %7.5fi    %8.5f   %8.5f %c %7.5fi    %14.12f',...
-                u(j),s1,abs(v(j)),beta(j),x(j),s2,abs(y(j)),ang(j)));
+        err = sccheck('d',w,beta);
+        if err==1
+            fprintf('Use SCFIX to make polygon obey requirements\n')
+            error(' ')
+        end
+        
+        [trace,tol,method] = parseopt(options);
+        if length(z0)==1
+            tol = z0;
+            z0 = [];
+        end
+        nqpts = max(ceil(-log10(tol)),4);
+        qdat = scqdata(beta,nqpts); 		% quadrature data
+        
+        atinf = (beta <= -1);
+        
+        if n==3
+            % Trivial solution
+            z = [-i;(1-i)/sqrt(2);1];
             
-        end
-        disp(' ')
-        if imag(c) < 0
-            s = '-';
         else
-            s = '+';
+            
+            % Set up normalized lengths for nonlinear equations:
+            
+            % indices of left and right integration endpoints
+            left = find(~atinf(1:n-2));
+            right = 1+find(~atinf(2:n-1));
+            cmplx = ((right-left) == 2);
+            % normalize lengths by w(2)-w(1)
+            nmlen = (w(right)-w(left))/(w(2)-w(1));
+            % abs value for finite ones; Re/Im for infinite ones
+            nmlen = [abs(nmlen(~cmplx));real(nmlen(cmplx));imag(nmlen(cmplx))];
+            % first entry is useless (=1)
+            nmlen(1) = [];
+            
+            % Set up initial guess
+            if isempty(z0)
+                y0 = zeros(n-3,1);
+            else
+                z0 = z0(:)./abs(z0(:));
+                % Moebius to make th(n-2:n)=[1,1.5,2]*pi;
+                Am = moebius(z0(n-2:n),[-1;-i;1]);
+                z0 = Am(z0);
+                th = angle(z0);
+                th(th<=0) = th(th<=0) + 2*pi;
+                dt = diff([0;th(1:n-2)]);
+                y0 = log(dt(1:n-3)./dt(2:n-2));
+            end
+            
+            % Solve nonlinear system of equations:
+            
+            % package data
+            fdat = {n,beta,nmlen,left,right,logical(cmplx),qdat};
+            % set options
+            opt = zeros(16,1);
+            opt(1) = trace;
+            opt(2) = method;
+            opt(6) = 100*(n-3);
+            opt(8) = tol;
+            opt(9) = min(eps^(2/3),tol/10);
+            opt(12) = nqpts;
+            try
+                [y,termcode] = nesolve(@diskmap.dpfun,y0,opt,fdat);
+            catch
+                % Have to delete the "waitbar" figure if interrupted
+                close(findobj(allchild(0),'flat','Tag','TMWWaitbar'));
+                error(lasterr)
+            end
+            if termcode~=1
+                warning('Nonlinear equations solver did not terminate normally.')
+            end
+            
+            % Convert y values to z
+            cs = cumsum(cumprod([1;exp(-y)]));
+            theta = pi*cs(1:n-3)/cs(n-2);
+            z = ones(n,1);
+            z([1:n-3]) = exp(i*theta);
+            z(n-2:n-1) = [-1;-i];
         end
-        disp(sprintf('  c = %.8g %c %.8gi\n',real(c),s,abs(imag(c))))
+        
+        % Determine scaling constant
+        mid = (z(1)+z(2))/2;
+        c = (w(1) - w(2))/...
+            (diskmap.dquad(z(2),mid,2,z,beta,qdat) ...
+            - diskmap.dquad(z(1),mid,1,z,beta,qdat));
+        
     end
     
-    function [y,d] = dfixwc(w,beta,z,c,wc,tol)
-        %DFIXWC Fix conformal center of disk map.
-        %   The conformal center WC of a Schwarz-Christoffel interior disk map
-        %   is defined as the image of zero.  The parameter problem solver
-        %   DPARAM does not allow control over the placement of the conformal
-        %   center.  Using the output Z,C from DPARAM, [Z0,C0] =
-        %   DFIXWC(W,BETA,Z,C,WC) computes a Moebius transformation so that if
-        %   Z0 and C0 are used in place of Z and C, the conformal center of the
-        %   resulting map will be WC.
-        %
-        %   [Z0,C0] = DFIXWC(W,BETA,Z,C,WC,TOL) uses tolerance TOL.
-        %
-        %   See also DPARAM, PTSOURCE.
+    function F = dpfun(y,fdat)
+        %   Returns residual for solution of nonlinear equations.
         
-        n = length(w);
+        [n,beta,nmlen,left,right,cmplx,qdat] = deal(fdat{:});
         
-        if nargin < 6
-            [trace,tol,method] = sctool.scparopt([]);
+        % Convert y values to z (prevertices)
+        cs = cumsum(cumprod([1;exp(-y)]));
+        theta = pi*cs(1:n-3)/cs(length(cs));
+        z = ones(n,1);
+        z(1:n-3) = exp(i*theta);
+        z(n-2:n-1) = [-1;-i];
+        
+%         %%% Check crowding.
+%         %%if any(diff(theta)<eps) | any(isnan(theta))
+%         %%  % Since abs(y) is large, use it as the penalty function.
+%         %%  F = y;
+%         %%  disp('Warning: Severe crowding')
+%         %%  return
+%         %%end
+        
+        % Compute the integrals
+        zleft = z(left);
+        zright = z(right);
+        angl = angle(zleft);
+        mid = exp(i*(angl + rem(angle(zright./zleft)+2*pi,2*pi)/2));
+        % For integrals between nonadjacent singularities, choose 0 as intermediate
+        % integration point.
+        mid(cmplx) = zeros(size(mid(cmplx)));
+        % If any are complex, the first one must be too.
+        if any(cmplx)
+            cmplx(1) = 1;
         end
         
-        zc = dinvmap(wc,w,beta,z,c,tol);
+        ints = NaN*zleft;
+        ints(~cmplx) = sctool.dabsquad(zleft(~cmplx),mid(~cmplx),left(~cmplx),...
+            z,beta,qdat) + ...
+            sctool.dabsquad(zright(~cmplx),mid(~cmplx),right(~cmplx),z,beta,qdat);
+        if any(cmplx)
+            ints(cmplx) = sctool.dquad(zleft(cmplx),mid(cmplx),left(cmplx),z,beta,qdat) - ...
+                sctool.dquad(zright(cmplx),mid(cmplx),right(cmplx),z,beta,qdat);
+        end
         
-        % Transform prevertices.
-        y = ((1-zc')/(1-zc))*(z-zc)./(1-zc'*z);
-        y(n) = 1;				% force it to be exact
-        y = y./abs(y);
+        if any(ints==0)
+            % Singularities were too crowded in practice.
+%             %%  F = y;
+            warning('Severe crowding')
+        end
         
-        % Recalculate constant from scratch.
-        mid = (y(1)+y(2))/2;
-        qdat = scqdata(beta,ceil(-log10(tol)));
-        d = (w(1) - w(2))/...
-            (dquad(y(2),mid,2,y,beta,qdat) - dquad(y(1),mid,1,y,beta,qdat));
-    end
-    
-    function zdot = dimapfun(wp,yp,scale,z,beta,c)
-        %   Used by DINVMAP for solution of an ODE.
-        
-        %   Copyright 1998 by Toby Driscoll.
-        %   $Id: dimapfun.m 7 1998-05-10 04:37:19Z tad $
-        
-        lenyp = length(yp);
-        lenzp = lenyp/2;
-        zp = (yp(1:lenzp)+sqrt(-1)*yp(lenzp+1:lenyp));
-        
-        f = scale./dderiv(zp,z,beta,c);
-        zdot = [real(f);imag(f)];        
+        % Compute nonlinear equation residual values.
+        cmplx(1) = 0;
+        F1 = ints(~cmplx);
+        F1 = F1(2:end)/abs(F1(1));
+        F2 = ints(cmplx)/ints(1);
+        F = [F1;real(F2);imag(F2)] - nmlen;
     end
     
     function [zp,flag] = dinvmap(wp,w,beta,z,c,qdat,z0,options)
@@ -990,27 +1067,6 @@ methods(Access=private)
         
     end
     
-    function [zhp,chp] = disk2hp(w,beta,z,c)
-        %DISK2HP Convert solution from the disk to one from the half-plane.
-        %   [ZHP,CHP] = DISK2HP(W,BETA,Z,C) quickly transforms the solution Z,C
-        %   of the Schwarz-Christoffel disk mapping parameter problem to the
-        %   solution ZHP,CHP of the half-plane problem.
-        %
-        %   See also HP2DISK, DPARAM, HPPARAM.
-        
-        n = length(w);
-        zhp = zeros(size(z));
-        zhp(n) = Inf;
-        zhp(1:n-1) = -i*(z(1:n-1)+1)./(z(1:n-1)-1); % Mobius transfmn
-        zhp = real(zhp);
-        
-        % Recalculate constant from scratch.
-        mid = mean(zhp(1:2));
-        qdat = sctool.scqdata(beta(1:n-1),16);
-        chp = (w(1)-w(2))/(hplmap.hpquad(zhp(2),mid,2,zhp(1:n-1),beta(1:n-1),qdat) - ...
-            hplmap.hpquad(zhp(1),mid,1,zhp(1:n-1),beta(1:n-1),qdat));
-    end
-    
     function wp = dmap(zp,w,beta,z,c,qdat)
         %DMAP  Schwarz-Christoffel disk map.
         %   DMAP(ZP,W,BETA,Z,C,QDAT) computes the values of the Schwarz-
@@ -1068,9 +1124,9 @@ methods(Access=private)
             % Can't integrate starting at pre-infinity: find conformal center to use
             % as integration basis.
             if ~isinf(w(n-1))
-                wc = w(n-1) + c*dquad(z(n-1),0,n-1,z,beta,qdat);
+                wc = w(n-1) + c*diskmap.dquad(z(n-1),0,n-1,z,beta,qdat);
             else
-                wc = w(n) + c*dquad(z(n),0,n,z,beta,qdat);
+                wc = w(n) + c*diskmap.dquad(z(n),0,n,z,beta,qdat);
             end
         end
         
@@ -1082,200 +1138,152 @@ methods(Access=private)
         % Compute the map directly at "normal" points.
         normal = ~bad & ~vertex;
         if any(normal)
-            I = dquad(zs(normal),zp(normal),sing(normal),z,beta,qdat);
+            I = diskmap.dquad(zs(normal),zp(normal),sing(normal),z,beta,qdat);
             wp(normal) = ws(normal) + c*I;
         end
         
         % Compute map at "bad" points, using conformal center as basis, to avoid
         % integration where right endpoint is too close to a singularity.
         if any(bad)
-            I = dquad(zp(bad),zeros(sum(bad),1),zeros(sum(bad),1),z,beta,qdat);
+            I = diskmap.dquad(zp(bad),zeros(sum(bad),1),...
+                zeros(sum(bad),1),z,beta,qdat);
             wp(bad) = wc - c*I;
         end
         
         wp = reshape(wp,shape);
     end
-    
-    function [z,c,qdat] = dparam(w,beta,z0,options)
-        %DPARAM Schwarz-Christoffel disk parameter problem.
-        %   [Z,C,QDAT] = DPARAM(W,BETA) solves the Schwarz-Christoffel mapping
-        %   parameter problem with the disk as fundamental domain and the
-        %   polygon specified by W as the target. W must be a vector of the
-        %   vertices of the polygon, specified in counterclockwise order, and
-        %   BETA should be a vector of the turning angles of the polygon; see
-        %   SCANGLE for details. If successful, DPARAM will return Z, a vector
-        %   of the pre-images of W; C, the multiplicative constant of the
-        %   conformal map; and QDAT, an optional matrix of quadrature data used
-        %   by some of the other S-C routines.
+end
+
+methods(Access=private)
+    function fprime = dderiv(zp,z,beta,c)
+        %DDERIV Derivative of the disk map.
+        %   DDERIV(ZP,Z,BETA,C) returns the derivative at the points of ZP of
+        %   the Schwarz-Christoffel disk map defined by Z, BETA, and C.
         %
-        %   [Z,C,QDAT] = DPARAM(W,BETA,Z0) uses Z0 as an initial guess for Z.
-        %
-        %   [Z,C,QDAT] = DPARAM(W,BETA,TOL) attempts to find an answer within
-        %   tolerance TOL. (Also see SCPAROPT.)
-        %
-        %   [Z,C,QDAT] = DPARAM(W,BETA,Z0,OPTIONS) uses a vector of control
-        %   parameters. See SCPAROPT.
-        %
-        %   See also SCPAROPT, DRAWPOLY, DDISP, DPLOT, DMAP, DINVMAP.
+        %   See also DPARAM, DMAP.
         
-        %   Copyright 1998-2001 by Toby Driscoll.
-        %   $Id: dparam.m 199 2002-09-13 18:54:27Z driscoll $
-        
-        import sctool.*
-        
-        n = length(w);				% no. of vertices
-        w = w(:);
-        beta = beta(:);
-        
-        % Set up defaults for missing args
+        % Support old syntax
         if nargin < 4
-            options = [];
-            if nargin < 3
-                z0 = [];
-            end
+            c = 1;
         end
         
-        err = sccheck('d',w,beta);
-        if err==1
-            fprintf('Use SCFIX to make polygon obey requirements\n')
-            error(' ')
-        end
+        z = z(:);
+        beta = beta(:);
+        zprow = zp(:).';
+        fprime = zeros(size(zp));
         
-        [trace,tol,method] = parseopt(options);
-        if length(z0)==1
-            tol = z0;
-            z0 = [];
-        end
-        nqpts = max(ceil(-log10(tol)),4);
-        qdat = scqdata(beta,nqpts); 		% quadrature data
-        
-        atinf = (beta <= -1);
-        
-        if n==3
-            % Trivial solution
-            z = [-i;(1-i)/sqrt(2);1];
-            
-        else
-            
-            % Set up normalized lengths for nonlinear equations:
-            
-            % indices of left and right integration endpoints
-            left = find(~atinf(1:n-2));
-            right = 1+find(~atinf(2:n-1));
-            cmplx = ((right-left) == 2);
-            % normalize lengths by w(2)-w(1)
-            nmlen = (w(right)-w(left))/(w(2)-w(1));
-            % abs value for finite ones; Re/Im for infinite ones
-            nmlen = [abs(nmlen(~cmplx));real(nmlen(cmplx));imag(nmlen(cmplx))];
-            % first entry is useless (=1)
-            nmlen(1) = [];
-            
-            % Set up initial guess
-            if isempty(z0)
-                y0 = zeros(n-3,1);
-            else
-                z0 = z0(:)./abs(z0(:));
-                % Moebius to make th(n-2:n)=[1,1.5,2]*pi;
-                Am = moebius(z0(n-2:n),[-1;-i;1]);
-                z0 = Am(z0);
-                th = angle(z0);
-                th(th<=0) = th(th<=0) + 2*pi;
-                dt = diff([0;th(1:n-2)]);
-                y0 = log(dt(1:n-3)./dt(2:n-2));
-            end
-            
-            % Solve nonlinear system of equations:
-            
-            % package data
-            fdat = {n,beta,nmlen,left,right,logical(cmplx),qdat};
-            % set options
-            opt = zeros(16,1);
-            opt(1) = trace;
-            opt(2) = method;
-            opt(6) = 100*(n-3);
-            opt(8) = tol;
-            opt(9) = min(eps^(2/3),tol/10);
-            opt(12) = nqpts;
-            try
-                [y,termcode] = nesolve(@dpfun,y0,opt,fdat);
-            catch
-                % Have to delete the "waitbar" figure if interrupted
-                close(findobj(allchild(0),'flat','Tag','TMWWaitbar'));
-                error(lasterr)
-            end
-            if termcode~=1
-                warning('Nonlinear equations solver did not terminate normally.')
-            end
-            
-            % Convert y values to z
-            cs = cumsum(cumprod([1;exp(-y)]));
-            theta = pi*cs(1:n-3)/cs(n-2);
-            z = ones(n,1);
-            z([1:n-3]) = exp(i*theta);
-            z(n-2:n-1) = [-1;-i];
-        end
-        
-        % Determine scaling constant
-        mid = (z(1)+z(2))/2;
-        c = (w(1) - w(2))/...
-            (dquad(z(2),mid,2,z,beta,qdat) - dquad(z(1),mid,1,z,beta,qdat));
-        
+        npts = length(zp(:));
+        terms = 1 - zprow(ones(length(beta),1),:)./z(:,ones(npts,1));
+        fprime(:) = c*exp(sum(log(terms).*beta(:,ones(npts,1))));
     end
     
-    function F = dpfun(y,fdat)
-        %   Returns residual for solution of nonlinear equations.
+    function ddisp(w,beta,z,c)
+        %DDISP  Display results of Schwarz-Christoffel disk parameter problem.
+        %   DDISP(W,BETA,Z,C) displays the results of DPARAM in a pleasant way.
+        %
+        %   See also DPARAM, DPLOT.
         
-        [n,beta,nmlen,left,right,cmplx,qdat] = deal(fdat{:});
+        disp(' ')
+        disp('      vertex [w]          beta        prevertex [z]         arg(z)/pi')
+        disp(' -----------------------------------------------------------------------')
+        u = real(w);
+        v = imag(w);
+        x = real(z);
+        y = imag(z);
+        ang = angle(z)/pi;
+        ang(ang<=0) = ang(ang<=0) + 2;
+        for j = 1:length(w)
+            if v(j) < 0
+                s1 = '-';
+            else
+                s1 = '+';
+            end
+            if y(j) < 0
+                s2 = '-';
+            else
+                s2 = '+';
+            end
+            disp(sprintf(' %8.5f %c %7.5fi    %8.5f   %8.5f %c %7.5fi    %14.12f',...
+                u(j),s1,abs(v(j)),beta(j),x(j),s2,abs(y(j)),ang(j)));
+            
+        end
+        disp(' ')
+        if imag(c) < 0
+            s = '-';
+        else
+            s = '+';
+        end
+        disp(sprintf('  c = %.8g %c %.8gi\n',real(c),s,abs(imag(c))))
+    end
+    
+    function [y,d] = dfixwc(w,beta,z,c,wc,tol)
+        %DFIXWC Fix conformal center of disk map.
+        %   The conformal center WC of a Schwarz-Christoffel interior disk map
+        %   is defined as the image of zero.  The parameter problem solver
+        %   DPARAM does not allow control over the placement of the conformal
+        %   center.  Using the output Z,C from DPARAM, [Z0,C0] =
+        %   DFIXWC(W,BETA,Z,C,WC) computes a Moebius transformation so that if
+        %   Z0 and C0 are used in place of Z and C, the conformal center of the
+        %   resulting map will be WC.
+        %
+        %   [Z0,C0] = DFIXWC(W,BETA,Z,C,WC,TOL) uses tolerance TOL.
+        %
+        %   See also DPARAM, PTSOURCE.
         
-        % Convert y values to z (prevertices)
-        cs = cumsum(cumprod([1;exp(-y)]));
-        theta = pi*cs(1:n-3)/cs(length(cs));
-        z = ones(n,1);
-        z(1:n-3) = exp(i*theta);
-        z(n-2:n-1) = [-1;-i];
+        n = length(w);
         
-%         %%% Check crowding.
-%         %%if any(diff(theta)<eps) | any(isnan(theta))
-%         %%  % Since abs(y) is large, use it as the penalty function.
-%         %%  F = y;
-%         %%  disp('Warning: Severe crowding')
-%         %%  return
-%         %%end
-        
-        % Compute the integrals
-        zleft = z(left);
-        zright = z(right);
-        angl = angle(zleft);
-        mid = exp(i*(angl + rem(angle(zright./zleft)+2*pi,2*pi)/2));
-        % For integrals between nonadjacent singularities, choose 0 as intermediate
-        % integration point.
-        mid(cmplx) = zeros(size(mid(cmplx)));
-        % If any are complex, the first one must be too.
-        if any(cmplx)
-            cmplx(1) = 1;
+        if nargin < 6
+            [trace,tol,method] = sctool.scparopt([]);
         end
         
-        ints = NaN*zleft;
-        ints(~cmplx) = sctool.dabsquad(zleft(~cmplx),mid(~cmplx),left(~cmplx),...
-            z,beta,qdat) + ...
-            sctool.dabsquad(zright(~cmplx),mid(~cmplx),right(~cmplx),z,beta,qdat);
-        if any(cmplx)
-            ints(cmplx) = sctool.dquad(zleft(cmplx),mid(cmplx),left(cmplx),z,beta,qdat) - ...
-                sctool.dquad(zright(cmplx),mid(cmplx),right(cmplx),z,beta,qdat);
-        end
+        zc = dinvmap(wc,w,beta,z,c,tol);
         
-        if any(ints==0)
-            % Singularities were too crowded in practice.
-%             %%  F = y;
-            warning('Severe crowding')
-        end
+        % Transform prevertices.
+        y = ((1-zc')/(1-zc))*(z-zc)./(1-zc'*z);
+        y(n) = 1;				% force it to be exact
+        y = y./abs(y);
         
-        % Compute nonlinear equation residual values.
-        cmplx(1) = 0;
-        F1 = ints(~cmplx);
-        F1 = F1(2:end)/abs(F1(1));
-        F2 = ints(cmplx)/ints(1);
-        F = [F1;real(F2);imag(F2)] - nmlen;
+        % Recalculate constant from scratch.
+        mid = (y(1)+y(2))/2;
+        qdat = scqdata(beta,ceil(-log10(tol)));
+        d = (w(1) - w(2))/...
+            (diskmap.dquad(y(2),mid,2,y,beta,qdat) ...
+            - diskmap.dquad(y(1),mid,1,y,beta,qdat));
+    end
+    
+    function zdot = dimapfun(wp,yp,scale,z,beta,c)
+        %   Used by DINVMAP for solution of an ODE.
+        
+        %   Copyright 1998 by Toby Driscoll.
+        %   $Id: dimapfun.m 7 1998-05-10 04:37:19Z tad $
+        
+        lenyp = length(yp);
+        lenzp = lenyp/2;
+        zp = (yp(1:lenzp)+sqrt(-1)*yp(lenzp+1:lenyp));
+        
+        f = scale./dderiv(zp,z,beta,c);
+        zdot = [real(f);imag(f)];        
+    end
+    
+    function [zhp,chp] = disk2hp(w,beta,z,c)
+        %DISK2HP Convert solution from the disk to one from the half-plane.
+        %   [ZHP,CHP] = DISK2HP(W,BETA,Z,C) quickly transforms the solution Z,C
+        %   of the Schwarz-Christoffel disk mapping parameter problem to the
+        %   solution ZHP,CHP of the half-plane problem.
+        %
+        %   See also HP2DISK, DPARAM, HPPARAM.
+        
+        n = length(w);
+        zhp = zeros(size(z));
+        zhp(n) = Inf;
+        zhp(1:n-1) = -i*(z(1:n-1)+1)./(z(1:n-1)-1); % Mobius transfmn
+        zhp = real(zhp);
+        
+        % Recalculate constant from scratch.
+        mid = mean(zhp(1:2));
+        qdat = sctool.scqdata(beta(1:n-1),16);
+        chp = (w(1)-w(2))/(hplmap.hpquad(zhp(2),mid,2,zhp(1:n-1),beta(1:n-1),qdat) - ...
+            hplmap.hpquad(zhp(1),mid,1,zhp(1:n-1),beta(1:n-1),qdat));
     end
     
     function [H,R2,THETA] = dplot(w,beta,z,c,R,theta,options)
