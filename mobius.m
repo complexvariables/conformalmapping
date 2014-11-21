@@ -213,29 +213,40 @@ methods
   end
   
   function M = mtimes(M1, M2)
-    % Multiply Moebius transformation by a scalar.
+    % Multiply Moebius transformation by a scalar, compose it with another
+    % map, or apply it if left multiplication.
     
-    if isa(M1, 'double')
-      % Make the first one mobius.
-      tmp = M1;
-      M1 = M2;
-      M2 = tmp;
-    elseif isa(M2, 'mobius')
-      M = mobius(M1.theMatrix*M2.theMatrix);
-      M.theDomain = domain(M2);
-      M.theRange = range(M1);
-      return
-    elseif isa(M2, 'conformalmap')
-      M = mtimes@conformalmap(M2, M1);
-      return
+    if isa(M1, 'mobius')
+        switch class(M2)
+            case 'mobius'
+                M = mobius(M1.theMatrix*M2.theMatrix);
+                M.theDomain = domain(M2);
+                M.theRange = range(M1);
+                return
+                
+            case 'conformalmap'
+                M = mtimes@conformalmap(M2, M1);
+                return
+                
+        end
+        
+        if isa(M2, 'closedcurve') || isa(M2, 'region')
+            M = apply(M1, M2);
+            return
+        end
+    else
+        % swap
+        [M1, M2] = deal(M2, M1);
     end
     
-    A = M1.theMatrix;
-    if isa(M2, 'double') && length(M2) == 1
-      A(1,:) = A(1,:)*M2;
-      M = mobius(A);
+    % Try scalar multiplication.
+    if isnumeric(M2) && length(M2) == 1
+        A = M1.theMatrix;
+        A(1,:) = A(1,:)*M2;
+        M = mobius(A);
     else
-      error('CMT:NotDefined', 'Operation not defined.')
+        error('CMT:NotDefined', ['Combining %s with a Mobius ' ...
+            'transformation in this way is not defined.'], class(M2))
     end
   end
   
