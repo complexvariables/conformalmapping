@@ -121,7 +121,7 @@ methods
             for j = 1:length(varargin)
                 switch lower(varargin{j}(1:min(3,length(varargin{j}))))
                     case 'pol'
-                        varargout{j} = polygon(map);
+                        varargout{j} = map.polygon;
                     case 'opt'
                         varargout{j} = options(map);
                     otherwise
