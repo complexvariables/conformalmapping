@@ -841,10 +841,10 @@ methods(Hidden,Static)
         if ode
             if isempty(z0)
                 % Pick a value z0 (not a singularity) and compute the map there.
-                map = @(zp) dmap(zp,w,beta,z,c,qdat);
+                map = @(zp) diskmap.dmap(zp,w,beta,z,c,qdat);
                 [z0,w0] = sctool.findz0('d',wp(~done),map,w,beta,z,c,qdat);
             else
-                w0 = dmap(z0,w,beta,z,c,qdat);
+                w0 = diskmap.dmap(z0,w,beta,z,c,qdat);
                 if length(z0)==1 && lenwp > 1
                     z0 = z0(:,ones(lenwp,1)).';
                     w0 = w0(:,ones(lenwp,1)).';
@@ -886,7 +886,7 @@ methods(Hidden,Static)
             wp = wp(:);
             k = 0;
             while ~all(done) && k < maxiter
-                F = wp(~done) - dmap(zn(~done),w,beta,z,c,qdat);
+                F = wp(~done) - diskmap.dmap(zn(~done),w,beta,z,c,qdat);
                 m = length(F);
                 dF = c*exp(sum(beta(:,ones(m,1)).*...
                     log(1-(zn(~done,ones(n,1)).')./z(:,ones(m,1)))));
@@ -1276,7 +1276,7 @@ methods(Hidden,Static)
         % Prepare axes
         axes(ax(1))
         turn_off_hold = ~ishold;
-        hp = plotpoly(w,beta);
+        hp = sctool.plotpoly(w,beta);
         set(hp,'vis',vis{1})
         hold on
         % For now, there is no need to draw the canonical domain. This is an
@@ -1324,7 +1324,7 @@ methods(Hidden,Static)
             while (any(new)) && (iter < maxrefn)
                 drawnow
                 zp = R(j)*exp(1i*tp(new));
-                neww = dmap(zp,w,beta,z,c,qdat);
+                neww = diskmap.dmap(zp,w,beta,z,c,qdat);
                 wp(new) = neww;
                 iter = iter + 1;
                 
@@ -1405,7 +1405,7 @@ methods(Hidden,Static)
             iter = 0;
             while (any(new)) && (iter < maxrefn)
                 drawnow
-                neww = dmap(zp(new),w,beta,z,c,qdat);
+                neww = diskmap.dmap(zp(new),w,beta,z,c,qdat);
                 wp(new) = neww;
                 iter = iter + 1;
                 
