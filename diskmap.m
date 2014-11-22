@@ -565,7 +565,7 @@ methods
         %HPLMAP Convert Schwarz-Christoffel disk map to a map from the half-plane.
         
         p = M.polygon;
-        [z1,c1] = disk2hp(vertex(p),angle(p)-1,M.prevertex,M.constant);
+        [z1,c1] = M.disk2hp(vertex(p),angle(p)-1,M.prevertex,M.constant);
         M1 = hplmap(p,scmapopt(M),z1,c1);
     end
     
@@ -615,17 +615,17 @@ methods
         c = M.constant;
         
         if nargin == 1
-            [a1,a2,a3] = dplot(w,beta,z,c);
+            [a1,a2,a3] = M.dplot(w,beta,z,c);
         elseif length(varargin) == 1
             % Tolerance given only
-            [a1,a2,a3] = dplot(w,beta,z,c,10,10,ceil(-log10(varargin{1})));
+            [a1,a2,a3] = M.dplot(w,beta,z,c,10,10,ceil(-log10(varargin{1})));
         elseif length(varargin) == 2
             % R, theta given only
-            [a1,a2,a3] = dplot(w,beta,z,c,varargin{1},varargin{2});
+            [a1,a2,a3] = M.dplot(w,beta,z,c,varargin{1},varargin{2});
         else
             % All given
             nqpts = ceil(-log10(varargin{3}));
-            [a1,a2,a3] = dplot(w,beta,z,c,varargin{1},varargin{2},nqpts);
+            [a1,a2,a3] = M.dplot(w,beta,z,c,varargin{1},varargin{2},nqpts);
         end
         
         if nargout > 0
@@ -650,93 +650,6 @@ methods
             M.polygon = M.polygon + a;
         else
             error('Addition is not defined for these operands.')
-        end
-    end
-end
-
-methods(Static)
-    % needed by CR inverse mapping
-    function out = imapfun(varargin)
-        out = dimapfun(varargin{:});
-    end
-    
-    function I = dquad(z1,z2,sing1,z,beta,qdat)
-        %DQUAD: Numerical quadrature for the disk map.
-        %   DQUAD(ZL,ZR,S,Z,BETA,QDAT,MIDPT) performs the integration for the SC
-        %   disk formula. ZL and ZR are vectors of left and right endpoints. S
-        %   is a vector of integers. If ZL(k) = Z(m), then S(k) should have the
-        %   value m; otherwise, S(k) should be zero.
-        %
-        %   Z and BETA are prevertices and turning angles for the SC map. QDAT
-        %   is a matrix of quadrature data (see SCQDATA).
-        %
-        %   The integration is adaptive in the sense that members of Z (with
-        %   nonzero BETA) that are close to the left endpoints cause
-        %   subdivision. This is NOT true of singularities close to the right end.
-        
-        %   Copyright 1998--2001 by Toby Driscoll.
-        %   $Id: dquad.m 212 2002-09-25 17:31:37Z driscoll $
-        
-        %   z1,z2 are vectors of left and right endpoints.  sing1 is a vector of
-        %   integer indices which label the singularities in z1.  So if sing1(5)
-        %   = 3, then z1(5) = z(3).  A zero means no singularity.  z is the
-        %   vector of singularities; beta is the vector of associated turning
-        %   angles.  qdat is quadrature data from SCQDATA.
-        %
-        %   Make sure that z and beta are column vectors.
-        %
-        %   DQUAD integrates from a possible singularity at the left end to a
-        %   regular point at the right.  If both endpoints are singularities,
-        %   you must break the integral into two pieces and make two calls.
-        %
-        %   The integral is subdivided, if necessary, so that no singularity
-        %   lies closer to the left endpoint than 1/2 the length of the
-        %   integration (sub)interval.
-        
-        nqpts = size(qdat,1);
-        n = length(z);
-        bigz = z(:,ones(1,nqpts));
-        bigbeta = beta(:,ones(1,nqpts));
-        if isempty(sing1)
-            sing1 = zeros(length(z1),1);
-        end
-        
-        I = zeros(size(z1));
-        nontriv = find(z1(:)~=z2(:))';
-        
-        for k = nontriv
-            za = z1(k);
-            zb = z2(k);
-            sng = sing1(k);
-            
-            % Allowable integration step, based on nearest singularity.
-            dist = min(1,2*min(abs(z([1:sng-1,sng+1:n])-za))/abs(zb-za));
-            zr = za + dist*(zb-za);
-            % Adjust Gauss-Jacobi nodes and weights to interval.
-            ind = rem(sng+n,n+1)+1;
-            nd = ((zr-za)*qdat(:,ind) + zr + za).'/2; % G-J nodes
-            wt = ((zr-za)/2) * qdat(:,ind+n+1);	% G-J weights
-            terms = 1 - (nd(ones(n,1),:))./bigz;
-            if any(terms(:)==0)
-                % Endpoints are practically coincident.
-                I(k) = 0;
-            else
-                % Use Gauss-Jacobi on first subinterval, if necessary.
-                if sng > 0
-                    terms(sng,:) = terms(sng,:)./abs(terms(sng,:));
-                    wt = wt*(abs(zr-za)/2)^beta(sng);
-                end
-                I(k) = exp(sum(log(terms).*bigbeta))*wt;
-                while dist < 1
-                    % Do regular Gaussian quad on other subintervals.
-                    zl = zr;
-                    dist = min(1,2*min(abs(z-zl))/abs(zl-zb));
-                    zr = zl + dist*(zb-zl);
-                    nd = ((zr-zl)*qdat(:,n+1) + zr + zl).'/2;
-                    wt = ((zr-zl)/2) * qdat(:,2*n+2);
-                    I(k) = I(k) + exp(sum(log(1 - nd(ones(n,1),:)./bigz).*bigbeta)) * wt;
-                end
-            end
         end
     end
 end
@@ -801,6 +714,304 @@ methods(Hidden,Static)
             s = '+';
         end
         disp(sprintf('  c = %.8g %c %.8gi\n',real(c),s,abs(imag(c))))
+    end
+    
+    function [y,d] = dfixwc(w,beta,z,c,wc,tol)
+        %DFIXWC Fix conformal center of disk map.
+        %   The conformal center WC of a Schwarz-Christoffel interior disk map
+        %   is defined as the image of zero.  The parameter problem solver
+        %   DPARAM does not allow control over the placement of the conformal
+        %   center.  Using the output Z,C from DPARAM, [Z0,C0] =
+        %   DFIXWC(W,BETA,Z,C,WC) computes a Moebius transformation so that if
+        %   Z0 and C0 are used in place of Z and C, the conformal center of the
+        %   resulting map will be WC.
+        %
+        %   [Z0,C0] = DFIXWC(W,BETA,Z,C,WC,TOL) uses tolerance TOL.
+        %
+        %   See also DPARAM, PTSOURCE.
+        
+        n = length(w);
+        
+        if nargin < 6
+            [trace,tol,method] = sctool.scparopt([]);
+        end
+        
+        zc = dinvmap(wc,w,beta,z,c,tol);
+        
+        % Transform prevertices.
+        y = ((1-zc')/(1-zc))*(z-zc)./(1-zc'*z);
+        y(n) = 1;				% force it to be exact
+        y = y./abs(y);
+        
+        % Recalculate constant from scratch.
+        mid = (y(1)+y(2))/2;
+        qdat = scqdata(beta,ceil(-log10(tol)));
+        d = (w(1) - w(2))/...
+            (diskmap.dquad(y(2),mid,2,y,beta,qdat) ...
+            - diskmap.dquad(y(1),mid,1,y,beta,qdat));
+    end
+    
+    function zdot = dimapfun(wp,yp,scale,z,beta,c)
+        %   Used by DINVMAP for solution of an ODE.
+        
+        %   Copyright 1998 by Toby Driscoll.
+        %   $Id: dimapfun.m 7 1998-05-10 04:37:19Z tad $
+        
+        lenyp = length(yp);
+        lenzp = lenyp/2;
+        zp = (yp(1:lenzp)+sqrt(-1)*yp(lenzp+1:lenyp));
+        
+        f = scale./diskmap.dderiv(zp,z,beta,c);
+        zdot = [real(f);imag(f)];        
+    end
+    
+    function [zp,flag] = dinvmap(wp,w,beta,z,c,qdat,z0,options)
+        %DINVMAP Schwarz-Christoffel disk inverse map.
+        %   DINVMAP(WP,W,BETA,Z,C,TOL) computes the inverse of the
+        %   Schwarz-Christoffel disk map (i.e., from a polygon to the disk) at
+        %   the points given in vector WP. The other arguments are as in
+        %   DPARAM. TOL is a scalar tolerance, or a quadrature-data matrix QDAT
+        %   as returned by SCQDATA, or may be omitted.
+        %
+        %   The default algorithm is to solve an ODE in order to obtain a fair
+        %   approximation for ZP, and then improve ZP with Newton iterations.
+        %   The ODE solution at WP requires a vector Z0 whose forward image W0
+        %   is such that for each j, the line segment connecting WP(j) and W0(j)
+        %   lies inside the polygon.  By default Z0 is chosen by a fairly robust
+        %   automatic process.  Using a parameter (see below), you can choose to
+        %   use either an ODE solution or Newton iterations exclusively.
+        %
+        %   DINVMAP(WP,W,BETA,Z,C,TOL,Z0) has two interpretations.  If the ODE
+        %   solution is being used, Z0 overrides the automatic selection of
+        %   initial points.  (This can be handy in convex polygons, where the
+        %   choice of Z0 is trivial.)  Otherwise, Z0 is taken as an initial
+        %   guess to ZP.  In either case, if length(Z0)==1, the value Z0 is used
+        %   for all elements of WP; otherwise, length(Z0) should equal
+        %   length(WP).
+        %
+        %   DINVMAP(WP,W,BETA,Z,C,TOL,Z0,OPTIONS) uses a vector of parameters
+        %   that control the algorithm.  See SCINVOPT.
+        %
+        %   [ZP,FLAG] = DINVMAP(...) also returns a vector of indices where the
+        %   method was unable to produce a sufficiently small residual. A warning
+        %   is issued when this occurs.
+        %
+        %   See also SCINVOPT, DPARAM, DMAP.
+        
+        n = length(w);
+        beta = beta(:);
+        z = z(:);
+        zp = zeros(size(wp));
+        wp = wp(:);
+        lenwp = length(wp);
+        
+        if nargin < 8
+            options = [];
+            if nargin < 7
+                z0 = [];
+                if nargin < 6
+                    qdat = [];
+                end
+            end
+        end
+        
+        [ode,newton,tol,maxiter] = sctool.scinvopt(options);
+        
+        if isempty(qdat)
+            qdat = tol;
+        end
+        
+        if length(qdat)==1
+            qdat = sctool.scqdata(beta,max(ceil(-log10(qdat)),2));
+        end
+        
+        done = zeros(size(wp));
+        % First, trap all points indistinguishable from vertices, or they will cause
+        % trouble.
+        % Modified 05/14/2007 to work around bug in matlab 2007a.
+        for j=1:n
+            idx = find(abs(wp-w(j)) < 3*eps);
+            zp(idx) = z(j);
+            done(idx) = 1;
+        end
+        lenwp = lenwp - sum(done);
+        if lenwp==0, flag = []; return, end
+        
+        % ODE
+        if ode
+            if isempty(z0)
+                % Pick a value z0 (not a singularity) and compute the map there.
+                map = @(zp) dmap(zp,w,beta,z,c,qdat);
+                [z0,w0] = sctool.findz0('d',wp(~done),map,w,beta,z,c,qdat);
+            else
+                w0 = dmap(z0,w,beta,z,c,qdat);
+                if length(z0)==1 && lenwp > 1
+                    z0 = z0(:,ones(lenwp,1)).';
+                    w0 = w0(:,ones(lenwp,1)).';
+                end
+                w0 = w0(~done);
+                z0 = z0(~done);
+            end
+            
+            % Use relaxed ODE tol if improving with Newton.
+            odetol = max(tol,1e-4*(newton));
+            opt = odeset('abstol',odetol,'reltol',odetol);
+            
+            % Rescale dependent coordinate
+            scale = (wp(~done) - w0(:));
+            
+            % Solve ODE
+            z0 = [real(z0);imag(z0)];
+            odefun = @(w,y) diskmap.dimapfun(w,y,scale,z,beta,c);
+            [t,y] = ode113(odefun,[0,0.5,1],z0,opt);
+            [m,leny] = size(y);
+            zp(~done) = y(m,1:lenwp)+sqrt(-1)*y(m,lenwp+1:leny);
+            abszp = abs(zp);
+            out = abszp > 1;
+            zp(out) = zp(out)./abszp(out);
+        end
+        
+        % Newton iterations
+        if newton
+            if ~ode
+                zn = z0(:);
+                if length(z0)==1 && lenwp > 1
+                    zn = zn(:,ones(lenwp,1));
+                end
+                zn(done) = zp(done);
+            else
+                zn = zp(:);
+            end
+            
+            wp = wp(:);
+            k = 0;
+            while ~all(done) && k < maxiter
+                F = wp(~done) - dmap(zn(~done),w,beta,z,c,qdat);
+                m = length(F);
+                dF = c*exp(sum(beta(:,ones(m,1)).*...
+                    log(1-(zn(~done,ones(n,1)).')./z(:,ones(m,1)))));
+                zn(~done) = zn(~done) + F(:)./dF(:);
+                out = abs(zn) > 1;
+                zn(out) = sign(zn(out));
+                done(~done) = (abs(F)< tol);
+                k = k+1;
+            end
+            if any(abs(F)> tol)
+                str = sprintf('Check solution; maximum residual = %.3g\n',max(abs(F)));
+                warning(str)
+            end
+            zp(:) = zn;
+        end;
+        
+        flag = find(~done);
+        
+    end
+    
+    function [zhp,chp] = disk2hp(w,beta,z,c)
+        %DISK2HP Convert solution from the disk to one from the half-plane.
+        %   [ZHP,CHP] = DISK2HP(W,BETA,Z,C) quickly transforms the solution Z,C
+        %   of the Schwarz-Christoffel disk mapping parameter problem to the
+        %   solution ZHP,CHP of the half-plane problem.
+        %
+        %   See also HP2DISK, DPARAM, HPPARAM.
+        
+        n = length(w);
+        zhp = zeros(size(z));
+        zhp(n) = Inf;
+        zhp(1:n-1) = -i*(z(1:n-1)+1)./(z(1:n-1)-1); % Mobius transfmn
+        zhp = real(zhp);
+        
+        % Recalculate constant from scratch.
+        mid = mean(zhp(1:2));
+        qdat = sctool.scqdata(beta(1:n-1),16);
+        chp = (w(1)-w(2))/(hplmap.hpquad(zhp(2),mid,2,zhp(1:n-1),beta(1:n-1),qdat) - ...
+            hplmap.hpquad(zhp(1),mid,1,zhp(1:n-1),beta(1:n-1),qdat));
+    end
+    
+    function wp = dmap(zp,w,beta,z,c,qdat)
+        %DMAP  Schwarz-Christoffel disk map.
+        %   DMAP(ZP,W,BETA,Z,C,QDAT) computes the values of the Schwarz-
+        %   Christoffel disk map at the points in vector ZP. The arguments W,
+        %   BETA, Z, C, and QDAT are as in DPARAM. DMAP returns a vector the
+        %   same size as ZP.
+        %
+        %   DMAP(ZP,W,BETA,Z,C,TOL) uses quadrature data intended to give an
+        %   answer accurate to within TOL.
+        %
+        %   DMAP(ZP,W,BETA,Z,C) uses a tolerance of 1e-8.
+        %
+        %   See also DPARAM, DPLOT, DINVMAP.
+        
+        if isempty(zp)
+            wp = [];
+            return
+        end
+        
+        n = length(z);
+        w = w(:);
+        beta = beta(:);
+        z = z(:);
+        
+        % Quadrature data and error tolerance
+        if nargin < 6
+            tol = 1e-8;
+            qdat = scqdata(beta,8);
+        elseif length(qdat)==1
+            tol = qdat;
+            qdat = scqdata(beta,max(ceil(-log10(tol)),8));
+        else
+            tol = 10^(-size(qdat,1));
+        end
+        
+        shape = size(zp);
+        zp = zp(:);
+        zprow = zp.';
+        p = length(zp);
+        wp = zeros(p,1);
+        
+        % For each point in zp, find nearest prevertex.
+        [dist,sing] = min(abs(zprow(ones(n,1),:) - z(:,ones(1,p))));
+        sing = sing(:);				% indices of prevertices
+        
+        % Screen out images of prevertices
+        vertex = (dist(:) < tol);
+        wp(vertex) = w(sing(vertex));
+        
+        % "Bad" points are closest to a prevertex of infinity.
+        atinf = find(isinf(w)); 		% infinite vertices
+        bad = ismember(sing,atinf) & ~vertex;
+        
+        if any(bad)
+            % Can't integrate starting at pre-infinity: find conformal center to use
+            % as integration basis.
+            if ~isinf(w(n-1))
+                wc = w(n-1) + c*diskmap.dquad(z(n-1),0,n-1,z,beta,qdat);
+            else
+                wc = w(n) + c*diskmap.dquad(z(n),0,n,z,beta,qdat);
+            end
+        end
+        
+        % zs = the starting singularities
+        zs = z(sing);
+        % ws = map(zs)
+        ws = w(sing);
+        
+        % Compute the map directly at "normal" points.
+        normal = ~bad & ~vertex;
+        if any(normal)
+            I = diskmap.dquad(zs(normal),zp(normal),sing(normal),z,beta,qdat);
+            wp(normal) = ws(normal) + c*I;
+        end
+        
+        % Compute map at "bad" points, using conformal center as basis, to avoid
+        % integration where right endpoint is too close to a singularity.
+        if any(bad)
+            I = diskmap.dquad(zp(bad),zeros(sum(bad),1),...
+                zeros(sum(bad),1),z,beta,qdat);
+            wp(bad) = wc - c*I;
+        end
+        
+        wp = reshape(wp,shape);
     end
     
     function [z,c,qdat] = dparam(w,beta,z0,options)
@@ -984,306 +1195,6 @@ methods(Hidden,Static)
         F1 = F1(2:end)/abs(F1(1));
         F2 = ints(cmplx)/ints(1);
         F = [F1;real(F2);imag(F2)] - nmlen;
-    end
-    
-    function [zp,flag] = dinvmap(wp,w,beta,z,c,qdat,z0,options)
-        %DINVMAP Schwarz-Christoffel disk inverse map.
-        %   DINVMAP(WP,W,BETA,Z,C,TOL) computes the inverse of the
-        %   Schwarz-Christoffel disk map (i.e., from a polygon to the disk) at
-        %   the points given in vector WP. The other arguments are as in
-        %   DPARAM. TOL is a scalar tolerance, or a quadrature-data matrix QDAT
-        %   as returned by SCQDATA, or may be omitted.
-        %
-        %   The default algorithm is to solve an ODE in order to obtain a fair
-        %   approximation for ZP, and then improve ZP with Newton iterations.
-        %   The ODE solution at WP requires a vector Z0 whose forward image W0
-        %   is such that for each j, the line segment connecting WP(j) and W0(j)
-        %   lies inside the polygon.  By default Z0 is chosen by a fairly robust
-        %   automatic process.  Using a parameter (see below), you can choose to
-        %   use either an ODE solution or Newton iterations exclusively.
-        %
-        %   DINVMAP(WP,W,BETA,Z,C,TOL,Z0) has two interpretations.  If the ODE
-        %   solution is being used, Z0 overrides the automatic selection of
-        %   initial points.  (This can be handy in convex polygons, where the
-        %   choice of Z0 is trivial.)  Otherwise, Z0 is taken as an initial
-        %   guess to ZP.  In either case, if length(Z0)==1, the value Z0 is used
-        %   for all elements of WP; otherwise, length(Z0) should equal
-        %   length(WP).
-        %
-        %   DINVMAP(WP,W,BETA,Z,C,TOL,Z0,OPTIONS) uses a vector of parameters
-        %   that control the algorithm.  See SCINVOPT.
-        %
-        %   [ZP,FLAG] = DINVMAP(...) also returns a vector of indices where the
-        %   method was unable to produce a sufficiently small residual. A warning
-        %   is issued when this occurs.
-        %
-        %   See also SCINVOPT, DPARAM, DMAP.
-        
-        n = length(w);
-        beta = beta(:);
-        z = z(:);
-        zp = zeros(size(wp));
-        wp = wp(:);
-        lenwp = length(wp);
-        
-        if nargin < 8
-            options = [];
-            if nargin < 7
-                z0 = [];
-                if nargin < 6
-                    qdat = [];
-                end
-            end
-        end
-        
-        [ode,newton,tol,maxiter] = sctool.scinvopt(options);
-        
-        if isempty(qdat)
-            qdat = tol;
-        end
-        
-        if length(qdat)==1
-            qdat = sctool.scqdata(beta,max(ceil(-log10(qdat)),2));
-        end
-        
-        done = zeros(size(wp));
-        % First, trap all points indistinguishable from vertices, or they will cause
-        % trouble.
-        % Modified 05/14/2007 to work around bug in matlab 2007a.
-        for j=1:n
-            idx = find(abs(wp-w(j)) < 3*eps);
-            zp(idx) = z(j);
-            done(idx) = 1;
-        end
-        lenwp = lenwp - sum(done);
-        if lenwp==0, flag = []; return, end
-        
-        % ODE
-        if ode
-            if isempty(z0)
-                % Pick a value z0 (not a singularity) and compute the map there.
-                map = @(zp) dmap(zp,w,beta,z,c,qdat);
-                [z0,w0] = sctool.findz0('d',wp(~done),map,w,beta,z,c,qdat);
-            else
-                w0 = dmap(z0,w,beta,z,c,qdat);
-                if length(z0)==1 && lenwp > 1
-                    z0 = z0(:,ones(lenwp,1)).';
-                    w0 = w0(:,ones(lenwp,1)).';
-                end
-                w0 = w0(~done);
-                z0 = z0(~done);
-            end
-            
-            % Use relaxed ODE tol if improving with Newton.
-            odetol = max(tol,1e-4*(newton));
-            opt = odeset('abstol',odetol,'reltol',odetol);
-            
-            % Rescale dependent coordinate
-            scale = (wp(~done) - w0(:));
-            
-            % Solve ODE
-            z0 = [real(z0);imag(z0)];
-            odefun = @(w,y) dimapfun(w,y,scale,z,beta,c);
-            [t,y] = ode113(odefun,[0,0.5,1],z0,opt);
-            [m,leny] = size(y);
-            zp(~done) = y(m,1:lenwp)+sqrt(-1)*y(m,lenwp+1:leny);
-            abszp = abs(zp);
-            out = abszp > 1;
-            zp(out) = zp(out)./abszp(out);
-        end
-        
-        % Newton iterations
-        if newton
-            if ~ode
-                zn = z0(:);
-                if length(z0)==1 && lenwp > 1
-                    zn = zn(:,ones(lenwp,1));
-                end
-                zn(done) = zp(done);
-            else
-                zn = zp(:);
-            end
-            
-            wp = wp(:);
-            k = 0;
-            while ~all(done) && k < maxiter
-                F = wp(~done) - dmap(zn(~done),w,beta,z,c,qdat);
-                m = length(F);
-                dF = c*exp(sum(beta(:,ones(m,1)).*...
-                    log(1-(zn(~done,ones(n,1)).')./z(:,ones(m,1)))));
-                zn(~done) = zn(~done) + F(:)./dF(:);
-                out = abs(zn) > 1;
-                zn(out) = sign(zn(out));
-                done(~done) = (abs(F)< tol);
-                k = k+1;
-            end
-            if any(abs(F)> tol)
-                str = sprintf('Check solution; maximum residual = %.3g\n',max(abs(F)));
-                warning(str)
-            end
-            zp(:) = zn;
-        end;
-        
-        flag = find(~done);
-        
-    end
-    
-    function wp = dmap(zp,w,beta,z,c,qdat)
-        %DMAP  Schwarz-Christoffel disk map.
-        %   DMAP(ZP,W,BETA,Z,C,QDAT) computes the values of the Schwarz-
-        %   Christoffel disk map at the points in vector ZP. The arguments W,
-        %   BETA, Z, C, and QDAT are as in DPARAM. DMAP returns a vector the
-        %   same size as ZP.
-        %
-        %   DMAP(ZP,W,BETA,Z,C,TOL) uses quadrature data intended to give an
-        %   answer accurate to within TOL.
-        %
-        %   DMAP(ZP,W,BETA,Z,C) uses a tolerance of 1e-8.
-        %
-        %   See also DPARAM, DPLOT, DINVMAP.
-        
-        if isempty(zp)
-            wp = [];
-            return
-        end
-        
-        n = length(z);
-        w = w(:);
-        beta = beta(:);
-        z = z(:);
-        
-        % Quadrature data and error tolerance
-        if nargin < 6
-            tol = 1e-8;
-            qdat = scqdata(beta,8);
-        elseif length(qdat)==1
-            tol = qdat;
-            qdat = scqdata(beta,max(ceil(-log10(tol)),8));
-        else
-            tol = 10^(-size(qdat,1));
-        end
-        
-        shape = size(zp);
-        zp = zp(:);
-        zprow = zp.';
-        p = length(zp);
-        wp = zeros(p,1);
-        
-        % For each point in zp, find nearest prevertex.
-        [dist,sing] = min(abs(zprow(ones(n,1),:) - z(:,ones(1,p))));
-        sing = sing(:);				% indices of prevertices
-        
-        % Screen out images of prevertices
-        vertex = (dist(:) < tol);
-        wp(vertex) = w(sing(vertex));
-        
-        % "Bad" points are closest to a prevertex of infinity.
-        atinf = find(isinf(w)); 		% infinite vertices
-        bad = ismember(sing,atinf) & ~vertex;
-        
-        if any(bad)
-            % Can't integrate starting at pre-infinity: find conformal center to use
-            % as integration basis.
-            if ~isinf(w(n-1))
-                wc = w(n-1) + c*diskmap.dquad(z(n-1),0,n-1,z,beta,qdat);
-            else
-                wc = w(n) + c*diskmap.dquad(z(n),0,n,z,beta,qdat);
-            end
-        end
-        
-        % zs = the starting singularities
-        zs = z(sing);
-        % ws = map(zs)
-        ws = w(sing);
-        
-        % Compute the map directly at "normal" points.
-        normal = ~bad & ~vertex;
-        if any(normal)
-            I = diskmap.dquad(zs(normal),zp(normal),sing(normal),z,beta,qdat);
-            wp(normal) = ws(normal) + c*I;
-        end
-        
-        % Compute map at "bad" points, using conformal center as basis, to avoid
-        % integration where right endpoint is too close to a singularity.
-        if any(bad)
-            I = diskmap.dquad(zp(bad),zeros(sum(bad),1),...
-                zeros(sum(bad),1),z,beta,qdat);
-            wp(bad) = wc - c*I;
-        end
-        
-        wp = reshape(wp,shape);
-    end
-end
-
-methods(Access=private)
-    function [y,d] = dfixwc(w,beta,z,c,wc,tol)
-        %DFIXWC Fix conformal center of disk map.
-        %   The conformal center WC of a Schwarz-Christoffel interior disk map
-        %   is defined as the image of zero.  The parameter problem solver
-        %   DPARAM does not allow control over the placement of the conformal
-        %   center.  Using the output Z,C from DPARAM, [Z0,C0] =
-        %   DFIXWC(W,BETA,Z,C,WC) computes a Moebius transformation so that if
-        %   Z0 and C0 are used in place of Z and C, the conformal center of the
-        %   resulting map will be WC.
-        %
-        %   [Z0,C0] = DFIXWC(W,BETA,Z,C,WC,TOL) uses tolerance TOL.
-        %
-        %   See also DPARAM, PTSOURCE.
-        
-        n = length(w);
-        
-        if nargin < 6
-            [trace,tol,method] = sctool.scparopt([]);
-        end
-        
-        zc = dinvmap(wc,w,beta,z,c,tol);
-        
-        % Transform prevertices.
-        y = ((1-zc')/(1-zc))*(z-zc)./(1-zc'*z);
-        y(n) = 1;				% force it to be exact
-        y = y./abs(y);
-        
-        % Recalculate constant from scratch.
-        mid = (y(1)+y(2))/2;
-        qdat = scqdata(beta,ceil(-log10(tol)));
-        d = (w(1) - w(2))/...
-            (diskmap.dquad(y(2),mid,2,y,beta,qdat) ...
-            - diskmap.dquad(y(1),mid,1,y,beta,qdat));
-    end
-    
-    function zdot = dimapfun(wp,yp,scale,z,beta,c)
-        %   Used by DINVMAP for solution of an ODE.
-        
-        %   Copyright 1998 by Toby Driscoll.
-        %   $Id: dimapfun.m 7 1998-05-10 04:37:19Z tad $
-        
-        lenyp = length(yp);
-        lenzp = lenyp/2;
-        zp = (yp(1:lenzp)+sqrt(-1)*yp(lenzp+1:lenyp));
-        
-        f = scale./diskmap.dderiv(zp,z,beta,c);
-        zdot = [real(f);imag(f)];        
-    end
-    
-    function [zhp,chp] = disk2hp(w,beta,z,c)
-        %DISK2HP Convert solution from the disk to one from the half-plane.
-        %   [ZHP,CHP] = DISK2HP(W,BETA,Z,C) quickly transforms the solution Z,C
-        %   of the Schwarz-Christoffel disk mapping parameter problem to the
-        %   solution ZHP,CHP of the half-plane problem.
-        %
-        %   See also HP2DISK, DPARAM, HPPARAM.
-        
-        n = length(w);
-        zhp = zeros(size(z));
-        zhp(n) = Inf;
-        zhp(1:n-1) = -i*(z(1:n-1)+1)./(z(1:n-1)-1); % Mobius transfmn
-        zhp = real(zhp);
-        
-        % Recalculate constant from scratch.
-        mid = mean(zhp(1:2));
-        qdat = sctool.scqdata(beta(1:n-1),16);
-        chp = (w(1)-w(2))/(hplmap.hpquad(zhp(2),mid,2,zhp(1:n-1),beta(1:n-1),qdat) - ...
-            hplmap.hpquad(zhp(1),mid,1,zhp(1:n-1),beta(1:n-1),qdat));
     end
     
     function [H,R2,THETA] = dplot(w,beta,z,c,R,theta,options)
@@ -1557,6 +1468,92 @@ methods(Access=private)
             end
         end
         
+    end
+    
+    % Used directly by hplmap/hp2disk.
+    function I = dquad(z1,z2,sing1,z,beta,qdat)
+        %DQUAD: Numerical quadrature for the disk map.
+        %   DQUAD(ZL,ZR,S,Z,BETA,QDAT,MIDPT) performs the integration for the SC
+        %   disk formula. ZL and ZR are vectors of left and right endpoints. S
+        %   is a vector of integers. If ZL(k) = Z(m), then S(k) should have the
+        %   value m; otherwise, S(k) should be zero.
+        %
+        %   Z and BETA are prevertices and turning angles for the SC map. QDAT
+        %   is a matrix of quadrature data (see SCQDATA).
+        %
+        %   The integration is adaptive in the sense that members of Z (with
+        %   nonzero BETA) that are close to the left endpoints cause
+        %   subdivision. This is NOT true of singularities close to the right end.
+        
+        %   Copyright 1998--2001 by Toby Driscoll.
+        %   $Id: dquad.m 212 2002-09-25 17:31:37Z driscoll $
+        
+        %   z1,z2 are vectors of left and right endpoints.  sing1 is a vector of
+        %   integer indices which label the singularities in z1.  So if sing1(5)
+        %   = 3, then z1(5) = z(3).  A zero means no singularity.  z is the
+        %   vector of singularities; beta is the vector of associated turning
+        %   angles.  qdat is quadrature data from SCQDATA.
+        %
+        %   Make sure that z and beta are column vectors.
+        %
+        %   DQUAD integrates from a possible singularity at the left end to a
+        %   regular point at the right.  If both endpoints are singularities,
+        %   you must break the integral into two pieces and make two calls.
+        %
+        %   The integral is subdivided, if necessary, so that no singularity
+        %   lies closer to the left endpoint than 1/2 the length of the
+        %   integration (sub)interval.
+        
+        nqpts = size(qdat,1);
+        n = length(z);
+        bigz = z(:,ones(1,nqpts));
+        bigbeta = beta(:,ones(1,nqpts));
+        if isempty(sing1)
+            sing1 = zeros(length(z1),1);
+        end
+        
+        I = zeros(size(z1));
+        nontriv = find(z1(:)~=z2(:))';
+        
+        for k = nontriv
+            za = z1(k);
+            zb = z2(k);
+            sng = sing1(k);
+            
+            % Allowable integration step, based on nearest singularity.
+            dist = min(1,2*min(abs(z([1:sng-1,sng+1:n])-za))/abs(zb-za));
+            zr = za + dist*(zb-za);
+            % Adjust Gauss-Jacobi nodes and weights to interval.
+            ind = rem(sng+n,n+1)+1;
+            nd = ((zr-za)*qdat(:,ind) + zr + za).'/2; % G-J nodes
+            wt = ((zr-za)/2) * qdat(:,ind+n+1);	% G-J weights
+            terms = 1 - (nd(ones(n,1),:))./bigz;
+            if any(terms(:)==0)
+                % Endpoints are practically coincident.
+                I(k) = 0;
+            else
+                % Use Gauss-Jacobi on first subinterval, if necessary.
+                if sng > 0
+                    terms(sng,:) = terms(sng,:)./abs(terms(sng,:));
+                    wt = wt*(abs(zr-za)/2)^beta(sng);
+                end
+                I(k) = exp(sum(log(terms).*bigbeta))*wt;
+                while dist < 1
+                    % Do regular Gaussian quad on other subintervals.
+                    zl = zr;
+                    dist = min(1,2*min(abs(z-zl))/abs(zl-zb));
+                    zr = zl + dist*(zb-zl);
+                    nd = ((zr-zl)*qdat(:,n+1) + zr + zl).'/2;
+                    wt = ((zr-zl)/2) * qdat(:,2*n+2);
+                    I(k) = I(k) + exp(sum(log(1 - nd(ones(n,1),:)./bigz).*bigbeta)) * wt;
+                end
+            end
+        end
+    end
+    
+    % needed by CR inverse mapping
+    function out = imapfun(varargin)
+        out = diskmap.dimapfun(varargin{:});
     end
 end
 
