@@ -22,6 +22,10 @@ properties
   interiorPoint
 end
 
+properties(Hidden,Constant)
+    ei2pi = exp(2i*pi*(0:199)'/199)
+end
+
 methods
   function gc = circle(varargin)
     if ~nargin
@@ -137,6 +141,15 @@ methods
     end
   end
   
+  function out = fill(gc, varargin)
+      args = cmtplot.fillargs;
+      z = gc.center + gc.radius*gc.ei2pi;
+      h = fill(real(z), imag(z), args{:}, varargin{:});      
+      if nargout
+          out = h;
+      end
+  end
+  
   function z = intersect(gc1, gc2)
     % Calculate circle intersections.
     
@@ -250,14 +263,15 @@ methods
 end
 
 methods(Hidden)
-  function h = plotCurve(gc, varargin)
+  function h = plotCurve(gc)
     if isinf(gc)
       % For a line, we will use a polygon. This employs the truncation
       % mechanism that gives us something usable with plotting regions.
       h = plot(polygon([gc.points(1), infvertex(tangent(gc), -tangent(gc))]));
     else
-      % Use defualt plot.
-      h = plotCurve@closedcurve(gc);
+      % Circle!!
+      z = gc.center + gc.radius*gc.ei2pi;
+      h = plot(real(z), imag(z));
     end
   end  
 end
