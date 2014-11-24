@@ -50,30 +50,32 @@ methods
                 clist = clist{1};
             end
             
-            if isempty(clist) || any(cellfun(@(x) ~isa(x, 'circle'), clist))
-                error('CMT:InvalidArgument', ...
-                    'Expected one or more circles.')
-            end
-            
-            m = numel(clist);
-            cv(m,1) = 1i;
-            rv(m,1) = 0;
-            for j = 1:m
-                cv(j) = clist{j}.center;
-                rv(j) = clist{j}.radius;
-            end
-            
-            if numel(varargin) == 0 || ~strcmp(varargin{1}, 'noCheck')
-                % Check bounded/unbounded/intersect.
-                isinside = circleRegion.circleCheck(cv, rv);
-                if numel(clist) > 1 && all(isinside)
-                    args = {clist{1}, clist(2:end)};
-                elseif numel(clist) == 1 || ~any(isinside)
-                    args = {clist, 'exteriorto'};
-                else
+            if ~isempty(clist) 
+                if any(cellfun(@(x) ~isa(x, 'circle'), clist))
                     error('CMT:InvalidArgument', ...
-                        ['The circles given do not define an expected region.' ...
-                        ' See help.'])
+                        'Expected one or more circles.')
+                end
+            
+                m = numel(clist);
+                cv(m,1) = 1i;
+                rv(m,1) = 0;
+                for j = 1:m
+                    cv(j) = clist{j}.center;
+                    rv(j) = clist{j}.radius;
+                end
+                
+                if numel(varargin) == 0 || ~strcmp(varargin{1}, 'noCheck')
+                    % Check bounded/unbounded/intersect.
+                    isinside = circleRegion.circleCheck(cv, rv);
+                    if numel(clist) > 1 && all(isinside)
+                        args = {clist{1}, clist(2:end)};
+                    elseif numel(clist) == 1 || ~any(isinside)
+                        args = {clist, 'exteriorto'};
+                    else
+                        error('CMT:InvalidArgument', ...
+                            ['The circles given do not define an expected region.' ...
+                            ' See help.'])
+                    end
                 end
             end
         end
@@ -97,6 +99,9 @@ methods
         end
         
         C = boundary(R);
+        if ~iscell(C)
+            C = {C};
+        end
         for j = 1:numel(C)
             C{j} = M(C{j});
         end
