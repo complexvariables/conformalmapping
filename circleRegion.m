@@ -3,9 +3,10 @@ classdef circleRegion < region
 %
 % C = circleRegion(clist)
 % C = circleRegion(circle1, circle2, ...)
-% Uses circles in cell array clist to create region. If clist{1} bounds the
-% following circles, the region is considered bounded. It's an unbounded
-% region otherwise.
+% Uses circles in cell array clist, or alternatively a list of circles as
+% individual arguments, to create a region with zero or more circles as
+% boundaries. If the first circle bounds the following circles, the region
+% is considered bounded. It's an unbounded region otherwise.
 %
 % This class represents one of two types of regions:
 %   1. A region bounded by a circle which contains one or more circular
@@ -13,10 +14,14 @@ classdef circleRegion < region
 %   2. An unbounded region containing one or more circular holes.
 % In either case none of the circular boundaries intersect, including
 % tangentialy.
-% A region interior to a single circle is not currently handled by this
-% class. For this use the unitdisk class.
+% The single circle case is ambiguous, thus the class constructor defaults
+% to the unbounded case for a single circle. In this case, and this case
+% only, one may use the following to convert to a bounded region:
 %
-% See also circle, region, unitdisk.
+%   C = circleRegion(circle(center, radius));
+%   C.bounded = true;
+%
+% See also circle, region.
 
 % This file is a part of the CMToolit.
 % It is licensed under the BSD 3-clause license.
@@ -33,6 +38,10 @@ classdef circleRegion < region
 properties(SetAccess=protected)
     centers
     radii
+end
+
+properties(Dependent)
+    bounded
 end
 
 methods
@@ -138,7 +147,7 @@ methods
     end
     
     function tf = isbounded(R)
-        tf = hasouter(R) & hasinner(R);
+        tf = R.bounded;
     end
     
     function str = replicate(R)
@@ -157,6 +166,33 @@ methods
             str = s;
         else
             fprintf('%s', s)
+        end
+    end
+    
+    %%%%% get/set %%%%%
+    function b = get.bounded(R)
+        b = hasouter(R);
+    end
+    
+    function R = set.bounded(R, b)
+        if R.m ~= 1
+            error('CMT:InvalidOperation', ...
+                'Bounded status may only be specified for the single circle case.')
+        end
+        if ~(islogical(b) && numel(b) == 1)
+            error('CMT:InvalidArgument', ...
+                'Expected a single logical value.')
+        end
+        
+        bstatus = R.bounded;
+        if ~bstatus && b
+            % Not bounded, but make it so.
+            R.outerboundary = R.innerboundary;
+            R.innerboundary = {};
+        elseif bstatus && ~b
+            % Bounded, but make it not so.
+            R.innerboundary = R.outerboundary;
+            R.outerboundary = {};
         end
     end
 end
