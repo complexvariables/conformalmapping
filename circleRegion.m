@@ -42,6 +42,7 @@ end
 
 properties(Dependent)
     bounded
+    circles
 end
 
 methods
@@ -172,6 +173,10 @@ methods
     %%%%% get/set %%%%%
     function b = get.bounded(R)
         b = hasouter(R);
+    end
+    
+    function C = get.circles(R)
+        C = boundary(R);
     end
     
     function R = set.bounded(R, b)
