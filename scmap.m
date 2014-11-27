@@ -23,7 +23,7 @@ properties(SetAccess=protected)
     options         % Option structure for the map.
 end
 
-properties(Dependent)
+properties(SetAccess=protected, Dependent)
     polygon         % Polygon for the map.
 end
 
@@ -139,11 +139,7 @@ methods
             
         end
     end
-    
-    function p = get.polygon(M)
-        p = M.theRange;
-    end
-    
+        
     function M = hplmap(M)
         %HPLMAP Convert generic Schwarz-Christoffel map object to half-plane map.
         %   HPLMAP(M) creates a hplmap object based on the polygon and
@@ -249,6 +245,15 @@ methods
     end
     
     function M = uplus(M)
+    end
+    
+    %---------- get/set ------------%
+    function p = get.polygon(M)
+        p = M.theRange;
+    end
+    
+    function M = set.polygon(M, p)
+        M.theRange = p;
     end
 end
 
