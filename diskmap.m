@@ -581,7 +581,7 @@ methods
         
         M.constant = c*M.constant;
         M.polygon = c*M.polygon;
-        M.center = c*M.center;
+        M.centerVal = c*M.centerVal;
     end
     
     function v = parameters(M)
@@ -646,7 +646,7 @@ methods
         end
         
         if length(a)==1 & isa(a,'double')
-            M.center = M.center + a;
+            M.centerVal = M.centerVal + a;
             M.polygon = M.polygon + a;
         else
             error('Addition is not defined for these operands.')
