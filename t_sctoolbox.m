@@ -23,4 +23,9 @@ p = polygon([1i; -1+1i; -1-1i; 1-1i; 1; 0]);
 
 %%
 
-f = extermap(p);
+% f = extermap(p);
+
+
+%%
+
+f = rectmap(p, [1 2 4 5]);
