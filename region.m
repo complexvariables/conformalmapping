@@ -3,18 +3,18 @@ classdef region
 %
 % A region is defined by one or more closed curves. The interior of a
 % region is defined to be to the left of the tangent vector of the closed
-% curve. The exterior is the compliment of the interior.
+% curve. The exterior is the complement of the interior.
 %
-% TBD: What does it mean for a region object to have no boundary curves?
-% Currently isempty() returns true if there are no boundary curves, which
-% is admittedly a bit ambiguously named. Do we mean an empty set for a
-% region, or do we mean the entire plane?
+% A region with no boundary curves is defined to be empty in the sense of
+% returning true for ISEMPTY(). This can be useful to designate a type of
+% region with indeterminate geomtetry, such as a disk with unknown
+% center and/or radius. It has no other consistent interpretation.
 %
 % r = region(p)
-% r = region(p, 'interiorto')
+% r = region(p, 'interiorTo')
 %   Constructs an interior region bounded by the closed curve p or the
 %   cell array of closed curves p.
-% r = region(q, 'exteriorto')
+% r = region(q, 'exteriorTo')
 %   Constructs an exterior region bounded by the closed curve q or the cell
 %   array of closed curves q.
 % r = region(p, q)
@@ -62,7 +62,7 @@ methods
       case 2
         [p, q] = varargin{:};
         if ischar(q)
-          switch q
+          switch lower(q)
             case 'interiorto'
               R.outerboundary_ = region.checkcc(p);
             case 'exteriorto'

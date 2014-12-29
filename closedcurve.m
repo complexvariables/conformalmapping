@@ -59,10 +59,20 @@ methods
     C = cinvcurve(C);
   end
   
-  function display(C)
-    fprintf('\n%s =\n', inputname(1))
-    disp(C)
+%   function display(C)
+%     fprintf('\n%s =\n', inputname(1))
+%     disp(C)
+%   end
+
+  function r = extetior(p)
+      % EXTERIOR(P)
+      % Return the region exterior to the curve P (to the right of a tangent
+      % vector on the curve).
+      %
+      % See also REGION.
+      r = region(p,'exteriorTo');
   end
+
   
   function out = fill(C, varargin)
     washold = ishold;
@@ -83,6 +93,15 @@ methods
     if nargout
       out = h;
     end
+  end
+  
+  function r = interior(p)
+      % INTERIOR(P)
+      % Return the region interior to the curve P (to the left of a tangent
+      % vector on the curve).
+      %
+      % See also REGION.
+      r = region(p,'interiorTo');
   end
   
   function n = length(C)
