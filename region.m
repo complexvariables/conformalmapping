@@ -153,7 +153,7 @@ methods
     % Fill interiors of any outer boundaries or draw exterior region.
     if hasouter(R)
       for k = 1:R.numouter
-        fill(R.outerboundary_{k}, varargin{:})
+        fill(R.outerboundary_{k}, fillargs{:}, varargin{:});
       end
     elseif isexterior(R)
       zb = zeros(4*R.numinner, 1);
@@ -168,10 +168,13 @@ methods
     if hasinner(R)
       bgcolor = get(gca, 'color');
       for k = 1:R.numinner
-        fill(R.innerboundary_{k}, 'facecolor', bgcolor, ...
-             'edgecolor', plotdef.filledgecolor, varargin{:})
+        fill(R.innerboundary_{k}, fillargs{:}, varargin{:}, ...
+            'facecolor',bgcolor);
       end
     end
+    
+    axis(plotbox(R))
+    axis equal
             
     if ~washold
       hold off

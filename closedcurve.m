@@ -99,13 +99,16 @@ methods
     washold = ishold;
     
     % Rely on adaptplot or overloaded plot to get curve "right".
+    box on
     hold on
     h = plot(C);
     z = complex(get(h, 'xdata'), get(h, 'ydata'));
     delete(h)
     
-    args = plotdef.fillargs;
-    h = fill(real(z), imag(z), args{:}, varargin{:});
+    if nargin==1
+        varargin = plotdef.fillargs;
+    end
+    h = fill(real(z), imag(z), varargin{:});
     
     if ~washold
       hold off

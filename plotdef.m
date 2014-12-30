@@ -18,14 +18,12 @@ properties(Constant)
   
   % line things
   defaultlinewidth = 0.5;
-  smoothingon = {'linesmoothing', 'on'}
 end
 
 methods(Static)
   function args = closedcurveargs()
     args = [{'color', plotdef.cccolor, ...
-             'linewidth', plotdef.cclinewidth}, ...
-             plotdef.smoothingon];
+             'linewidth', plotdef.cclinewidth}];
   end
   
   function c = cccolor()
@@ -49,9 +47,8 @@ methods(Static)
   end
   
   function args = gridargs()
-    args = [{'color', plotdef.gridcolor, ...
-             'linewidth', plotdef.gridlinewidth}, ...
-             plotdef.smoothingon];
+    args = {'color', plotdef.gridcolor, ...
+             'linewidth', plotdef.gridlinewidth};
   end
   
   function c = gridcolor()

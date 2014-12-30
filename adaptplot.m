@@ -44,12 +44,11 @@ if nargout < 2
   % holding issues.
   makeplot = true;
   if ndim < 3
-    allhand = plot(NaN,NaN,'k.-','erasemode','back');
+    allhand = plot(NaN,NaN,'k.-');
   else
-    allhand = plot3(NaN,NaN,NaN,'k.-','erasemode','back');
+    allhand = plot3(NaN,NaN,NaN,'k.-');
   end
-  badhand = line(NaN,NaN,'color','r','marker','.','linestyle','none',...
-    'erasemode','none');  
+  badhand = line(NaN,NaN,'color','r','marker','.','linestyle','none');  
 else
   makeplot = false;
 end
@@ -58,7 +57,7 @@ fun = fcnchk(fun);  % this is in FPLOT
 
 % If the axis limits are frozen, use them to determine the stopping
 % criterion. Otherwise, it will be based on the size of the graph itself.
-if strcmp(get(gca,'xlimmode'),'manual') & ishold
+if strcmp(get(gca,'xlimmode'),'manual') && ishold
   axlim = axis;
   axlim = reshape( axlim, [2 length(axlim)/2] );
   diam = max( diff(axlim,[],1) );
@@ -79,10 +78,10 @@ refine = true;
 depth = 1;
 tnew = [];  xnew = zeros(0,ndim);
 
-while any(refine) & (depth < maxdepth)
+while any(refine) && (depth < maxdepth)
   
   % Update trace plot
-  if makeplot & dotrace
+  if makeplot && dotrace
     updateplot(allhand,t,x,ndim)
     updateplot(badhand,tnew,xnew,ndim)
     drawnow, pause(delay)
@@ -125,9 +124,9 @@ end
 
 %% Wrap up
 if makeplot
-  set(allhand,'erasemode','normal','marker','none','color','b')
-  updateplot(allhand,t,x,ndim)
-  set(badhand,'erasemode','normal')
+  set(allhand,'marker','none','color','b')
+  updateplot(allhand,t,x,ndim);
+  %set(badhand);
   delete(badhand)
 end
 
