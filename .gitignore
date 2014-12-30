@@ -1,3 +1,4 @@
 # VIM swap files
 *.swp
 html
+.~class map.vue

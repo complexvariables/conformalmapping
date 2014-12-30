@@ -15,8 +15,29 @@ properties
 end
 
 methods
-  % Just use default constructor; nothing to do right now on construction.
   
+    % Just use default constructor; nothing to do right now on construction.
+  
+    
+    function r = between(p,q)
+        % BETWEEN(P,Q)
+        % Return the region between the two closedcurve objects P and Q.
+        % They can be specified in either order (outer/inner or
+        % inner/outer). No strict checking of nonintersection or nesting is done.
+        
+        pointOnQ = point(q,0.123456789);
+        pointOnP = point(p,0.123456789);
+        if isinside(p,pointOnQ)
+            % P is outer, Q is inner
+            r = region(p,q);
+        elseif isinside(q,pointOnP)
+            % Q is outer, P is inner
+            r = region(q,p);
+        else
+            error('Boundaries do not appear to be nested')
+        end
+    end
+    
   function box = boundbox(C)
     % Return bounding box for curve using evenly spaced points.
     t = C.length_*(0:199)'/200;
