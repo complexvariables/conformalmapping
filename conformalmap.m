@@ -142,6 +142,33 @@ methods
         d = f.theDomain;
     end
 
+  function w = evaluate(f, z)
+    % w = apply(f, z)
+    %   Apply the conformal map to z.
+    %
+    % See the apply concept in the developer docs for more details.
+    
+    if iscomposition(f)
+      % f is a composition, apply each map in turn.
+      w = z;
+      for k = 1:numel(f.function_list_)
+        w = evaluate(f.function_list_{k}, w);
+      end
+    else   
+        % Try asking the target object first.
+        try
+            w = evaluate(z, f);
+            return
+        catch err
+            if ~any(strcmp(err.identifier, ...
+                    {'MATLAB:UndefinedFunction', 'CMT:NotDefined'}))
+                rethrow(err)
+            end
+        end
+    end
+ 
+  end
+
     function tf = isanonymous(f)
         tf = numel(f.functionList) == 1 ...
             && isa(f.functionList{1}, 'function_handle');

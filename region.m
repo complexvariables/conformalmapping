@@ -3,18 +3,18 @@ classdef region < cmtobject
 %
 % A region is defined by one or more closed curves. The interior of a
 % region is defined to be to the left of the tangent vector of the closed
-% curve. The exterior is the compliment of the interior.
+% curve. The exterior is the complement of the interior.
 %
-% TBD: What does it mean for a region object to have no boundary curves?
-% Currently isempty() returns true if there are no boundary curves, which
-% is admittedly a bit ambiguously named. Do we mean an empty set for a
-% region, or do we mean the entire plane?
+% A region with no boundary curves is defined to be empty in the sense of
+% returning true for ISEMPTY(). This can be useful to designate a type of
+% region with indeterminate geomtetry, such as a disk with unknown
+% center and/or radius. It has no other consistent interpretation.
 %
 % r = region(p)
-% r = region(p, 'interiorto')
+% r = region(p, 'interiorTo')
 %   Constructs an interior region bounded by the closed curve p or the
 %   cell array of closed curves p.
-% r = region(q, 'exteriorto')
+% r = region(q, 'exteriorTo')
 %   Constructs an exterior region bounded by the closed curve q or the cell
 %   array of closed curves q.
 % r = region(p, q)
@@ -63,7 +63,7 @@ methods
       case 2
         [p, q] = varargin{:};
         if ischar(q)
-          switch q
+          switch lower(q)
             case 'interiorto'
               R.outerboundary = region.checkcc(p);
             case 'exteriorto'
@@ -184,7 +184,7 @@ methods
     % Fill interiors of any outer boundaries or draw exterior region.
     if hasouter(R)
       for k = 1:R.numouter
-        fill(R.outerboundary{k}, varargin{:})
+        fill(R.outerboundary_{k}, fillargs{:}, varargin{:});
       end
     elseif isexterior(R)
       zb = zeros(4*R.numinner, 1);
@@ -199,10 +199,13 @@ methods
     if hasinner(R)
       bgcolor = get(gca, 'color');
       for k = 1:R.numinner
-        fill(R.innerboundary{k}, 'facecolor', bgcolor, ...
-             'edgecolor', cmtplot.filledgecolor, varargin{:})
+        fill(R.innerboundary_{k}, fillargs{:}, varargin{:}, ...
+            'facecolor',bgcolor);
       end
     end
+    
+    axis(plotbox(R))
+    axis equal
             
     if ~washold
       hold off
@@ -329,6 +332,8 @@ methods
     end
     
     box = cmt.plotbox(cmt.bb2z(boundbox(R)), scale);
+      zi(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.innerboundary_{k}, 1));
+      zo(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.outerboundary_{k}, 1));
   end
 end
 

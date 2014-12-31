@@ -90,6 +90,11 @@ methods
         g.functionList = {func};
     end
 
+  function w = evaluate(f, z)
+    w = polyval(f.coefs_, z);
+  end
+
+  
     function S = kernel(f)
         S = f.theKernel;
     end

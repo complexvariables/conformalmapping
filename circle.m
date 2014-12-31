@@ -256,7 +256,7 @@ methods(Hidden)
       % mechanism that gives us something usable with plotting regions.
       h = plot(polygon([gc.points(1), infvertex(tangent(gc), -tangent(gc))]));
     else
-      % Use defualt plot.
+      % Use default plot.
       h = plotCurve@closedcurve(gc);
     end
   end  

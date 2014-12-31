@@ -15,8 +15,29 @@ properties
 end
 
 methods
-  % Just use default constructor; nothing to do right now on construction.
   
+    % Just use default constructor; nothing to do right now on construction.
+  
+    
+    function r = between(p,q)
+        % BETWEEN(P,Q)
+        % Return the region between the two closedcurve objects P and Q.
+        % They can be specified in either order (outer/inner or
+        % inner/outer). No strict checking of nonintersection or nesting is done.
+        
+        pointOnQ = point(q,0.123456789);
+        pointOnP = point(p,0.123456789);
+        if isinside(p,pointOnQ)
+            % P is outer, Q is inner
+            r = region(p,q);
+        elseif isinside(q,pointOnP)
+            % Q is outer, P is inner
+            r = region(q,p);
+        else
+            error('Boundaries do not appear to be nested')
+        end
+    end
+    
   function box = boundbox(C)
     % Return bounding box for curve using evenly spaced points.
     t = C.paramLength*(0:199)'/200;
@@ -59,38 +80,34 @@ methods
     C = cinvcurve(C);
   end
   
-  function display(C)
-    fprintf('\n%s =\n', inputname(1))
-    disp(C)
-  end
-  
-  function R = exterior(C)
-      % EXTERIOR creates an exterior region bounded by curve.
+%   function display(C)
+%     fprintf('\n%s =\n', inputname(1))
+%     disp(C)
+%   end
+
+  function r = exterior(p)
+      % EXTERIOR(P)
+      % Return the region exterior to the curve P (to the right of a tangent
+      % vector on the curve).
       %
-      % R = exterior(C)
-      % Creates exterior region R bounded by closed curve C.
-      %
-      % See also closedcurve, region.
-      
-      if ~isa(C, 'closedcurve')
-          error('CMT:InvalidArgument', ...
-              'Function argument must be a closed curve.')
-      end
-      
-      R = region(C, 'exteriorto');
+      % See also REGION.
+      r = region(p,'exteriorTo');
   end
-  
+
   function out = fill(C, varargin)
     washold = ishold;
     
     % Rely on adaptplot or overloaded plot to get curve "right".
+    box on
     hold on
     h = plot(C);
     z = complex(get(h, 'xdata'), get(h, 'ydata'));
     delete(h)
     
-    args = cmtplot.fillargs;
-    h = fill(real(z), imag(z), args{:}, varargin{:});
+    if nargin==1
+        varargin = plotdef.fillargs;
+    end
+    h = fill(real(z), imag(z), varargin{:});
     
     if ~washold
       hold off
@@ -101,20 +118,13 @@ methods
     end
   end
   
-  function R = interior(C)
-      % INTERIOR creates a bounded region with boundary C.
+  function r = interior(p)
+      % INTERIOR(P)
+      % Return the region interior to the curve P (to the left of a tangent
+      % vector on the curve).
       %
-      % R = exterior(C)
-      % Creates interior region R bounded by closed curve C.
-      %
-      % See also closedcurve, region.
-      
-      if ~isa(C, 'closedcurve')
-          error('CMT:InvalidArgument', ...
-              'Function argument must be a closed curve.')
-      end
-      
-      R = region(C);
+      % See also REGION.
+      r = region(p,'interiorTo');
   end
   
   function n = length(C)
