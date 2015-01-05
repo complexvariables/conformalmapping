@@ -26,6 +26,10 @@ classdef closedcurve < curve
         function img = apply(src,f)
             img = closedcurve( apply@curve(src,f) );
         end
+        
+        function str = char(c)
+            str = sprintf('closed curve parameterized over [%g,%g]',c.bounds);
+        end
 
         function t = mod(C, t)
             % Returns equivalent parameter value in the allowed range.

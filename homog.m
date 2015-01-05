@@ -1,10 +1,16 @@
 classdef homog
-% HOMOG is the homogenous coordinate class.
+%HOMOG homogenous coordinates class.
 %
-% Replace complex number z by pair (z1, z2), such that z = z1/z2. Interacts
-% quietly with builtin double data type.
+% HOMOG(Z1,Z2) creates a homogeneous coordinate representing the complex
+% number z = Z1/Z2. If Z2 is nonzero, this is a straightforward idea. If Z2
+% is zero, then Z1 represents a tangent direction in the complex plane at
+% which Inf is to be approached. This is useful for specifying lines, as
+% e.g. there are infinitely many lines through any fixed finite point and
+% infinity. 
 %
-% zeta = homog(z1, z2) -- If z2 is not supplied, we assume z2=1.
+% HOMOG(Z1) uses Z2=1. 
+%
+% Class instances should interoperate quietly with the double data type.
 
 % This file is a part of the CMToolbox.
 % It is licensed under the BSD 3-clause license.
@@ -33,7 +39,7 @@ methods
       
       if ~isequal(size(z1), size(z2))
         if isempty(z2)
-          % Assume 1 for denominator
+          % Assume 1 for denominator.
           z2 = ones(size(z1));
         elseif numel(z2) == 1
           % Scalar expansion.
@@ -97,15 +103,21 @@ methods
     z2 = zeta.denominator;
   end
   
-  function display(zeta)
-    % Format for viewing pleasure.
-    n = size(zeta.numerator);
-    fprintf('\n\t%s array of homogenous coordinates:\n\n', ...
-            [sprintf('%i-by-', n(1:end-1)), sprintf('%i', n(end))])
-    fprintf('numerator = \n\n')
-    disp(zeta.numerator)
-    fprintf('\ndenominator = \n\n')
-    disp(zeta.denominator)
+  function str = char(zeta)
+    % Format for text representation.
+    str = [ num2str(zeta.numerator), ...
+        '\n  (over)\n', ...
+        num2str(zeta.denominator)
+        ];
+  end
+  
+  function disp(zeta)
+      n = size(zeta.numerator);
+      fprintf('%i-by-', n(1:end-1));
+      fprintf('%i', n(end));
+      fprintf(' array of homogeneous coordinates:\n\n');
+      fprintf(char(zeta));
+      fprintf('\n\n');
   end
   
   function z = double(zeta)

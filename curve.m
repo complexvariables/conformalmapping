@@ -38,6 +38,10 @@ classdef (InferiorClasses = {?double}) curve
             box = cmt.boundbox(point(C, t));
         end
         
+        function str = char(c)
+            str = sprintf('curve parameterized over [%g,%g]',c.bounds);
+        end
+        
         function varargout = corner(C, varargin)
             % I'm honestly not quite sure about the usage of this, it will probably
             % change drastically in the future. Haven't found it being used yet in any
@@ -68,6 +72,11 @@ classdef (InferiorClasses = {?double}) curve
                     varargout{1} = v;
                 end
             end
+        end
+        
+        function disp(c)
+            fprintf(char(c))
+            fprintf('\n\n')
         end
         
         function cm = uminus(c)

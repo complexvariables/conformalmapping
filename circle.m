@@ -102,19 +102,9 @@ classdef circle < closedcurve
 %         end
 %         
         
-        function disp(gc)
-            if isinf(gc)
-                fprintf('circle (generalized) as a line,\n')
-            else
-                fprintf('circle with center %s and radius %s,\n', ...
-                    num2str(gc.center), num2str(gc.radius))
-            end
-%             if isempty(gc.points)
-%                 fprintf('\n(degenerate circle)\n\n')
-%             else
-%                 fprintf('\npassing through points:\n\n')
-%                 disp(gc.points(:))
-%             end
+        function str = char(gc)
+            str = sprintf('circle with center %s and radius %s',...
+                num2str(gc.center), num2str(gc.radius));
         end
         
         function d = dist(gc, z)
