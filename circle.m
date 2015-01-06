@@ -16,51 +16,70 @@ classdef circle < closedcurve
     % adapted from code by Toby Driscoll, originally 20??.
     
     properties
-        center      % will be an interior point for a line
-        radius
+        center = []     
+        radius = []
+        % In complex terms, a line can be seen as a circle. If the
+        % requested circle is a line, accept it and put it here.
+        line = []
     end
     
     methods
         function c = circle(varargin)
+        %CIRCLE  Circle object.
+        %   CIRCLE(CENTER,RADIUS) returns an object representing the
+        %   circle with given complex center and real radius. 
+        %
+        %   CIRCLE(Z) returns the circle through the three complex points 
+        %   in the vector Z. Inf is allowed as an entry of Z. If the points
+        %   are collinear, a warning is thrown and a ZLINE is returned
+        %   instead. 
+        %
+        %   CIRCLE by itself returns a circle object with unknown
+        %   parameters, representing an abstract circle.
+        %
+        %   See also ZLINE.
+        
             if nargin==0
-                % Return an abstract circle with unknown geometry.
+                % Abstract circle with unknown geometry.
                 return
             end
             
             switch nargin
-                case 1
+                case 1   % vector of three points given
                     z3 = varargin{1};
                     if isa(z3, 'double') && numel(z3) == 3
                         
-                        % Deduce center and radius.
-                        % Use standardmap directly to avoid vicious circularity, since mobius
-                        % constructs a circle when given two 3-tuples.
+                        % Find the mobius map from [1,i,-1] to the given
+                        % trio. Use a mobius standardmap as an intermediate
+                        % step, because the regular mobius constructor
+                        % wants to create a circle, causing infinite
+                        % recursion.
                         M = mobius(mobius.standardmap(z3)\mobius.standardmap([1, 1i, -1]));
+                        
+                        % This is the preimage of infinity. Because mobius
+                        % maps preserve reflections, its inverse WRT to the
+                        % unit circle is the preimage of the center of the
+                        % original circle. 
                         zi = pole(M);
+                        
+                        % If the pole lies on the unit circle, then
+                        % infinity is on the original circle--so it's a
+                        % line.
                         if abs(abs(zi) - 1) < 10*eps
                             % Infinite radius case.
-                            center_ = nan;
-                            radius_ = inf;
-                            % If Inf was given, make it the last point.
-                            if isreal(z3)
-                                z3 = complex(z3);
-                            end
-                            z3 = sort(z3);
+                            warning('The requested circle is really a line.')
+                            z3 = z3(~isinf(z3));
+                            center_ = NaN;
+                            radius_ = NaN;
+                            line_ = zline( z3(1:2) );
                         else
-                            % Inverse of zi maps to center.
+                            % Unit-inverse of zi maps to the center.
                             center_ = M(1/conj(zi));
                             radius_ = abs(z3(1) - center_);
                         end
-                        
-                        % Find a point in the interior of the curve. For a line, this is a
-                        % point to the "left" as seen by following the given points.
-                        if isinf(radius_)
-                            tangent = diff(z3(1:2));
-                            center_ = z3(1) + 1i*tangent;
-                        end
                     end
                     
-                case 2
+                case 2   % center and radius given
                     [center_, radius_] = varargin{:};
                     validateattributes(center_,{'double'},...
                         {'scalar','finite','nonnan'},...
@@ -71,16 +90,8 @@ classdef circle < closedcurve
             end
             
             function z = positionfun(t)
-                if ~isinf(radius_)
-                    z = center_ + radius_*exp(1i*t);
-                else
-                    % Use homogeneous coordinates to define a reasonable interpolant.
-%                     tangent = diff(c.points(1:2)); % must be finite
-%                     upper = 2*tangent*(t - 1/2);
-%                     lower = 4*t.*(1 - t);
-%                     z = double(homog(c.points(1)) + homog(upper, lower));
-                end
-            end
+                z = center_ + radius_*exp(1i*t);
+             end
             
             function zt = tangentfun(t)
                 zt = 1i*exp(1i*t);
@@ -89,48 +100,51 @@ classdef circle < closedcurve
             c = c@closedcurve(@positionfun,@tangentfun,[0 2*pi]);
             c.center = center_;
             c.radius = radius_;
-
+            
+            if isnan(center_)
+                c.line = line_;
+            end
         end
         
-%         function gc = apply(gc, m)
+%         function c = apply(c, m)
 %             if ~isa(m, 'mobius')
 %                 error('CMT:NotDefined', ...
 %                     'Expected a mobius transformation.')
 %             end
 %             
-%             gc = circle(m(gc.points));
+%             c = circle(m(c.points));
 %         end
 %         
         
-        function str = char(gc)
-            str = sprintf('circle with center %s and radius %s',...
-                num2str(gc.center), num2str(gc.radius));
-        end
-        
-        function d = dist(gc, z)
-            % Distance between point and circle.
-            if ~isinf(gc)
-                v = z - gc.center;
-                d = abs(abs(v) - gc.radius);
-%             else
-%                 v = z - gc.points(1);
-%                 s = sign(1i*diff(gc.points(1:2)));
-%                 d = abs(real(v)*real(s) + imag(v)*imag(s));
+        function str = char(c)
+            if isnumeric(c.radius)
+                str = sprintf('circle with center %s and radius %s',...
+                    num2str(c.center), num2str(c.radius));
+            else
+                str = ['(generalized circle) ',char(c.line)];
             end
         end
         
-        function z = intersect(gc1, gc2)
+        function d = dist(c,z)
+            % Distance between point and circle.
+            if isnumeric(c.radius)
+                v = z - c.center;
+                d = abs(abs(v) - c.radius);
+            else
+                d = dist(c.line,z);
+            end
+        end
+        
+        function z = intersect(c1, c2)
             % Calculate circle intersections.
-            
-            % Move to "gencircle"?
-            
+             
             % Map first circle to the real axis.
-            M = mobius(point(gc1, [1/3, 2/3, 1]), [-1, 1, Inf]);
-            gc = M(gc2);
-            if isinf(gc)
+            M = mobius(point(c1, [1/3, 2/3, 1]), [-1, 1, Inf]);
+            c = M(c2);
+            if isinf(c)
                 % Intersect real axis with a line.
-                tau = tangent(gc);
-                p = gc.points(1);
+                tau = tangent(c);
+                p = c.points(1);
                 if abs(imag(tau)) > 100*eps
                     t = -imag(p)/imag(tau);
                     z = real(p) + t*real(tau);
@@ -142,7 +156,7 @@ classdef circle < closedcurve
                 z = [z, inf];
             else
                 % Intersect real axis with a circle.
-                rat = -imag(gc.center)/gc.radius;
+                rat = -imag(c.center)/c.radius;
                 if abs(abs(rat) - 1) < 100*eps
                     warning(['Circles are close to tangency.\nIntersection', ...
                         ' problem is not well conditioned.'])
@@ -150,38 +164,59 @@ classdef circle < closedcurve
                 theta = asin(rat);                    % find one intersection
                 theta = theta(isreal(theta));         % may not have one
                 theta = unique([theta, pi - theta]);  % may have a second
-                z = real(gc.center + gc.radius*exp(1i*theta));
+                z = real(c.center + c.radius*exp(1i*theta));
             end
             z = feval(inv(M), z);
         end
         
-        function tf = isinf(gc)
-            tf = isinf(gc.radius);
+        function tf = isinf(c)
+            tf = isnan(c.radius);
         end
         
-        function tf = isinside(gc, z)
-            if isinf(gc)
-                z = (z - gc.center)/tangent(gc, z);  % borked!
-                tf = imag(z) > 0;
+        function tf = isinside(c, z)
+            if isinf(c)
+                error('Not well defined for a line.')
+%                z = (z - c.center)/tangent(c, z);  % borked!
+%                tf = imag(z) > 0;
             else
-                tf = abs(z - gc.center) < gc.radius;
+                tf = abs(z - c.center) < c.radius;
             end
         end
              
         function c = uminus(c)
-            c = uminus@curve(c);
-            c.center = -c.center;
+            if ~isinf(c)
+                c = uminus@curve(c);
+                c.center = -c.center;
+            else
+                c.line = -c.line;
+            end
         end
         
+        function h = plot(c,varargin)
+            if ~isinf(c)
+                h = plot@curve(c,varargin{:});
+            else
+                h = plot(c.line,varargin{:});
+            end
+        end
+            
         function c = plus(c,z)
-            c = plus@curve(c,z);
-            c.center = c.center + z;
+            if ~isinf(c)
+                c = plus@curve(c,z);
+                c.center = c.center + z;
+            else
+                c.line = c.line + z;
+            end
         end
 
         function c = mtimes(c,z)
-            c = mtimes@curve(c,z);
-            c.center = c.center * z;
-            c.radius = c.radius * abs(z);
+            if ~isinf(c)
+                c = mtimes@curve(c,z);
+                c.center = c.center * z;
+                c.radius = c.radius * abs(z);
+            else
+                c.line = cline*z;
+            end
         end
      
    end

@@ -79,6 +79,13 @@ classdef (InferiorClasses = {?double}) curve
             fprintf('\n\n')
         end
         
+        function tf = isinf(c)
+            %ISINF   True if the curve is unbounded.
+            
+            % False unless overloaded by a subclass.
+            tf = false;
+        end
+        
         function cm = uminus(c)
             cm = c;
             cm.position = @(t) -c.position(t);
@@ -90,7 +97,10 @@ classdef (InferiorClasses = {?double}) curve
             washold = ishold;
             newplot
             
+            C = truncate(C);
+            
             h = plotCurve(C);
+            
             [cargs, pargs] = cmtplot.closedcurveArgs(varargin{:});
             set(h, pargs{:}, cargs{:});
             
@@ -145,9 +155,13 @@ classdef (InferiorClasses = {?double}) curve
         end
         
         function z = point(c,t)
-            z = nan(size(t));
+            z = homog(nan(size(t)),1);
             mask = (t>=c.bounds(1)) & (t<=c.bounds(2));
-            z(mask) = c.position(t(mask));
+            zm = c.position(t(mask));
+            if all(isnumeric(zm))  % no infinities
+                z = double(z);
+            end
+            z(mask) = zm;
         end
         
         function out = rsplot(C, varargin)
@@ -165,11 +179,13 @@ classdef (InferiorClasses = {?double}) curve
             % Draw on the sphere.
             function x = rspoint(t)
                 z = point(C, t);
-                [x1, x2, x3] = c2rs(z);
+                [x1, x2, x3] = cmt.c2rs(z);
                 x = [x1, x2, x3];
             end
             h = adaptplot(@rspoint, C.bounds);
-            set(h, varargin{:});
+            if nargin > 1
+                set(h, varargin{:});
+            end
             
             if ~washold
                 hold off
@@ -199,6 +215,12 @@ classdef (InferiorClasses = {?double}) curve
             z = point(C, t);
             xy = [real(z), imag(z)];
         end
+        
+        function c = truncate(c)
+            %TRUNCATE  Finite truncation of an unbounded curve.
+            
+            % \relax
+        end
     end
     
     methods(Hidden)
@@ -207,23 +229,5 @@ classdef (InferiorClasses = {?double}) curve
         end
     end
     
-    methods (Access=private)
-        function [x1, x2, x3] = c2rs(z)
-            % C2RS Cartesian complex coordinate to Riemann sphere projection.
-            
-            % This file is a part of the CMToolbox.
-            % It is licensed under the BSD 3-clause license.
-            % (See LICENSE.)
-            
-            % Copyright Toby Driscoll, 2014.
-            
-            theta = angle(z);
-            absz = abs(z);
-            phi = atan2(absz.^2 - 1, 2*abs(z));
-            phi(isinf(z)) = pi/2;
-            [x1, x2, x3] = sph2cart(theta, phi, ones(size(theta)));
-            
-        end
-    end
     
 end

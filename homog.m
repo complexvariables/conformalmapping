@@ -145,6 +145,10 @@ methods
     zeta = cat(2, varargin{:});
   end
   
+  function y = imag(zeta)
+      y = imag(zeta.numerator ./ zeta.denominator);
+  end
+  
   function z = inv(zeta)
     % Return 1/zeta.
     z = homog(zeta.denominator, zeta.numerator);
@@ -185,6 +189,11 @@ methods
     c = homog(a.numerator*b.numerator, a.denominator*b.denominator);
   end
   
+  function s = num2str(zeta)
+      s = ['homog( ',num2str(zeta.numerator),...
+          ', ',num2str(zeta.denominator), ' )'];
+  end
+  
   function n = numel(zeta, varargin)
     n = numel(zeta.numerator, varargin{:});
   end
@@ -216,6 +225,10 @@ methods
     c = times(a, inv(b));
   end
   
+  function x = real(zeta)
+      x = real(zeta.numerator ./ zeta.denominator);
+  end
+
   function zeta = subsref(zeta, s)
     % Provide double-like indexing.
     switch s.type

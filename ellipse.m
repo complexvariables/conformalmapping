@@ -17,15 +17,15 @@ classdef ellipse < closedcurve
     methods
         function E = ellipse(varargin)
             rot_ = 0;
-            if nargin == 1 % epsilon case
+            if nargin == 1 % eccentricity given
                 e = varargin{1};
                 if e < 0 || 1 <= e
                     error('CMT:InvalidArgument', ...
                        'Eccentricity must be between 0 and 1.')
                 end
                 
-                m1 = 1+e;
-                m2 = 1-e;
+                m1 = (1-e^2)^(.25);
+                m2 = 1/m1;
             elseif nargin >= 2
                 if nargin > 3
                     error('CMT:InvalidArgument', 'Too many arguments.')
