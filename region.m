@@ -11,15 +11,15 @@ classdef region < cmtobject
 % center and/or radius. It has no other consistent interpretation.
 %
 % r = region(p)
-% r = region(p, 'interiorTo')
+% r = region(p, 'interior')
 %   Constructs an interior region bounded by the closed curve p or the
 %   cell array of closed curves p.
-% r = region(q, 'exteriorTo')
+% r = region(q, 'exterior')
 %   Constructs an exterior region bounded by the closed curve q or the cell
 %   array of closed curves q.
 % r = region(p, q)
-% r = region(p, 'interiorto', q, 'exteriorto')
-% r = region(q, 'exteriorto', p, 'interiorto')
+% r = region(p, 'interior', q, 'exterior')
+% r = region(q, 'exterior', p, 'interior')
 %   Constructs a region with p as the exterior boundary and q as the
 %   interior boundary. The arguments may be cell arrays.
 %
@@ -64,9 +64,9 @@ methods
         [p, q] = varargin{:};
         if ischar(q)
           switch lower(q)
-            case 'interiorto'
+            case 'interior'
               R.outerboundary = region.checkcc(p);
-            case 'exteriorto'
+            case 'exterior'
               R.innerboundary = region.checkcc(p);
             otherwise
               error('CMT:InvalidArgument', 'String "%s" unrecognized.', q)
@@ -78,10 +78,10 @@ methods
         
       case 4
         [p, pstr, q, qstr] = varargin{:};        
-        if strcmp(pstr, 'interiorto') && strcmp(qstr, 'exteriorto')
+        if strcmp(pstr, 'interior') && strcmp(qstr, 'exterior')
           R.outerboundary = region.checkcc(p);
           R.innerboundary = region.checkcc(q);
-        elseif strcmp(qstr, 'interiorto') && strcmp(pstr, 'exteriorto')
+        elseif strcmp(qstr, 'interior') && strcmp(pstr, 'exterior')
           R.outerboundary = region.checkcc(q);
           R.innerboundary = region.checkcc(p);
         else
@@ -178,38 +178,41 @@ methods
     newplot
     washold = ishold;
     hold on
+    box on
     
     fillargs = cmtplot.fillargs;
     
-    % Fill interiors of any outer boundaries or draw exterior region.
-    if hasouter(R)
-      for k = 1:R.numouter
-        fill(R.outerboundary_{k}, fillargs{:}, varargin{:});
-      end
-    elseif isexterior(R)
-      zb = zeros(4*R.numinner, 1);
-      for k = 1:R.numinner
-        zb(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.innerboundary{k}, 1));
-      end
-      zb = cmt.bb2z(cmt.plotbox(zb, 2));
-      fill(real(zb), imag(zb), fillargs{:}, varargin{:});
+    if R.numouter > 0
+        % Fill interior of the outer boundary.
+        for k = 1:R.numouter
+            hl = plot(R.outerboundary{k});
+            fill(get(hl,'xdata'),get(hl,'ydata'),fillargs{:}, varargin{:});
+        end
+        pbox = plotbox( truncate(R.outerboundary{k}) );
+    else
+        % Fill the plot box (as though there is no outer boundary).
+        zb = zeros(4*R.numinner, 1);
+        for k = 1:R.numinner
+            b = truncate(R.innerboundary{k});
+            zb(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(b, 1));
+        end
+        pbox = cmt.plotbox(zb, 2);
+        fill(pbox([1 1 2 2 1]),pbox([3 4 4 3 3]),fillargs{:},varargin{:});
     end
     
     % Poke holes based on inner boundaries.
-    if hasinner(R)
+    if R.numinner > 0
       bgcolor = get(gca, 'color');
       for k = 1:R.numinner
-        fill(R.innerboundary_{k}, fillargs{:}, varargin{:}, ...
+          hl = plot(R.innerboundary{k});
+          fill(get(hl,'xdata'),get(hl,'ydata'),fillargs{:}, varargin{:}, ...
             'facecolor',bgcolor);
       end
     end
     
-    axis(plotbox(R))
-    axis equal
-            
     if ~washold
       hold off
-      axis(plotbox(R))
+      axis(pbox)
       aspectequal
     end
   end % fill
@@ -245,7 +248,7 @@ methods
     tf = hasinner(R) & ~hasouter(R);
   end
   
-  function tf = isin(R, z)
+  function tf = isinside(R, z)
     % Is point z in region?
     if isempty(R.outerboundary)
       outin = true;
@@ -273,12 +276,7 @@ methods
     tf = hasouter(R) & ~hasinner(R);
   end
   
-  function tf = isinside(R, z)
-    % Another name for isin(R, z).
-    tf = isin(R, z);
-  end
-  
-  function tf = issimplyconnected(R)
+ function tf = issimplyconnected(R)
     % True if region is simply connected (only one outer or inner boundary, but
     % not both).
     tf = (isinterior(R) & R.numouter == 1) ...
