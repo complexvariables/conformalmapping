@@ -13,13 +13,12 @@ function cmtsetpref(group,varargin)
 
 %  Copyright 2015 by Toby Driscoll.
 
-if nargin >= 1 && isequal(group,'factory')
-    if nargin == 1
-        setFactoryDefaults;
-    else
-        setFactoryDefaults(group);
-    end
+if nargin == 1 && isequal(group,'factory')
+    setFactoryDefaults;
     
+elseif nargin == 2 && isequal(varargin{1},'factory')
+    setFactoryDefaults(group);
+ 
 elseif nargin < 2
     allgroups = fieldnames(factoryDefaults);
     if nargin==0
@@ -47,7 +46,7 @@ else
     end
     
     for i = 1:length(params)
-        data.(lower(params{i})) = values{i};
+        data.(params{i}) = values{i};
     end
     
     setappdata(0,cmtgroup,data);
@@ -127,12 +126,18 @@ function prefs = factoryDefaults
 
 colr = get(0,'defaultaxescolororder');
 prefs.graphics = {
-    'linewidth',1.5,'[ real ]','Width of all boundary curves.',...
+    'linewidth',2,'[ real ]','Width of all boundary curves.',...
     'linecolor',colr(1,:),'[ valid colorspec ]','Color of all boundary curves.',...
-    'gridcolor',colr(2,:),'[ valid colorspec ]','Color of grid curves',...
     'fillcolor',[.93 .7 .125],'[ valid colorspec ]','Fill color for regions.',...
     'curvetrace',false,'[ logical ]','Show dots while adaptively drawing a curve.'
     };
+
+prefs.grid = {
+    'type','mesh','[ ''mesh'' | ''curves'' | ''carleson'' ]','Default type of grid to use.',...
+    'curvewidth',0.5,'[ real ]','Width of grid curves.',...
+    'curvecolor',colr([2 4],:),'[ 2x1 colorspec ]','Color of curves, by direction.'
+    };
+    
 
 prefs.szego = {
     'confcenter',0,'[ complex ]','Conformal center (image of zero).',...

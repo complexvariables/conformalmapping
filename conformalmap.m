@@ -66,6 +66,7 @@ methods
                 f.functionList = varargin;
             end
         end
+        
     end
 
     function w = apply(f, z)
