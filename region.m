@@ -127,34 +127,39 @@ methods
       m = R.numinner + R.numouter;
   end
   
-  function disp(R)
-    if isempty(R)
-      fprintf('empty region\n\n')
-    end
-    
-    fprintf('region')
-    
-    outer = R.outerboundary;
-    inner = R.innerboundary;
-    
-    if ~isempty(outer)
-      fprintf(' interior to:\n')
-      for k = 1:numel(outer)
-        disp(outer{k})
-      end
-      if ~isempty(inner)
-        fprintf('\n and')
-      end
-    end
-    
-    if ~isempty(inner)
-      fprintf(' exterior to:\n')
-      for k = 1:numel(inner)
-        disp(inner{k})
-      end
-    end    
-  end
-  
+       function str = char(R)
+            if isempty(R)
+                str = 'empty region';
+                return
+            end
+            
+            str = 'region';
+            outer = R.outerboundary;
+            inner = R.innerboundary;
+            
+            if ~isempty(outer)
+                str = [str, ' interior to:\n'];
+                for k = 1:numel(outer)
+                    str = [ str, '   ', char(outer{k}), '\n' ];
+                end
+                if ~isempty(inner)
+                    str = [str, '\n and'];
+                end
+            end
+            
+            if ~isempty(inner)
+                str = [str, ' exterior to:\n'];
+                for k = 1:numel(inner)
+                    str = [str, '   ', char(inner{k}), '\n'];
+                end
+            end
+        end
+        
+        function disp(R)
+            fprintf( char(R) )
+            fprintf('\n')
+        end
+
   function gd = grid(~)
     % Default empty grid.
     gd = [];
