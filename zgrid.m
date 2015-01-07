@@ -37,8 +37,10 @@ methods
   end
   
   function s = char(g)
-      s = sprintf('grid object (%s) in region:\n',class(g));
-      s = [s, char(g.region)];
+      s = sprintf('grid object (%s) in:\n',class(g));
+      s = [s, '   ',char(g.region)];
+      s = strrep(s,'\n','\n   ');
+      s = deblank(s);      
   end
   
   function disp(g)
