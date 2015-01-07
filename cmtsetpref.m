@@ -1,4 +1,16 @@
 function cmtsetpref(group,varargin)
+%CMTSETPREF  Set or help on preferences for the CM Toolkit.
+%  CMTSETPREF(GROUP,PARAM1,VAL1,...) sets preference value(s) for the
+%  conformal mapping toolkit in the specified GROUP.
+%
+%  CMTSETPREF(GROUP) shows all the available parameters in the group with
+%  some help text.
+%
+%  CMTSETPREF by itself shows help on all available parameters and groups.
+%
+%  CMTSETPREF FACTORY resets all parameters to built-in defaults. 
+
+%  Copyright 2015 by Toby Driscoll.
 
 if nargin < 2
     allgroups = fieldnames(factoryDefaults);

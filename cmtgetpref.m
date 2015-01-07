@@ -1,4 +1,12 @@
 function value = cmtgetpref(group,prop)
+%CMTGETPREF  Get preference(s) for the CM Toolkit.
+%  CMTGETPREF(GROUP,PARAM) returns the value of the Conformal Mapping
+%  Toolkit preference parameter PARAM in the group GROUP.
+%
+%  CMTGETPREF(GROUP) returns a structure with all the parameter values in
+%  the group.
+
+%  Copyright 2015 by Toby Driscoll.
 
 cmtgroup = ['CMT',group];
 if ~isappdata(0,cmtgroup)
