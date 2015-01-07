@@ -99,10 +99,11 @@ classdef (InferiorClasses = {?double}) curve
             
             C = truncate(C);
             
-            h = plotCurve(C);
+            h = adaptplot(@(t) xypoint(C, t), C.bounds);
             
-            [cargs, pargs] = cmtplot.closedcurveArgs(varargin{:});
-            set(h, pargs{:}, cargs{:});
+            pref = cmtgetpref('graphics');
+            plotargs = {'linewidth',pref.linewidth,'color',pref.linecolor};
+            set(h,plotargs{:},varargin{:});
             
             if ~washold
                 axis(plotbox(C, 1.1));
@@ -222,12 +223,6 @@ classdef (InferiorClasses = {?double}) curve
             % \relax
         end
     end
-    
-    methods(Hidden)
-        function h = plotCurve(C, varargin)
-            h = adaptplot(@(t) xypoint(C, t), C.bounds);
-        end
-    end
-    
+        
     
 end

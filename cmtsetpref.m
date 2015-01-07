@@ -8,11 +8,19 @@ function cmtsetpref(group,varargin)
 %
 %  CMTSETPREF by itself shows help on all available parameters and groups.
 %
-%  CMTSETPREF FACTORY resets all parameters to built-in defaults. 
+%  CMTSETPREF(GROUP,'factory') or CMTSETPREF FACTORY resets parameters to
+%  built-in defaults.
 
 %  Copyright 2015 by Toby Driscoll.
 
-if nargin < 2
+if nargin >= 1 && isequal(group,'factory')
+    if nargin == 1
+        setFactoryDefaults;
+    else
+        setFactoryDefaults(group);
+    end
+    
+elseif nargin < 2
     allgroups = fieldnames(factoryDefaults);
     if nargin==0
         group = allgroups;
@@ -22,8 +30,6 @@ if nargin < 2
     end
     showHelp(group)
     
-elseif strcmp(group,'factory')
-    setFactoryDefaults;
 else
     cmtgroup = ['CMT',group];
     if ~isappdata(0,cmtgroup)    % first call
@@ -51,13 +57,20 @@ end
 end
 
 
-function setFactoryDefaults
+function setFactoryDefaults(group)
 
 prefs = factoryDefaults;
-group = fieldnames(prefs);
+if nargin == 0
+    group = fieldnames(prefs);
+else
+    validatestring(group,fieldnames(prefs));
+    group = {group};
+end
+
 for i = 1:length(group)
     p = prefs.(group{i});
-    p(3:3:end) = [];   % delete the help tips
+    p(3:4:end) = [];   % delete the help tips
+    p(3:3:end) = [];
     s = struct(p{:});
     setappdata( 0, ['CMT',group{i}], s );
 end
@@ -116,7 +129,9 @@ colr = get(0,'defaultaxescolororder');
 prefs.graphics = {
     'linewidth',1.5,'[ real ]','Width of all boundary curves.',...
     'linecolor',colr(1,:),'[ valid colorspec ]','Color of all boundary curves.',...
-    'gridcolor',colr(2,:),'[ valid colorspec ]','Color of grid curves'
+    'gridcolor',colr(2,:),'[ valid colorspec ]','Color of grid curves',...
+    'fillcolor',[.93 .7 .125],'[ valid colorspec ]','Fill color for regions.',...
+    'curvetrace',false,'[ logical ]','Show dots while adaptively drawing a curve.'
     };
 
 prefs.szego = {

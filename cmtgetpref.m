@@ -9,8 +9,9 @@ function value = cmtgetpref(group,prop)
 %  Copyright 2015 by Toby Driscoll.
 
 cmtgroup = ['CMT',group];
-if ~isappdata(0,cmtgroup)
-    error('group %s is not recognized.',group)
+
+if ~isappdata(0,cmtgroup)   % first call; create prefs group
+    cmtsetpref(group,'factory');
 end
 
 data = getappdata(0,cmtgroup);
