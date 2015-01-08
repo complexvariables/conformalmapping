@@ -23,6 +23,13 @@ classdef polygon < closedcurve
     properties
         vertices = []
         angles = []
+        numsheets
+    end
+    
+    properties (Access=private)
+        homArray
+        homIndex
+        incoming
     end
     
     methods
@@ -35,58 +42,65 @@ classdef polygon < closedcurve
                 alpha = [];
             end
             
+            % Determine if (x,y) or (z) was given for the vertices.
             if ~isreal(x) || nargin == 1 || (any(isinf(x)) && nargin==2)
                 % Vertices passed as a complex vector
-                w = x(:);
-                scale = max(abs(w));
+                z = x(:);
+                scale = max(abs(z(~isinf(z))));
                 % If first point is repeated at the end, delete the second copy
                 % Thanks to Mark Embree for bug fix.
-                if abs(w(end) - w(1)) < 3*eps*scale
-                    w(end) = [];
+                if abs(z(end) - z(1)) < 3*eps*scale
+                    z(end) = [];
                 end
                 if nargin > 1
                     alpha = y;
                 end
             else
                 % Vertices passed as two real vectors
-                w = x(:) + 1i*y(:);
-                scale = max(abs(w));
+                z = x(:) + 1i*y(:);
+                scale = max(abs(z(~isinf(z))));
                 % If first point is repeated at the end, delete the second copy
-                if abs(w(end) - w(1)) < 3*eps*scale
+                if abs(z(end) - z(1)) < 3*eps*scale
                     w(end) = [];
                 end
             end
             
-            n = numel(w);
-            if isempty(alpha)
-                alpha = polygon.computeAngles(w);
-            end
-            index = polygon.index(alpha);
-            if index < 0
-                w = w([1 n:-1:2]);
-                atinf = isinf(w);
-                alpha = alpha([1 n:-1:2]);
-                alpha(~atinf) = 2 - alpha(~atinf);
-                alpha(atinf) = -2 - alpha(atinf);
+            % We internally use homogeneous coordinates.
+            z = homog(z);
+            
+            [vertex,zindex,incoming] = polygon.parseVertices(z);
+            n = length(vertex);
+            alpha = polygon.computeAngles(vertex,incoming,z,zindex);
+            
+            % We will always use a positive (counterclockwise) internal
+            % representation.
+            numsheet = round(sum(1-alpha)/2);
+            if numsheet < 0
+                z = z(n:-1:1);
+                [vertex,zindex,incoming] = polygon.parseVertices(z);
+                alpha = polygon.computeAngles(vertex,incoming,z,zindex);
+                numsheet = round(sum(1-alpha)/2);
             end
             
-            if abs(index) > 1
+            if numsheet > 1
                 warning('CMT:BadThings', 'Polygon is multiple-sheeted.')
             end
-
+            
             % Parameterize the boundary.
             function tau = tangent(t)
                 thisSide = max( 1, ceil(t(:)) );
-                nextSide = mod(thisSide,n) + 1;
-                tau = nan(size(t));
-                
-                mask1 = isinf(w(nextSide));
-                tau(mask1) = sign(w(nextSide(mask1)));
-                mask2 = isinf(w(thisSide));
-                tau(mask2) = -sign(w(thisSide(mask2)));
-                mask = ~(mask1 | mask2);
-                tau(mask) = w(nextSide(mask)) - w(thisSide(mask));
-            end
+                tau = zeros(size(t));
+                tau(:) = incoming(thisSide);
+%                 nextSide = mod(thisSide,n) + 1;
+%                 tau = nan(size(t));
+%                 
+%                 mask1 = isinf(w(nextSide));
+%                 tau(mask1) = sign(w(nextSide(mask1)));
+%                 mask2 = isinf(w(thisSide));
+%                 tau(mask2) = -sign(w(thisSide(mask2)));
+%                 mask = ~(mask1 | mask2);
+%                 tau(mask) = w(nextSide(mask)) - w(thisSide(mask));
+             end
             
             function z = position(t)
                 thisSide = max( 1, ceil(t(:)) );
@@ -97,20 +111,31 @@ classdef polygon < closedcurve
                 
                 % Will need the fact that infinite vertices cannot be
                 % adjacent here.
-                mask1 = isinf(w(nextSide));
-                z(mask1) = w(thisSide(mask1)) + r(mask1)./(1-r(mask1)).*tau(mask1);
-                mask2 = isinf(w(thisSide));
-                z(mask2) = w(nextSide(mask2)) - (1-r(mask2))./r(mask2).*tau(mask2);
+                mask1 = isinf(vertex(nextSide));
+                z(mask1) = vertex(thisSide(mask1)) + r(mask1)./(1-r(mask1)).*tau(mask1);
+                mask2 = isinf(vertex(thisSide));
+                z(mask2) = vertex(nextSide(mask2)) - (1-r(mask2))./r(mask2).*tau(mask2);
                 mask = ~(mask1 | mask2);
-                z(mask) = w(thisSide(mask)) + r(mask).*tau(mask);
+                z(mask) = vertex(thisSide(mask)) + r(mask).*tau(mask);
             end
             
+            vertex = vertex(:);   % needed to make position function work
             P = P@closedcurve(@position,@tangent,[0 n]);
-            P.vertices = w(:);
+            P.vertices = vertex(:);
             P.angles = alpha(:);
+            P.numsheets = numsheet;
+            P.homArray = z(:);
+            P.homIndex = zindex;
+            P.incoming = incoming;
             
         end  % constructor
         
+        function alpha = angle(p)
+            %ANGLE   Interior angles at polygon vertices.
+            % Provided for backward compatibility.
+            
+            alpha = p.angles;
+        end
         
         function box = boundbox(p)
             % BOUNDINGBOX Smallest box that contains the polygon.
@@ -241,48 +266,6 @@ classdef polygon < closedcurve
         
         function j = end(p, ~, ~)
             j = length(p);
-        end
-        
-        function H = fill(p, varargin)
-            % FILL   Plot a polygon with a filled interior.
-            %   FILL(P) plots the boundary of P in blue and fills the interior of the
-            %   polygon with gray. FILL(P,PROP1,VAL1,...) passes additional arguments
-            %   to the built-in FILL command.
-            %
-            %   See also FILL.
-            
-            % Copyright 2003 by Toby Driscoll.
-            % $Id: fill.m,v 1.3 2004/05/27 13:11:21 driscoll Exp $
-            
-            v = p.vertices;
-            vf = v(~isinf(v));
-            if any(isinf(v))
-                v = vertex(truncate(p));
-            end
-            
-            axlim = [min(real(vf)), max(real(vf)), min(imag(vf)), max(imag(vf))];
-            d = max([diff(axlim(1:2)), diff(axlim(3:4))]);
-            if d < eps
-                d = 1;
-            end
-            axlim(1:2) = mean(axlim(1:2)) + 0.54*[-1 1]*d;
-            axlim(3:4) = mean(axlim(3:4)) + 0.54*[-1 1]*d;
-            
-            % Use defaults, but allow overrides and additional settings.
-            settings = {[0.75 0.75 0.85], 'edgecolor', 'b', ...
-                'linewidth', 1.5, varargin{:}}; %#ok<CCAT>
-            v = v([1:end, 1]);
-            h = fill(real(v), imag(v), settings{:});
-            
-            if ~ishold
-                axis equal
-                axis square
-                axis(axlim)
-            end
-            
-            if nargout
-                H = h;
-            end
         end
         
         function [hits, loc] = intersect(p, endpt, tol)
@@ -519,6 +502,34 @@ classdef polygon < closedcurve
             end
         end
         
+        function handle = plot(p, varargin)
+            %PLOT  Plot a polygon.
+            
+            if isempty(p.vertices)
+                return
+            end
+            washold = ishold;
+            newplot
+            
+            % An unbounded polygon will be truncated to make it safe for plotting.
+            zplot = vertex(truncate(p));
+            
+            zplot = zplot([1:end 1]);
+            [cargs, pargs] = cmtplot.closedcurveArgs(varargin{:});
+            h = plot(real(zplot), imag(zplot), pargs{:}, cargs{:});
+            
+            if ~washold
+                axis(plotbox(p, 1.2));
+                set(gca, 'dataaspectratio', [1 1 1])
+                hold off
+            end
+             
+            if nargout
+                handle = h;
+            end
+        end
+ 
+        
         function h = plotcdt(p,T,varargin)
             %PLOTCDT Plot constrained Delaunay triangulation.
             %   PLOTCDT(P,T) plots the CDT of P computed by CDT. PLOTCDT(P,T,1) labels
@@ -577,35 +588,6 @@ classdef polygon < closedcurve
             end
         end
         
-%         function z = point(p, t)
-%             % Boundary point by parameter t in [0, 1].
-%             n = numel(p.vertices);
-%             zc = p.vertices;
-%             zh = p.hvertex_;
-%             zhind = p.hindex_;
-%             z = nan(size(t));
-%             t = modparam(p, t(:));
-%             
-%             % Loop by side number.
-%             for k = 1:n
-%                 sidek = find(t >= (k - 1)/n & t < k/n);
-%                 if isempty(sidek)
-%                     continue
-%                 end
-%                 tk = n*t(sidek) - (k - 1);
-%                 k1 = mod(k, n) + 1;
-%                 if isinf(zc(k))
-%                     tangent = numer(zh(zhind(k) + 1));
-%                     z(sidek) = double(zc(k1) + homog((1 - tk)*tangent, tk));
-%                 elseif isinf(zc(k1))
-%                     tangent = numer(zh(zhind(k1)));
-%                     z(sidek) = double(zc(k) + homog(tk*tangent, 1 - tk));
-%                 else
-%                     z(sidek) = interp1([0 1], zc([k k1]), tk, 'linear');
-%                 end
-%             end
-%         end
-%         
         function n = size(p, m)
             % Number of vertices.
             
@@ -640,11 +622,6 @@ classdef polygon < closedcurve
             
             % Property reference.
             out = builtin('subsref', p, S);
-        end
-        
-        function zt = tangent(p, t) %#ok<INUSD,STOUT>
-            error('CMT:NotImplemented', ...
-                'Placeholder function waiting on implementation.')
         end
         
         function [tri, x, y] = triangulate(p, h)
@@ -742,61 +719,66 @@ classdef polygon < closedcurve
         end
         
         function q = truncate(p)
-            % TRUNCATE Truncate an unbounded polygon.
+            %TRUNCATE Truncate an unbounded polygon.
             %   Q = TRUNCATE(P) returns a polygon whose finite vertices are the same
             %   as those of P and whose infinite vertices have been replaced by
             %   several finite ones. The new vertices are chosen by using a
             %   circular "cookie cutter" on P.
             
-            w = p.vertices;
-            n = numel(w);
-            if ~any(isinf(w))
-                q = p;
-                return
-            end
+            %   Copyright 2002-2006 by Toby Driscoll.
             
-            % Put the finite vertices in a box.
+            w = vertex(p);
+            n = length(w);
+            tau = p.incoming;
+            
+            if ~any(isinf(w)), q=p; return, end
+            
+            % Find a circle containing all of the finite vertices.
             wf = w(~isinf(w));
             xbound = [ min(real(wf)); max(real(wf)) ];
             ybound = [ min(imag(wf)); max(imag(wf)) ];
-            delta = max( diff(xbound), diff(ybound) );
-            xrect = mean(xbound) + [-1;1]*delta;
-            yrect = mean(ybound) + [-1;1]*delta;
-            zrect = xrect([1 1 2 2]') + 1i*yrect([2 1 1 2]');
+            zcen = mean(xbound) + 1i*mean(ybound);
+            delta = norm( [ diff(xbound) diff(ybound) ]/2 );
+            if delta < eps, delta = 1; end
+            R = 2*norm(delta);
             
-            % Find intersections of the box with the unbounded sides.
-            [hit, loc] = intersect(p, [zrect, zrect([2:4, 1])]);
+            % Shift the origin to zcen.
+            w = w - zcen;
             
-            % Carry over the finite vertices, inserting to substitute for the
-            % infinite ones.
+            % Each infinite side is intersected with the circle. The infinite vertex is
+            % replaced by finite ones on the circle.
             atinf = find(isinf(w));
             v = w(1:atinf(1)-1);
             for k = 1:length(atinf)
-                M = atinf(k);
-                M1 = mod(M-2, n) + 1;
-                
-                % Find where the adjacent sides hit the rectangle.
-                rp = loc(logical(hit(:,M1)),M1);
-                %             sp = find( hit(:,M1) );
-                %             rp = loc(sp,M1);
-                rn = loc(logical(hit(:,M)),M);
-                %             sn = find( hit(:,M) );
-                %             rn = loc(sn,M);
-                
-                % Include the rectangle corners that are "in between".
-                dt = mod( angle(rn/rp), 2*pi );
-                dr = mod( angle(zrect/rp), 2*pi );
-                [dr,idx] = sort(dr);
-                use = dr<dt;
-                v = [ v; rp; zrect(idx(use)); rn ]; %#ok<AGROW>
+                % Indices of this, previous and next vertices.
+                m = atinf(k);
+                m_prev = mod(m-2,n) + 1;
+                m_next = mod(m,n) + 1;
+                % Find where the adjacent sides hit the circle.
+                p1 = [ abs(tau(m))^2 2*real(tau(m)'*w(m_prev)) abs(w(m_prev))^2-R^2 ];
+                t1 = roots(p1);  t1 = t1(t1>0);
+                z1 = w(m_prev) + t1*tau(m);
+                p2 = [ abs(tau(m_next))^2 2*real(-tau(m_next)'*w(m_next)) abs(w(m_next))^2-R^2 ];
+                t2 = roots(p2);  t2 = t2(t2>0);
+                z2 = w(m_next) - t2*tau(m_next);
+                % Include points at intermediate angles.
+                dphi = mod( angle(z2/z1), 2*pi );
+                phi0 = angle(z1);
+                thetanew = phi0 + unique([(0:pi/4:dphi) dphi]');
+                vnew = R*exp( 1i*thetanew );
+                v = [ v; vnew ];
+                % Fill in finite vertices up to the next infinite one.
                 if k < length(atinf)
-                    v = [ v; w(M+1:atinf(k+1)-1) ]; %#ok<AGROW>
+                    v = [ v; w(m+1:atinf(k+1)-1) ];
                 else
-                    v = [ v; w(M+1:end) ]; %#ok<AGROW>
+                    v = [ v; w(m+1:end) ];
                 end
             end
             
+            % Shift origin back.
+            v = v + zcen;
             q = polygon(v);
+            
         end
         
         function q = uminus(p)
@@ -806,15 +788,21 @@ classdef polygon < closedcurve
             q = polygon(-p.vertices, p.angles);
         end
         
-        function [x, y] = vertex(p)
+        function [x, y] = vertex(p,k)
             %VERTEX Vertices of a polygon.
             %   VERTEX(P) returns the vertices of polygon P as a complex vector.
             %
-            %   [X,Y] = VERTEX(P) returns the vertices as two real vectors.
+            %   VERTEX(P,K) returns the Kth vertex. 
+            %
+            %   [X,Y] = VERTEX(...) returns the vertices as two real vectors.
             %
             %   See also POLYGON.
             
             x = p.vertices;
+            if nargin > 1
+                x = x(k);
+            end
+            
             if nargout == 2
                 y = imag(x);
                 x = real(x);
@@ -843,84 +831,92 @@ classdef polygon < closedcurve
         end
     end
     
-    methods(Hidden)
-        function handle = plotCurve(p, varargin)
-            % PLOT a polygon.
-            
-            if isempty(p.vertices)
-                return
-            end
-            
-            % An unbounded polygon will be truncated to make it safe for plotting.
-            zplot = vertex(truncate(p));
-            
-            zplot = zplot([1:end 1]);
-            [cargs, pargs] = cmtplot.closedcurveArgs(varargin{:});
-            h = plot(real(zplot), imag(zplot), pargs{:}, cargs{:});
-            
-            if nargout
-                handle = h;
-            end
-        end
-    end
     
-    methods (Static)
-        function alpha = computeAngles(w)
+    methods (Static,Access=private)
+        function alpha = computeAngles(vertex,incoming,z,zindex)
             
-            % ALPHA = computeAngles(W)
-            %
-            % W : vector of vertices
-            % ALPHA : vector of interior angles, normalized by pi
+            n = length(vertex);
+            m = length(z);
             
-            n = length(w);
-            
-            %TODO: Fix using homog!
-            if any(isinf(w))
-                error('CMT:InvalidArgument', ...
-                    'Cannot compute angles for unbounded polygons.')
-            end
-            
-            % Compute angles
-            incoming = w - w([n 1:n-1]);
+            % Compute the interior angles
+            atinf = isinf(vertex);
             outgoing = incoming([2:n,1]);
-            alpha = mod(angle(-incoming.*conj(outgoing))/pi ,2);
+            alpha = mod( angle(-incoming.*conj(outgoing))/pi, 2);
+            alpha(atinf) = -mod( angle(-outgoing(atinf).*conj(incoming(atinf)))/pi, 2);
             
-            % It's ill-posed to determine locally the slits (inward-pointing) from
-            % points (outward-pointing). Check suspicious cases at the tips to see if
-            % they are interior to the rest of the polygon.
-            mask = (alpha < 100*eps) | (2-alpha < 100*eps);
-            if all(mask)
-                % This can happen if all vertices are collinear
-                alpha(:) = 0;
-                isccw = 1;				% irrelevant
-                index = 1;                          % irrelevant
-                return
-            end
-            slit = logical(isinpoly(w(mask), w(~mask)));
-            fmask = find(mask);
-            alpha(fmask(slit)) = 2;
-            alpha(fmask(~slit)) = 0;
+            % When adjacent edges are antiparallel, more testing needs to
+            % be done.
             
-            % Now test--if incorrect, assume the orientation is clockwise
-            index = sum(alpha-1)/2;
-            if abs(index - round(index)) > 100*sqrt(n)*eps
-                % Try reversing the interpretation of a crack
-                mask = (alpha < 2*eps) | (2-alpha < 2*eps);
-                alpha(~mask) = 2 - alpha(~mask);
-                index = sum(alpha - 1)/2;                 
-                % If still not integer, something is wrong
-                if abs(index - round(index)) > 100*sqrt(n)*eps
-                    error('CMT:RuntimeError', 'Invalid polygon.')
+            % In finite case, check if the vertex is inside the polygon
+            % defined by the others.
+            for j = find( ((abs(alpha) < 100*eps) | (abs(2-alpha) < 100*eps)) & ~atinf )
+                if isinpoly( vertex(j), vertex([1:j-1 j+1:n]) );
+                    alpha(j) = 2;
+                else
+                    alpha(j) = 0;
                 end
             end
+            
+            % In the Inf case, truncate the infinity and check the resulting
+            % triangle with its neighbors.
+            for j = find( ((abs(alpha) < 100*eps) | (abs(-2-alpha) < 100*eps)) & atinf )
+                jj = zindex(j);
+                jp = mod(jj+1,m) + 1;
+                jm = mod(jj-2,m) + 1;
+                Z = numer(z(jj))/eps;  % truncation of Inf
+                %                alpha(j) = round( angle( (z(jp)-Z)/(z(jm)-Z)) );
+                %            end
+                
+                % Dot product approach.
+                s = imag( -Z*conj(double(z(jp)-z(jm))-Z) );
+                if s>=0
+                    alpha(j) = 0;
+                else
+                    alpha(j) = -2;
+                end
+            end
+            
         end
         
         function k = index(alpha)
             % Given the angles of the polygon, determine the maximum
             % winding number about the "interior".
-            k = round(sum(1-alpha)/2);  
+            k = round(sum(1-alpha)/2);
         end
         
+        function [vertex,zindex,incoming] = parseVertices(z)
+            % Infinite vertices take up two spots in the vector. We step
+            % through in order to discover and account for them.
+            % vertex : array of doubles representing 'true' vertices
+            % zindex : location of each true vertex in the homog input
+            % incoming : direction of incoming edge at the true vertex
+            m = length(z(:));    % input length
+            k = 1;              % position in homogeneous array
+            n = 0;               % position in the double array
+            lastfinite = ~isinf(z(m));   % was the previous vertex finite?
+            while k <= m
+                n = n+1;
+                vertex(n) = double(z(k));
+                zindex(n) = k;
+                if isinf(vertex(n))
+                    if ~lastfinite
+                        error('Infinite vertices cannot be adjacent.')
+                    end
+                    incoming(n) = sign(z(k));
+                    lastfinite = false;
+                    k = k+2;
+                else
+                    k1 = mod(k-2,m) + 1;  % preceding vertex
+                    if lastfinite
+                        incoming(n) = vertex(n) - double(z(k1));
+                    else
+                        incoming(n) = -sign(z(k1));
+                    end
+                    lastfinite = true;
+                    k = k+1;
+                end
+            end
+        end
     end
     
 end

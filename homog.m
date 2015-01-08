@@ -318,6 +318,7 @@ methods (Static)
     function zeta = inf(angle)
         zeta = homog(exp(1i*angle),0);
     end
+    
 end
 
 end
