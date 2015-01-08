@@ -105,10 +105,29 @@ methods
   
   function str = char(zeta)
     % Format for text representation.
-    str = [ num2str(zeta.numerator), ...
-        '\n  (over)\n', ...
-        num2str(zeta.denominator)
-        ];
+    z = zeta.numerator./zeta.denominator;
+    z(isinf(z)) = complex(Inf,1);  % Get a predictable result for Inf 
+   
+    if isempty(zeta.numerator)
+        str = '[]';
+        return
+    end
+    
+    str = num2str(z);
+    for row = 1:size(str,1)
+        strinf = strfind(str(row,:),'Inf');
+        zinf = find(isinf(z(row,:)));
+        newstr{row} = str(row,:);
+        for i = length(strinf):-1:1  % don't change index values as you go
+            k = strinf(i);
+            s = angle(zeta.numerator(row,zinf(i)));
+            % If it's a complex vector, num2str will call
+            newstr{row} = [newstr{row}(1:k+2),...
+                sprintf('@(%spi)',num2str(s/pi,'%.2g')),...
+                newstr{row}(k+6:end)];
+        end
+    end
+    str = char(newstr{:});
   end
   
   function disp(zeta)
@@ -116,7 +135,7 @@ methods
       fprintf('%i-by-', n(1:end-1));
       fprintf('%i', n(end));
       fprintf(' array of homogeneous coordinates:\n\n');
-      fprintf(char(zeta));
+      disp(char(zeta));
       fprintf('\n\n');
   end
   
@@ -211,8 +230,8 @@ methods
     if isfloat(b)
       b = homog(b);
     end
-    c = homog(a.numerator*b.denominator + a.denominator*b.numerator, ...
-        a.denominator*b.denominator);
+    c = homog(a.numerator.*b.denominator + a.denominator.*b.numerator, ...
+        a.denominator.*b.denominator);
   end
   
   function c = rdivide(a, b)
@@ -228,12 +247,24 @@ methods
   function x = real(zeta)
       x = real(zeta.numerator ./ zeta.denominator);
   end
+  
+  function s = sign(zeta)
+      s = zeros(size(zeta));
+      mask = isinf(zeta);
+      s(mask) = sign( zeta.numerator(mask) );
+      zdub = double(zeta);
+      s(~mask) = sign( zdub(~mask) );
+  end
+  
+  function varargout = size(zeta)
+      [varargout{1:nargout}] = size(zeta.numerator);
+  end
 
-  function zeta = subsref(zeta, s)
+  function z = subsref(zeta, s)
     % Provide double-like indexing.
     switch s.type
       case '()'
-        zeta = homog(subsref(zeta.numerator, s), subsref(zeta.denominator, s));
+        z = homog(subsref(zeta.numerator, s), subsref(zeta.denominator, s));
       otherwise
         error('This type of indexing is not supported by homog objects.')
     end
@@ -281,6 +312,12 @@ methods
     % Unitary minus.
     b = homog(-a.numerator, a.denominator);
   end
+end
+
+methods (Static)
+    function zeta = inf(angle)
+        zeta = homog(exp(1i*angle),0);
+    end
 end
 
 end
