@@ -1,4 +1,4 @@
-function [out1,out2] = adaptplot(fun,tspan)
+function [out1,out2] = adaptplot(fun,tspan,varargin)
 %ADAPTPLOT Adaptively plot an explicit or parametric curve.
 %   ADAPTPLOT(FUN,TSPAN) adaptively selects values of t in the interval
 %   TSPAN in order to produce a nice-looking plot. FUN should accept column

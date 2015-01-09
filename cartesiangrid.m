@@ -50,9 +50,8 @@ classdef cartesiangrid < zgrid
             washold = ishold;
             hold on
             
-            pref = cmtgetpref('grid');
-            plotargs.one = {'linewidth',pref.curvewidth,'color',pref.curvecolor(1,:)};
-            plotargs.two = {'linewidth',pref.curvewidth,'color',pref.curvecolor(2,:)};
+            pref = plotset;
+            plotargs = {'linewidth',pref.gridWidth,'color',pref.gridColor};
 
             switch(g.type)
                 case 'curves'
@@ -63,8 +62,8 @@ classdef cartesiangrid < zgrid
                         h2(i) = plot(img{2}{i});
                     end
                     h = [h1 h2];
-                    set(h1,plotargs.one{:});
-                    set(h2,plotargs.two{:});
+                    set(h1,plotargs{:});
+                    set(h2,plotargs{:});
                 case 'mesh'
                     Z = img(:,[1:end 1]);
                     W = src(:,[1:end 1]);

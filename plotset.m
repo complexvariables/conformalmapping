@@ -16,16 +16,18 @@ properties
     lineSmoothing
     gridColor
     regionColor
+    gridWidth
 end
 
 properties(Access=protected)
     proplist = { ...
-        'lineWidth', 2, @isnumeric, '[ double {0.5} ]'
+        'lineWidth', 3, @isnumeric, '[ double {3} ]'
         'lineColor', cmtplot.ver84(1,:), [], '[ valid colorspec ]'
         'lineSmoothing', 'on', ...
             @plotset.isOnOff, '[ {on} | off ]'
         'regionColor',cmtplot.ver84(3,:), [], '[ valid colorspec ]'
-        'gridColor', cmtplot.ver84([2 4],:), [], '[ 2 x valid colorspec ]'
+        'gridWidth', 0.5, @isnumeric, '[ double {0.5} ]'
+        'gridColor', cmtplot.ver84(2,:), [], '[ valid colorspec ]'
     }
 end
 
