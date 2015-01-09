@@ -180,12 +180,12 @@ methods
     end
 
     function out = plot(f, varargin)
+        %FIXME: Some maps are going to want the grid to be in the range,
+        %not the domain.
         washold = ishold;
 
-        if isempty(f.theRange) || ...
-                ~(isempty(f.theDomain) || hasgrid(f.theDomain))
-            warning('Map range not set or domain has an empty grid. No plot produced.')
-            return
+        if ~isempty(f.theDomain) && ~hasgrid(f.theDomain)
+            error('Domain has an empty grid. No plot produced.')
         end
 
         cah = newplot;
@@ -194,11 +194,16 @@ methods
         % Separate grid construction and plot 'name'/value pairs.
         [gargs, pargs] = separateArgs(get(f.theDomain), varargin{:}); 
         hg = plot(apply(f, grid(f.theDomain, gargs{:})), pargs{:});
-        hb = plot(boundary(f.theRange), pargs{:});
+        if ~isempty(f.theRange)
+            hb = plot(boundary(f.theRange), pargs{:});
+            pb = plotbox(f.theRange);
+        else
+            pb = axis;
+        end
 
         if ~washold
             cmtplot.whitefigure(get(cah, 'parent'))
-            axis(plotbox(f.theRange))
+            axis(pb)
             aspectequal
             if cmtplot.hasNewGraphics
                 % Bug in new graphics won't show smoothed lines if this
