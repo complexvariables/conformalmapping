@@ -1,4 +1,4 @@
-function [out1,out2] = adaptplot(fun,tspan,varargin)
+function [out1,out2] = adaptplot(fun,tspan)
 %ADAPTPLOT Adaptively plot an explicit or parametric curve.
 %   ADAPTPLOT(FUN,TSPAN) adaptively selects values of t in the interval
 %   TSPAN in order to produce a nice-looking plot. FUN should accept column
@@ -18,7 +18,7 @@ function [out1,out2] = adaptplot(fun,tspan,varargin)
 %   Examples:
 %     adaptplot( @humps, [0,1] )
 %     adaptplot( @humps, [0,1], 'trace', 0.75)
-%     adaptplot( @(t) exp(-3*sin(t)+2*cos(4*t)), [2 8], 'trace', 0.75)
+%     adaptplot( @(t) exp(-3*sin(t)+2*cos(4*t)), [2 8])
 %     adaptplot( @(t) [cos(t) sin(t)], [-pi pi] )
 %     adaptplot( @(t) [t.*cos(t), exp(t).*sin(t), t], [0 6*pi] )
 %
@@ -32,8 +32,8 @@ function [out1,out2] = adaptplot(fun,tspan,varargin)
 %   Version 1.0, 02 June 2006
 
 %% Preliminaries
-[traceflag,delay] = optargs({'no',0.1},varargin);
-dotrace = isequal(traceflag,'trace');
+pref = cmtgetpref('graphics');
+dotrace = pref.curvetrace;
 if dotrace, shg, end
 
 x = feval(fun,tspan(1));
@@ -152,13 +152,6 @@ elseif ndim==2
 else
   set(hand,'xdata',x(:,1),'ydata',x(:,2),'zdata',x(:,3))
 end
-end
-
-function varargout = optargs(default,arg)
-% Use arg to override defaults
-varargout = default;
-idx = find( ~cellfun('isempty',arg) );
-varargout(idx) = arg(idx);
 end
 
     

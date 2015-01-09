@@ -117,7 +117,7 @@ classdef circle < closedcurve
 %         
         
         function str = char(c)
-            if isnumeric(c.radius)
+            if ~isinf(c)
                 str = sprintf('circle with center %s and radius %s',...
                     num2str(c.center), num2str(c.radius));
             else
@@ -127,7 +127,7 @@ classdef circle < closedcurve
         
         function d = dist(c,z)
             % Distance between point and circle.
-            if isnumeric(c.radius)
+            if ~isinf(c)
                 v = z - c.center;
                 d = abs(abs(v) - c.radius);
             else
@@ -175,9 +175,11 @@ classdef circle < closedcurve
         
         function tf = isinside(c, z)
             if isinf(c)
-                error('Not well defined for a line.')
-%                z = (z - c.center)/tangent(c, z);  % borked!
-%                tf = imag(z) > 0;
+                % We'll use the "to the left" definition based on the given
+                % tangent direction.
+                z0 = point(c.line,0);
+                z = (z - z0) / c.line.tangent(0);  
+                tf = imag(z) > 0;
             else
                 tf = abs(z - c.center) < c.radius;
             end
@@ -192,11 +194,15 @@ classdef circle < closedcurve
             end
         end
         
-        function h = plot(c,varargin)
+        function out = plot(c,varargin)
             if ~isinf(c)
                 h = plot@curve(c,varargin{:});
             else
                 h = plot(c.line,varargin{:});
+            end
+            
+            if nargout > 0
+                out = h;
             end
         end
             
@@ -219,6 +225,11 @@ classdef circle < closedcurve
             end
         end
      
+        function c = truncate(c)
+            if isinf(c)
+                c = truncate(c.line);
+            end
+        end
    end
     
     

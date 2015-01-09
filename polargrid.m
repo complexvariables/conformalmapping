@@ -9,24 +9,13 @@ classdef polargrid < zgrid
     methods
         function g = polargrid(r,radii,angles,type)
             g = g@zgrid(r);
-            if nargin==1
-                radii = 8;
-                angles = 12;
-            end
-            if length(radii)==1 && radii==round(radii)
-                radii = (1:radii) / radii;
-            end
-            if length(angles)==1 && angles==round(angles)
-                angles = 2*pi*(0:angles-1) / angles;
-            end
-            g.radii =  radii;
-            g.angles = angles;
             
             if nargin > 3
-                g.type = lower(type);
+                g.type = type;
             end
             
-            g = createsource(g);  % set up the initial grid
+            g.radii =  radii;
+            g.angles = angles;
         end
         
         function g = apply(g,f)
@@ -47,13 +36,41 @@ classdef polargrid < zgrid
             end
         end
         
+        function g = set.radii(g,r)
+            if length(r)==1 && r==round(r)
+                if strcmp(g.type,'curves')
+                    r = (1:r) / r;
+                else
+                    r = (0:r-1) / (r-1);
+                end
+            end
+            g.radii = r;
+            g = createsource(g);
+        end
+        
+        function g = set.angles(g,theta)
+            if length(theta)==1 && theta==round(theta)
+                theta = 2*pi*(0:theta-1) / theta;
+            end
+            g.angles = theta;
+            g = createsource(g);
+        end
+        
+        function g = set.type(g,type)
+            g.type = type;
+            g = createsource(g);
+        end
         
         function out = plot(g)
             src = g.dataSource;
             img = g.dataImage;
             newplot
             washold = ishold;
-
+            
+            pref = cmtgetpref('grid');
+            plotargs.one = {'linewidth',pref.curvewidth,'color',pref.curvecolor(1,:)};
+            plotargs.two = {'linewidth',pref.curvewidth,'color',pref.curvecolor(2,:)};
+            
             switch(g.type)
                 case 'curves'
                     for i = 1:length(src{1})
@@ -62,10 +79,10 @@ classdef polargrid < zgrid
                     for i = 1:length(src{2})
                         h2(i) = plot(img{2}{i});
                     end
-                    colr = get(gca,'colororder');
-                    set(h1,'color',colr(1,:))
-                    set(h2,'color',colr(2,:))
-                    h= [h1 h2];
+                    h = [h1 h2];
+                    set(h1,plotargs.one{:});
+                    set(h2,plotargs.two{:});
+                    
                 case 'mesh'
                     Z = img(:,[1:end 1]);
                     W = src(:,[1:end 1]);
@@ -74,8 +91,8 @@ classdef polargrid < zgrid
                     error('Unrecognized grid type.')
             end
             
+            axis auto 
             axis equal
-            axis auto
             
             if ~washold
                 hold off
@@ -108,7 +125,7 @@ classdef polargrid < zgrid
                     error('Unrecognized grid type.')
             end
         end
-         
+        
     end
     
 end

@@ -36,10 +36,16 @@ methods
     g.region = r;
   end
   
-  function disp(g)
-      fprintf('grid object (%s)\n',class(g))
+  function s = char(g)
+      s = sprintf('grid object (%s) in:\n',class(g));
+      s = [s, '   ',char(g.region)];
+      s = strrep(s,'\n','\n   ');
+      s = deblank(s);      
   end
   
+  function disp(g)
+      fprintf(char(g))
+  end
     
 end
 
