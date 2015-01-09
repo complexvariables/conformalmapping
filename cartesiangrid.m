@@ -46,7 +46,7 @@ classdef cartesiangrid < zgrid
             src = g.dataSource;
             img = g.dataImage;
             
-            newplot
+            %newplot
             washold = ishold;
             hold on
             
@@ -72,9 +72,10 @@ classdef cartesiangrid < zgrid
                     error('Unrecognized grid type.')
             end
             
-            axis auto
-            axis equal
             if ~washold
+                axis auto
+                axis equal
+                box on
                 hold off
             end
             
