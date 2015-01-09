@@ -93,6 +93,18 @@ methods
     end
   end % ctor
   
+  function S = apply(R,f)
+      ob = {};
+      for i = 1:length(R.outerboundary)
+          ob{i} = apply(R.outerboundary{i},f);
+      end
+      ib = {};
+      for i = 1:length(R.innerboundary)
+          ib{i} = apply(R.innerboundary{i},f);
+      end
+      S = region(ob,ib);
+  end
+  
   function b = boundary(R)
     % List region boundary as cell array of closedcurves.
     
@@ -161,7 +173,8 @@ methods
         end
 
   function gd = grid(~)
-    % Default empty grid.
+    % Default: empty grid.
+    warning('No grid available for this region.')
     gd = [];
   end
   
@@ -337,8 +350,6 @@ methods
     end
     
     box = cmt.plotbox(cmt.bb2z(boundbox(R)), scale);
-      zi(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.innerboundary_{k}, 1));
-      zo(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(R.outerboundary_{k}, 1));
   end
 end
 
