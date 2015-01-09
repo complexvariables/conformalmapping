@@ -73,7 +73,6 @@ classdef cartesiangrid < zgrid
             end
             
             if ~washold
-                axis auto
                 axis equal
                 box on
                 hold off

@@ -34,8 +34,8 @@ classdef region < cmtobject
 % adapted from code by Toby Driscoll, 20??.
 
 properties
-  outerboundary
-  innerboundary
+  outerboundary = {}
+  innerboundary = {}
 end
 
 properties(Dependent)
@@ -335,6 +335,59 @@ methods
       end
       
   end
+  
+  function r = minus(r,z)
+      r = plus(r,-z);
+  end
+  
+  function r = mrdivide(r,z)
+      r = rdivide(r,z);
+  end
+  
+  function r = times(r,z)
+      if isa(z,'region')
+          [z,r] = deal(r,z);
+      end
+      if ~isnumeric(z) || numel(z) > 1
+          error('Can only multiply a region by a scalar number.')
+      end
+      r.outerboundary = cellfun( @(x)x*z, r.outerboundary, 'uniform',false);
+      r.innerboundary = cellfun( @(x)x*z, r.innerboundary, 'uniform',false);
+  end
+
+  function r = plus(r,z)
+      if isa(z,'region')
+          tmp = r;
+          r = z;
+          z = tmp;
+      end
+      if ~isnumeric(z) || numel(z) > 1
+          error('Can only add a scalar number to a region.')
+      end
+      r.outerboundary = cellfun( @(x)x+z, r.outerboundary, 'uniform',false);
+      r.innerboundary = cellfun( @(x)x+z, r.innerboundary, 'uniform',false);
+  end
+  
+  function r = rdivide(r,z)
+      if ~isnumeric(z)
+          error('Scalar expected.')
+      end
+      r = times(r,1/z);
+  end
+  
+  function r = mtimes(r,z)
+      r = times(r,z);
+  end
+  
+  function r = uminus(r)
+      r.outerboundary = cellfun( @uminus, r.outerboundary, 'uniform',false);
+      r.innerboundary = cellfun( @uminus, r.innerboundary, 'uniform',false);
+  end
+  
+  function r = uplus(r)
+      % \relax
+  end
+
 end
 
 methods(Static, Hidden)

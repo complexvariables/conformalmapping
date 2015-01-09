@@ -496,8 +496,7 @@ classdef polygon < closedcurve
                 [q, p] = deal(p, q);
             end
             
-            r = p;
-            r.vertices = r.vertices*q;
+            r = polygon(q*p.homArray);
         end
         
         function L = perimeter(p)
@@ -580,20 +579,21 @@ classdef polygon < closedcurve
             end
             
             switch class(q)
-                case 'polygon'
+                
+                case 'polygon'  % TODO: Is this dumb?
                     if numel(q.vertices) ~= numel(p.vertices)
                         error('Polygons mst have the same length to be added.')
                     elseif isinf(p) || isinf(q)
                         error('Only finite polygons may be added.')
                     end
-                    r = polygon(p.vertices + q.vertices);
+                    r = polygon(p.homArray + q.homArray);
                     
                 case 'double'
                     if numel(q) > 1 && numel(q) ~= numel(p.vertices)
                         error(['Only a scalar or identical-length vector may be added ' ...
                             'to a polygon.'])
                     end
-                    r = polygon(p.vertices + q(:));
+                    r = polygon(p.homArray + q(:));
             end
         end
         
