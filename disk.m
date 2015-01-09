@@ -67,7 +67,7 @@ methods
                 gd = polargrid(D,60,100,'mesh');
 
             case 'carleson'
-                gd = carlesonGrid(D, opts);
+                gd = carlesonGrid(D);
                 
             otherwise
                 error('CMT:NotDefined', ...
