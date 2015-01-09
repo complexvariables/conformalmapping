@@ -189,6 +189,7 @@ classdef polygon < closedcurve
             d = max(abs(w1(:) - w2(:)));
         end
         
+        %TODO: Convert to char/disp pair. 
         function disp(p)
             % Pretty-print a polygon.
             
@@ -217,17 +218,19 @@ classdef polygon < closedcurve
             ac = textscan(astr, '%s', n, 'delimiter', '\n');
             ac = ac{1};
             
+            % Instead of stuff like Inf + 0.0000i, just use Inf.
+            vc = regexprep(vc,'Inf.*','Inf');
+            
             % Now into matrices.
-            vm = char(vc);
-            am = char(ac);
-            
-            
+            vm = char(strtrim(vc));
+            am = char(strtrim(ac));
+                       
             % Remove leading and trailing space blocs.
-            % (Should use strtrim here? -- EK)
-            idx = find(~all(vm == ' '));
-            vm = vm(:,min(idx):max(idx));
-            idx = find(~all(am == ' '));
-            am = am(:,min(idx):max(idx));
+            % (Should use strtrim here? -- EK)  Yes. -- TD
+%             idx = find(~all(vm == ' '));
+%             vm = vm(:,min(idx):max(idx));
+%             idx = find(~all(am == ' '));
+%             am = am(:,min(idx):max(idx));
             
             wv = max(size(vm, 2), 6);
             wa = max(size(am, 2), 8);
