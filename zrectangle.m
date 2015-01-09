@@ -1,75 +1,49 @@
-classdef zrectangle < polygon
-   
-    % This file is a part of the CMToolbox.
-    % It is licensed under the BSD 3-clause license.
-    % (See LICENSE.)
+classdef zrectangle < region
+%ZRECTANGLE  Rectangular region in the complex plane.
     
-    % Copyright Toby Driscoll, 2014.
-    % (Re)written by Everett Kropf, 2014,
-    % adapted from code by Toby Driscoll, originally 20??.
+% This file is a part of the CMToolbox.
+% It is licensed under the BSD 3-clause license.
+% (See LICENSE.)
+
+% Copyright Toby Driscoll, 2014.
+% (Re)written by Everett Kropf, 2014,
+% adapted from an idea by Toby Driscoll, 20??.
+
+methods
+    function B = zrectangle(varargin)
+        
+        if nargin>1 || ~isa(varargin{1},'zbox')
+            r = zbox(varargin{:});
+        else
+            r = varargin{1};
+        end
+        
+        B = B@region(r);
+    end
     
-    methods
-        function c = zrectangle(varargin)
-        %ZRECTANGLE  Rectangle object.
-        %   ZRECTANGLE(BOUNDS) returns an object representing the rectangle
-        %   in the complex plane with real part bounded by BOUNDS(1:2) and
-        %   imaginary part bounded by BOUNDS(3:4).
-        %
-        %   ZRECTANGLE(Z1,Z2) returns the rectangle whose opposite corners
-        %   are given by the complex points Z1 and Z2.
-        %
-        %   ZRECTANGLE by itself returns a circle object with unknown
-        %   parameters, representing an abstract rectangle.
-        %
-        %   See also ZLINE.
-        
-            if nargin==0
-                % Abstract with unknown geometry.
-                return
-            end
-            
-            switch nargin
-                case 1   % vector of bounds given
-                    bounds_ = varargin{1};
-                case 2
-                    zz = cat(1,varargin{:});
-                    bounds_ = [min(real(zz)), max(real(zz)),...
-                        min(imag(zz)), max(imag(zz)) ];
-            end  
-            
-            cr = bounds_([1 2 2 1]);
-            ci = bounds_([3 3 4 4]);
-            corners = complex(cr,ci);
-              
-            c = c@polygon(corners);
-        end
-        
-        function b = bounds(r)
-            z = r.vertex;
-            b = [min(real(z)),max(real(z)),min(imag(z)),max(imag(z))];
-        end
-        
-        function str = char(r)
-            b = bounds(r);
-            str = sprintf('rectangle with Re(z) in [%g,%g] and Im(z) in [%g,%g]\n',...
-                    b );
-        end
-        
-        function disp(r)
-            disp(char(r))
-        end
-        
-        function d = dist(c,z)
-            % Distance between point and circle.
-            if ~isinf(c)
-                v = z - c.center;
-                d = abs(abs(v) - c.radius);
-            else
-                d = dist(c.line,z);
-            end
-        end
-                    
-   end
+    function b = bounds(B)
+        b = bounds(B.boundary);
+    end
     
+    function g = grid(B,type)
+        
+        if nargin < 2
+            type = 'curves';
+        end
+        
+        switch type
+            case 'curves'
+                g = cartesiangrid(B,bounds(B),11,11,'curves');
+                
+            case 'mesh'
+                g = cartesiangrid(B,bounds(B),100,100,'mesh');
+        end
+    end
     
+    function t = hasgrid(~)
+        t = true;
+    end
+
+end
+
 end
