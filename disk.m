@@ -56,7 +56,7 @@ methods
     function gd = grid(D,type)
         
         if nargin < 2
-            type = 'mesh';
+            type = 'curves';
         end
         
         switch type
@@ -67,7 +67,7 @@ methods
                 gd = polargrid(D,60,100,'mesh');
 
             case 'carleson'
-                gd = carlesonGrid(D);
+                gd = carlesongrid(D);
                 
             otherwise
                 error('CMT:NotDefined', ...
@@ -78,6 +78,8 @@ methods
     function z = center(D)
         c = boundary(D);
         z = c.center;
+    end
+    
     function r = radius(D)
         c = boundary(D);
         r = c.radius;

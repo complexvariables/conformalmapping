@@ -61,7 +61,7 @@ classdef polygon < closedcurve
                 scale = max(abs(z(~isinf(z))));
                 % If first point is repeated at the end, delete the second copy
                 if abs(z(end) - z(1)) < 3*eps*scale
-                    w(end) = [];
+                    z(end) = [];
                 end
             end
             
@@ -70,7 +70,13 @@ classdef polygon < closedcurve
             
             [vertex,zindex,incoming] = polygon.parseVertices(z);
             n = length(vertex);
-            alpha = polygon.computeAngles(vertex,incoming,z,zindex);
+            if isempty(alpha)
+                alpha = polygon.computeAngles(vertex,incoming,z,zindex);
+            else
+                alpha = alpha(:);
+                
+                % TODO: make z properly homog
+            end
             
             % We will always use a positive (counterclockwise) internal
             % representation.
@@ -459,7 +465,7 @@ classdef polygon < closedcurve
         function [p, indx] = modify(p)
             %MODIFY Modify a polygon graphically.
             %   See MODPOLY for usage instructions.
-            
+            %FIXME
             [w, beta, indx] = modpoly(vertex(p), angle(p) - 1);
             p = polygon(w, beta + 1);
         end
@@ -561,7 +567,7 @@ classdef polygon < closedcurve
             if maxdiff < 100*eps
                 maxdiff = 1;
             end
-            fac = scale*(0.5 + 0.125*any(atinf));
+            fac = scale*(0.5 + 0.5*any(atinf));
             box(1:2) = mean(box(1:2)) + fac*maxdiff*[-1 1];
             box(3:4) = mean(box(3:4)) + fac*maxdiff*[-1 1];
         end
@@ -743,7 +749,7 @@ classdef polygon < closedcurve
             zcen = mean(xbound) + 1i*mean(ybound);
             delta = norm( [ diff(xbound) diff(ybound) ]/2 );
             if delta < eps, delta = 1; end
-            R = 2*norm(delta);
+            R = 10*norm(delta);
             
             % Shift the origin to zcen.
             w = w - zcen;

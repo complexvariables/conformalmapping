@@ -209,12 +209,12 @@ methods
             hl = plot(R.outerboundary{k});
             fill(get(hl,'xdata'),get(hl,'ydata'),fillargs{:});
         end
-        pbox = plotbox( truncate(R.outerboundary{k}) );
+        pbox = plotbox( R.outerboundary{k} );
     else
         % Fill the plot box (as though there is no outer boundary).
         zb = zeros(4*R.numinner, 1);
         for k = 1:R.numinner
-            b = truncate(R.innerboundary{k});
+            b = R.innerboundary{k};
             zb(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(b, 1));
         end
         pbox = cmt.plotbox(zb, 2);
@@ -230,9 +230,9 @@ methods
       end
     end
     
+    axis(pbox)
     if ~washold
       hold off
-      axis(pbox)
       aspectequal
     end
   end % fill
@@ -314,45 +314,21 @@ methods
   function varargout = plot(r, varargin)
       %PLOT  Same as FILL for a region.
       [varargout{1:nargout}] = fill(r,varargin{:});
-
-%     % Plot region without fill.
-% 
-%     newplot
-%     washold = ishold;
-%     hold on
-%     
-%     btag = sprintf('boundary_%s', num2hex(rand));
-%     inner = r.innerboundary;
-%     for k = 1:numel(inner)
-%       plot(inner{k}, varargin{:}, 'tag', btag)
-%     end
-%     outer = r.outerboundary;
-%     for k = 1:numel(outer)
-%       plot(outer{k}, varargin{:}, 'tag', btag)
-%     end
-%     
-%     if ~washold
-%       hold off
-%       axis(plotbox(r))
-%       aspectequal
-%     end
-%     
-%     if nargout
-%       out = findobj(gca, 'tag', btag);
-%     end
   end
   
   function box = plotbox(R, scale)
-    if nargin < 2
-      scale = [];
-    end
-    
-    if isempty(R)
-      box = [];
-      return
-    end
-    
-    box = cmt.plotbox(cmt.bb2z(boundbox(R)), scale);
+
+      if isempty(R)
+          box = [];
+          return
+      end
+      
+      if nargin < 2
+          box = plotbox(outer(R));
+      else
+          box = plotbox(outer(R),scale);
+      end
+      
   end
 end
 

@@ -23,29 +23,16 @@ properties(SetAccess=protected)
     options         % Option structure for the map.
 end
 
-properties(SetAccess=protected, Dependent)
-    polygon         % Polygon for the map.
-end
+% properties(SetAccess=protected, Dependent)
+%     outerpolygon         
+%     innerpolygon
+% end
 
 methods
-    function map = scmap(poly, opt)
+    function map = scmap(opt)
         if ~nargin
-            poly = [];
             opt = [];
-        else
-            % Branch based on class of first argument.
-            switch class(poly)
-                case 'polygon'
-                    if nargin == 1
-                        opt = [];
-                    end
-                otherwise
-                    msg = 'Expected ''%s'' to be of class polygon or scmap.';
-                    error(msg,inputname(1))
-            end
         end
-       
-        map.theRange = poly;
         map.options = sctool.scmapopt(opt);
     end
     
@@ -245,15 +232,6 @@ methods
     end
     
     function M = uplus(M)
-    end
-    
-    %---------- get/set ------------%
-    function p = get.polygon(M)
-        p = M.theRange;
-    end
-    
-    function M = set.polygon(M, p)
-        M.theRange = p;
     end
 end
 

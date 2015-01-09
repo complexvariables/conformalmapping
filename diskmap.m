@@ -37,6 +37,7 @@ classdef diskmap < scmap
 % Copyright Toby Driscoll.
 
 properties(SetAccess=protected)
+    polygon
     prevertex
     constant
     qdata
@@ -115,16 +116,20 @@ methods
         end % input switch
         
         % Retrieve options
-        opt = scmapopt(opt);
+        map = map@scmap(opt);
+        opt = map.options;
         
         % Take actions based on what needs to be filled in
         
         if isempty(z)
             % Solve parameter problem
             % Apply SCFIX to enforce solver rules
-            [w,beta] = scfix('d',vertex(poly),angle(poly)-1);
-            poly = polygon(w,beta+1);             % in case polygon was altered
+            %FIXME: Restore scfix.
+%             [w,beta] = scfix('d',vertex(poly),angle(poly)-1);
+%             poly = polygon(w,beta+1);             % in case polygon was altered
             
+            w = vertex(poly);
+            beta = angle(poly)-1;
             [z,c,qdata] = diskmap.dparam(w,beta,opt.InitialGuess,opt);
         end
         
@@ -144,9 +149,8 @@ methods
                 - diskmap.dquad(z(idx),mid,idx,z,beta,qdata);
             c = diff(w([1 idx]))/I;
         end
-        
-        map = map@scmap(poly,opt);
-        
+                
+        map.polygon = poly;
         map.prevertex = z;
         map.constant = c;
         map.qdata = qdata;
@@ -161,7 +165,11 @@ methods
         map.centerVal = center(map);
         
         % Fill in apparent accuracy
-        map.accuracyVal = accuracy(map);        
+        map.accuracyVal = accuracy(map); 
+        
+        % Fill in the standard region properties.
+        map.theDomain = unitdisk;
+        map.theRange = interior(poly);
     end
     
     function acc = accuracy(M)
@@ -608,30 +616,27 @@ methods
         %
         %   See also DISKMAP, EVAL.
         
-        p = M.polygon;
-        w = vertex(p);
-        beta = angle(p) - 1;
-        z = M.prevertex;
-        c = M.constant;
-        
-        if nargin == 1
-            [a1,a2,a3] = M.dplot(w,beta,z,c);
-        elseif length(varargin) == 1
-            % Tolerance given only
-            [a1,a2,a3] = M.dplot(w,beta,z,c,10,10,ceil(-log10(varargin{1})));
-        elseif length(varargin) == 2
-            % R, theta given only
-            [a1,a2,a3] = M.dplot(w,beta,z,c,varargin{1},varargin{2});
+        if nargin==1
+            type = 'curves';
         else
-            % All given
-            nqpts = ceil(-log10(varargin{3}));
-            [a1,a2,a3] = M.dplot(w,beta,z,c,varargin{1},varargin{2},nqpts);
+            type = varargin{1};
         end
+        g = grid(domain(M),type);
+        out = plot( apply(g,M) );
+        washold = ishold;
+        hold on
+        plot( M.polygon )
+        plot( M.centerVal, 'x' )
+        axis( plotbox(M.polygon,1.1)) 
+        if ~washold
+            hold off
+        end
+%         end
         
         if nargout > 0
-            h = a1;
-            r = a2;
-            theta = a3;
+            h = out;
+%             r = a2;
+%             theta = a3;
         end
     end
     
@@ -1053,11 +1058,11 @@ methods(Hidden,Static)
             end
         end
         
-        err = sccheck('d',w,beta);
-        if err==1
-            fprintf('Use SCFIX to make polygon obey requirements\n')
-            error(' ')
-        end
+       err = sccheck('d',w,beta);
+       if err==1
+           fprintf('Use SCFIX to make polygon obey requirements\n')
+           error(' ')
+       end
         
         [trace,tol,method] = parseopt(options);
         if length(z0)==1
@@ -1179,8 +1184,8 @@ methods(Hidden,Static)
             z,beta,qdat) + ...
             sctool.dabsquad(zright(~cmplx),mid(~cmplx),right(~cmplx),z,beta,qdat);
         if any(cmplx)
-            ints(cmplx) = sctool.dquad(zleft(cmplx),mid(cmplx),left(cmplx),z,beta,qdat) - ...
-                sctool.dquad(zright(cmplx),mid(cmplx),right(cmplx),z,beta,qdat);
+            ints(cmplx) = diskmap.dquad(zleft(cmplx),mid(cmplx),left(cmplx),z,beta,qdat) - ...
+                diskmap.dquad(zright(cmplx),mid(cmplx),right(cmplx),z,beta,qdat);
         end
         
         if any(ints==0)
