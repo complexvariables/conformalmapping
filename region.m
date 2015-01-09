@@ -298,32 +298,35 @@ methods
     end
   end
   
-  function out = plot(r, varargin)
-    % Plot region without fill.
+  function varargout = plot(r, varargin)
+      %PLOT  Same as FILL for a region.
+      [varargout{1:nargout}] = fill(r,varargin{:});
 
-    newplot
-    washold = ishold;
-    hold on
-    
-    btag = sprintf('boundary_%s', num2hex(rand));
-    inner = r.innerboundary;
-    for k = 1:numel(inner)
-      plot(inner{k}, varargin{:}, 'tag', btag)
-    end
-    outer = r.outerboundary;
-    for k = 1:numel(outer)
-      plot(outer{k}, varargin{:}, 'tag', btag)
-    end
-    
-    if ~washold
-      hold off
-      axis(plotbox(r))
-      aspectequal
-    end
-    
-    if nargout
-      out = findobj(gca, 'tag', btag);
-    end
+%     % Plot region without fill.
+% 
+%     newplot
+%     washold = ishold;
+%     hold on
+%     
+%     btag = sprintf('boundary_%s', num2hex(rand));
+%     inner = r.innerboundary;
+%     for k = 1:numel(inner)
+%       plot(inner{k}, varargin{:}, 'tag', btag)
+%     end
+%     outer = r.outerboundary;
+%     for k = 1:numel(outer)
+%       plot(outer{k}, varargin{:}, 'tag', btag)
+%     end
+%     
+%     if ~washold
+%       hold off
+%       axis(plotbox(r))
+%       aspectequal
+%     end
+%     
+%     if nargout
+%       out = findobj(gca, 'tag', btag);
+%     end
   end
   
   function box = plotbox(R, scale)

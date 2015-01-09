@@ -102,7 +102,7 @@ methods
     function gd = grid(D,type)
         
         if nargin < 2
-            type = cmtgetpref('grid','type');
+            type = 'mesh';
         end
         
         switch type
@@ -121,31 +121,6 @@ methods
         end
     end
 
-
-    function tf = hasgrid(~)
-        tf = true;
-    end
-    
-    function gd = polarGrid(D, opts)
-        nrad = opts.numRadialLines;
-        ncirc = opts.numCircularLines;
-        
-        npt = 200;
-        c = center(outer(D));
-        r = radius(outer(D));
-
-        curves = cell(nrad + ncirc, 1);
-        zg = (1:npt)'/(npt+1);
-        for k = 1:nrad
-            curves{k} = c + r*exp(2i*pi*(k-1)/nrad)*zg;
-        end
-        zg = exp(2i*pi*(0:npt-1)'/(npt-1));
-        for k = 1:ncirc
-            curves{nrad + k} = c + r*k/(ncirc+1)*zg;
-        end
-
-        gd = gridcurves(curves);
-    end
 end
 
 end
