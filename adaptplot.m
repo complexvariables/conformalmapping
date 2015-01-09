@@ -32,8 +32,8 @@ function [out1,out2] = adaptplot(fun,tspan)
 %   Version 1.0, 02 June 2006
 
 %% Preliminaries
-pref = cmtgetpref('graphics');
-dotrace = pref.curvetrace;
+[traceflag,delay] = optargs({'no',0.1},varargin);
+dotrace = isequal(traceflag,'trace');
 if dotrace, shg, end
 
 x = feval(fun,tspan(1));
@@ -152,6 +152,13 @@ elseif ndim==2
 else
   set(hand,'xdata',x(:,1),'ydata',x(:,2),'zdata',x(:,3))
 end
+end
+
+function varargout = optargs(default,arg)
+% Use arg to override defaults
+varargout = default;
+idx = find( ~cellfun('isempty',arg) );
+varargout(idx) = arg(idx);
 end
 
     
