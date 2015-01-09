@@ -304,7 +304,7 @@ methods(Access=protected)
             w = f.functionList{1}(z);
         else
             % Default map is identity.
-            if ~isa(class(f), 'conformalmap')
+            if ~isa(f, 'conformalmap')
                 warning('CMT:BadThings', ...
                     ['Identity map used when conformalmap is subclassed.\n' ...
                     '(Define applyMap in subclass %s?)'], class(f))

@@ -33,7 +33,7 @@ function [out1,out2] = adaptplot(fun,tspan,varargin)
 
 %% Preliminaries
 [traceflag,delay] = optargs({'no',0.1},varargin);
-dotrace = isequal(traceflag,'trace');
+dotrace = isequal(traceflag,'trace');  
 if dotrace, shg, end
 
 x = feval(fun,tspan(1));

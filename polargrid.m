@@ -1,17 +1,27 @@
 classdef polargrid < zgrid
     
+    % TODO: Allow translated center
+    
     properties
         radii = []
         angles = []
+        rbounds = [0 1]
+        %tbounds = [-pi pi]    % TODO: Make this variable. (Need arcs.)
         type = 'mesh';
     end
     
     methods
-        function g = polargrid(r,radii,angles,type)
+        function g = polargrid(r,radii,angles,type,rbnd,tbnd)
             g = g@zgrid(r);
             
             if nargin > 3
                 g.type = type;
+                if nargin > 4
+                    g.rbounds = rbnd;
+%                     if nargin > 5
+%                         g.tbounds = tbnd;
+%                     end
+                end
             end
             
             g.radii =  radii;
@@ -37,11 +47,13 @@ classdef polargrid < zgrid
         end
         
         function g = set.radii(g,r)
+            rb = g.rbounds;                 % FIXME
             if length(r)==1 && r==round(r)
-                if strcmp(g.type,'curves')
-                    r = (1:r) / r;
+                if strcmp(g.type,'curves') && rb(1)==0  % FIXME
+                    r = linspace(rb(1),rb(2),r+1);
+                    r(1) = [];
                 else
-                    r = (0:r-1) / (r-1);
+                    r = linspace(rb(1),rb(2),r);
                 end
             end
             g.radii = r;
@@ -111,8 +123,10 @@ classdef polargrid < zgrid
                     for i = 1:length(g.radii)
                         src{1}{i} = circle(0,g.radii(i));
                     end
+                    rb = g.rbounds;
                     for i = 1:length(g.angles)
-                        src{2}{i} = segment(0,exp(1i*g.angles(i)));
+                        tau = exp(1i*g.angles(i));                      
+                        src{2}{i} = segment(rb(1)*tau,rb(2)*tau);
                     end
                     g.dataSource = src;
                     g.dataImage = src;
