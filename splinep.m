@@ -70,7 +70,21 @@ methods
       yk = [yk; yk(1)];
     end
     
-    % Superclass constructor here.
+    [ppArray_, chordalArclength_] = splinep.makeSpline(xk, yk);
+    
+      function z = position(t)
+          t = t*chordalArclength_;
+          z = complex(ppval(ppArray_{1,1}, t), ...
+                ppval(ppArray_{2,1}, t));
+      end
+
+      function zt = tangent(t)
+          t = t*chordalArclength_;
+          zt = complex(ppval(ppArray_{1,2}, t), ...
+              ppval(ppArray_{2,2}, t))*chordalArclength_;
+      end
+      
+    S = S@closedcurve(@position,@tangent,[0 1]);
     
     % Spline data.
     S.knotX = xk;
@@ -154,13 +168,7 @@ methods
     end
     S = splinep(S.zpts + z);
   end
-  
-  function z = point(S, t)
-    t = modparam(S, t)*S.chordalArclength;
-    z = complex(ppval(S.ppArray{1,1}, t), ...
-                ppval(S.ppArray{2,1}, t));
-  end
-  
+    
   function replicate(S)
     % Print in format for pasting into scripts, etc.
     fprintf('%s = splinep([ ...\n    ', inputname(1));
@@ -191,12 +199,6 @@ methods
     t = modparam(S, t)*S.chordalArclength;
     z2 = complex(ppval(S.ppArray{1,3}, t), ...
                  ppval(S.ppArray{2,3}, t))*arclength(S)^2;
-  end
-  
-  function zt = tangent(S, t)
-    t = modparam(S, t)*arclength(S);
-    zt = complex(ppval(S.ppArray{1,2}, t), ...
-                 ppval(S.ppArray{2,2}, t))*arclength(S);
   end
   
   function S = uminus(S)

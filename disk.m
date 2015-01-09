@@ -53,6 +53,10 @@ methods
         get(D, gridset);
     end
 
+    function t = hasgrid(~)
+        t = true;
+    end
+    
     function gd = grid(D,type)
         
         if nargin < 2

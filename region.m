@@ -190,7 +190,7 @@ methods
     n = numel(R.outerboundary);
   end
   
-  function fill(R, varargin)
+  function out = fill(R, varargin)
     % Fill plot of region.
     
     newplot
@@ -207,7 +207,7 @@ methods
         % Fill interior of the outer boundary.
         for k = 1:R.numouter
             hl = plot(R.outerboundary{k});
-            fill(get(hl,'xdata'),get(hl,'ydata'),fillargs{:});
+            hf = fill(get(hl,'xdata'),get(hl,'ydata'),fillargs{:});
         end
         pbox = plotbox( R.outerboundary{k} );
     else
@@ -218,7 +218,7 @@ methods
             zb(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(b, 1));
         end
         pbox = cmt.plotbox(zb, 2);
-        fill(pbox([1 1 2 2 1]),pbox([3 4 4 3 3]),fillargs{:});
+        hf = fill(pbox([1 1 2 2 1]),pbox([3 4 4 3 3]),fillargs{:});
     end
     
     % Poke holes based on inner boundaries.
@@ -235,6 +235,11 @@ methods
       hold off
       aspectequal
     end
+    
+    if nargout > 0
+        out = hf;
+    end
+    
   end % fill
   
   function tf = hasgrid(~)

@@ -194,7 +194,7 @@ methods
         % Separate grid construction and plot 'name'/value pairs.
         [gargs, pargs] = separateArgs(get(f.theDomain), varargin{:}); 
         hg = plot(apply(f, grid(f.theDomain, gargs{:})), pargs{:});
-        hb = plot(f.theRange, pargs{:});
+        hb = plot(boundary(f.theRange), pargs{:});
 
         if ~washold
             cmtplot.whitefigure(get(cah, 'parent'))

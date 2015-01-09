@@ -85,7 +85,7 @@ methods
         S.curve = curve;
         S.confCenter = a;
         S.numCollPts = opts.numCollPts;
-        S.theta0 = angle(-1i*phi(S, 0)^2*tangent(S.curve, 0));
+        S.theta0 = angle(-1i*phi(S, 0)^2*S.curve.tangent(0));
         S.Saa = sum(abs(S.phiColl.^2))*S.dtColl;
         S.newtTol = opts.newtonTol;
         S.beNoisy = opts.trace;
@@ -105,7 +105,7 @@ methods
         % Calculate Kerzmann-Stein kernel.
         t = t(:);
         w = point(S.curve, t);
-        wt = tangent(S.curve, t);
+        wt = S.curve.tangent(t);
         wT = wt./abs(wt);
 
         z = S.zPts;
@@ -132,14 +132,14 @@ methods
 
     function y = psi(S, t)
         % Calculate integral equation RHS.
-        wt = tangent(S.curve, t(:));
+        wt = S.curve.tangent(t(:));
         y = 1i/(2*pi)./sqrt(abs(wt)) .* ...
             conj(wt./(point(S.curve, t(:)) - S.confCenter));
     end
 
     function th = theta(S, t)
         % Give unit circle correspondence angle.
-        th = angle(-1i.*phi(S, t).^2.*tangent(S.curve, t(:))) - S.theta0;
+        th = angle(-1i.*phi(S, t).^2.*S.curve.tangent(t(:))) - S.theta0;
         % KLUDGE: Roundoff allows theta(S, 0) ~= 0. "Fix" this.
         th(t == 0) = 0;
     end
@@ -285,7 +285,7 @@ methods(Access=protected, Static)
         dt = 1/N;
         t = (0:N-1)'*dt;
         z = point(curve, t);
-        zt = tangent(curve, t);
+        zt = curve.tangent(t);
         zT = zt./abs(zt);
 
         if noisy

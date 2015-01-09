@@ -19,7 +19,7 @@ properties(Access=protected)
         'gridType', 'polar', [], '[ string {polar} | carleson ]'
         'numRadialLines', 20, [], '[ positive integer {20} ]'
         'numCircularLines', 5, [], '[ positive integer {5} ]'
-        'numLevels', 5, [], '[ positive integer {5} ]'
+        'numLevels', 4, [], '[ positive integer {4} ]'
     };
 end
 

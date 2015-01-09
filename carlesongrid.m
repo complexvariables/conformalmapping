@@ -1,7 +1,7 @@
 classdef carlesongrid < zgrid
     
     properties
-        levels = 4
+        levels
     end
        
 
@@ -9,6 +9,7 @@ classdef carlesongrid < zgrid
         function g = carlesongrid(R)
             %TODO: Accept options.
             g = g@zgrid(R);
+            g.levels = get(gridset,'numLevels');
             
             nu = 32; % Base radial line number.
             r = 0.6*R.radius; % Base circle radius.
