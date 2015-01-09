@@ -99,14 +99,19 @@ methods
         end
     end
     
-    function gd = grid(D, varargin)
-        opts = get(D);
-        opts = set(opts, varargin{:});
+    function gd = grid(D,type)
         
-        switch opts.gridType
-            case 'polar'
-                gd = polarGrid(D, opts);
+        if nargin < 2
+            type = cmtgetpref('grid','type');
+        end
+        
+        switch type
+            case 'curves'
+                gd = polargrid(D,8,12,'curves');
                 
+            case 'mesh'
+                gd = polargrid(D,60,100,'mesh');
+
             case 'carleson'
                 gd = carlesonGrid(D, opts);
                 

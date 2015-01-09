@@ -185,13 +185,16 @@ methods
     hold on
     box on
     
-    fillargs = cmtplot.fillargs;
+    pref = cmtgetpref('graphics');
+    fillargs = { pref.fillcolor,...
+                'edgecolor',pref.linecolor','linewidth',pref.linewidth,...
+                varargin{:} };
     
     if R.numouter > 0
         % Fill interior of the outer boundary.
         for k = 1:R.numouter
             hl = plot(R.outerboundary{k});
-            fill(get(hl,'xdata'),get(hl,'ydata'),fillargs{:}, varargin{:});
+            fill(get(hl,'xdata'),get(hl,'ydata'),fillargs{:});
         end
         pbox = plotbox( truncate(R.outerboundary{k}) );
     else
@@ -202,16 +205,15 @@ methods
             zb(4*(k - 1) + (1:4)) = cmt.bb2z(plotbox(b, 1));
         end
         pbox = cmt.plotbox(zb, 2);
-        fill(pbox([1 1 2 2 1]),pbox([3 4 4 3 3]),fillargs{:},varargin{:});
+        fill(pbox([1 1 2 2 1]),pbox([3 4 4 3 3]),fillargs{:});
     end
     
     % Poke holes based on inner boundaries.
     if R.numinner > 0
-      bgcolor = get(gca, 'color');
+      fillargs{1} = get(gca, 'color');
       for k = 1:R.numinner
           hl = plot(R.innerboundary{k});
-          fill(get(hl,'xdata'),get(hl,'ydata'),fillargs{:}, varargin{:}, ...
-            'facecolor',bgcolor);
+          fill(get(hl,'xdata'),get(hl,'ydata'),fillargs{:});
       end
     end
     

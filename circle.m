@@ -194,11 +194,15 @@ classdef circle < closedcurve
             end
         end
         
-        function h = plot(c,varargin)
+        function out = plot(c,varargin)
             if ~isinf(c)
                 h = plot@curve(c,varargin{:});
             else
                 h = plot(c.line,varargin{:});
+            end
+            
+            if nargout > 0
+                out = h;
             end
         end
             

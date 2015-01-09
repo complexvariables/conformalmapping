@@ -11,49 +11,13 @@ classdef cartesiangrid < zgrid
         function g = cartesiangrid(r,bounds_,real_,imag_,type_)
             g = g@zgrid(r);
             
-            if nargin < 5
-                type_ = g.type;
-                if nargin < 4
-                    real_ = 10;
-                    imag_ = 10;
-                    if nargin < 2
-                        bounds_ = g.bounds;
-                    end
-                end
+            if nargin > 4
+                g.type = type_;
             end
             
-            % Used to "equally" distribute values in a
-            % finite/(semi)infinite interval.
-            function q = equidistribute(bounds,n)
-                if isinf(bounds(1)) && isinf(bounds(2))
-                    t = linspace(-1,1,n+2);
-                    t = t(2:n+1);
-                    q = 2*t./(1-t.^2);
-                elseif isinf(bounds(1))
-                    t = linspace(-1,0,n+1);
-                    t = t(2:n+1);
-                    q = t./(1+t) + bounds(2);
-                elseif isinf(bounds(2))
-                    t = linspace(0,1,n+1);
-                    t = t(1:n);
-                    q = t./(1-t) + bounds(1);
-                else
-                    q = linspace(bounds(1),bounds(2),n);
-                end
-            end                    
-            
-            % For integer arguments, find vectors of values. 
-            if length(real_)==1 && real_==round(real_)
-                real_ = equidistribute(bounds_(1:2),real_);
-            end
-            if length(imag_)==1 && imag_==round(imag_)
-                imag_ = equidistribute(bounds_(3:4),imag_);
-            end
-            
+            g.bounds = bounds_;
             g.real = real_;
             g.imag = imag_;
-            g.bounds = bounds_;
-            g.type = type_;
             
             g = createsource(g);  % set up the initial grid
 
@@ -78,7 +42,6 @@ classdef cartesiangrid < zgrid
             end
         end
         
-        
         function out = plot(g)
             src = g.dataSource;
             img = g.dataImage;
@@ -87,6 +50,9 @@ classdef cartesiangrid < zgrid
             washold = ishold;
             hold on
             
+            pref = plotset;
+            plotargs = {'linewidth',pref.gridWidth,'color',pref.gridColor};
+
             switch(g.type)
                 case 'curves'
                     for i = 1:length(src{1})
@@ -95,10 +61,9 @@ classdef cartesiangrid < zgrid
                     for i = 1:length(src{2})
                         h2(i) = plot(img{2}{i});
                     end
-                    colr = get(gca,'colororder');
-                    set(h1,'color',colr(1,:))
-                    set(h2,'color',colr(2,:))
                     h = [h1 h2];
+                    set(h1,plotargs{:});
+                    set(h2,plotargs{:});
                 case 'mesh'
                     Z = img(:,[1:end 1]);
                     W = src(:,[1:end 1]);
@@ -118,8 +83,25 @@ classdef cartesiangrid < zgrid
             end
            
         end
+    
+    function g = set.imag(g,y)
+        if length(y)==1 && y==round(y)
+            y = equidistribute(g,y,3:4);
+        end
+        g.imag = y;
+        g = createsource(g);
     end
     
+    function g = set.real(g,x)
+        if length(x)==1 && x==round(x)
+            x = equidistribute(g,x,1:2);
+        end
+        g.real = x;
+        g = createsource(g);
+    end
+
+    
+    end
     methods (Hidden)
         function g = createsource(g)
             % Set up the source grid with whichever type of implementation
@@ -156,6 +138,29 @@ classdef cartesiangrid < zgrid
                     g.dataImage = g.dataSource;
                 otherwise
                     error('Unrecognized grid type.')
+            end
+        end
+    end
+    
+    methods (Access=private)
+        % Used to "equally" distribute values in a
+        % finite/(semi)infinite interval.
+        function q = equidistribute(g,n,indx)
+            bounds = g.bounds(indx);
+            if isinf(bounds(1)) && isinf(bounds(2))
+                t = linspace(-1,1,n+2);
+                t = t(2:n+1);
+                q = 2*t./(1-t.^2);
+            elseif isinf(bounds(1))
+                t = linspace(-1,0,n+1);
+                t = t(2:n+1);
+                q = t./(1+t) + bounds(2);
+            elseif isinf(bounds(2))
+                t = linspace(0,1,n+1);
+                t = t(1:n);
+                q = t./(1-t) + bounds(1);
+            else
+                q = linspace(bounds(1),bounds(2),n);
             end
         end
     end

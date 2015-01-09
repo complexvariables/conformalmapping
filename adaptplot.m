@@ -18,7 +18,7 @@ function [out1,out2] = adaptplot(fun,tspan,varargin)
 %   Examples:
 %     adaptplot( @humps, [0,1] )
 %     adaptplot( @humps, [0,1], 'trace', 0.75)
-%     adaptplot( @(t) exp(-3*sin(t)+2*cos(4*t)), [2 8], 'trace', 0.75)
+%     adaptplot( @(t) exp(-3*sin(t)+2*cos(4*t)), [2 8])
 %     adaptplot( @(t) [cos(t) sin(t)], [-pi pi] )
 %     adaptplot( @(t) [t.*cos(t), exp(t).*sin(t), t], [0 6*pi] )
 %
