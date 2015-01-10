@@ -26,6 +26,7 @@ classdef polargrid < zgrid
             
             g.radii =  radii;
             g.angles = angles;
+            g.PhasePlotType = 'e';
         end
         
         function g = apply(g,f)
@@ -73,46 +74,46 @@ classdef polargrid < zgrid
             g = createsource(g);
         end
         
-        function out = plot(g)
-            src = g.dataSource;
-            img = g.dataImage;
-            newplot
-            washold = ishold;
-            
-            pref = plotset;
-            plotargs = {'linewidth',pref.gridWidth,'color',pref.gridColor};
-            
-            switch(g.type)
-                case 'curves'
-                    for i = 1:length(src{1})
-                        h1(i) = plot(img{1}{i}); hold on
-                    end
-                    for i = 1:length(src{2})
-                        h2(i) = plot(img{2}{i});
-                    end
-                    h = [h1 h2];
-                    set(h1,plotargs{:});
-                    set(h2,plotargs{:});
-                    
-                case 'mesh'
-                    Z = img(:,[1:end 1]);
-                    W = src(:,[1:end 1]);
-                    h = PhasePlot.PhasePlot(Z,W,'e');
-                otherwise
-                    error('Unrecognized grid type.')
-            end
-            
-            axis auto 
-            axis equal
-            
-            if ~washold
-                hold off
-            end
-            
-            if nargout > 0
-                out = h;
-            end
-        end
+%         function out = plot(g)
+%             src = g.dataSource;
+%             img = g.dataImage;
+%             newplot
+%             washold = ishold;
+%             
+%             pref = plotset;
+%             plotargs = {'linewidth',pref.gridWidth,'color',pref.gridColor};
+%             
+%             switch(g.type)
+%                 case 'curves'
+%                     for i = 1:length(src{1})
+%                         h1(i) = plot(img{1}{i}); hold on
+%                     end
+%                     for i = 1:length(src{2})
+%                         h2(i) = plot(img{2}{i});
+%                     end
+%                     h = [h1 h2];
+%                     set(h1,plotargs{:});
+%                     set(h2,plotargs{:});
+%                     
+%                 case 'mesh'
+%                     Z = img(:,[1:end 1]);
+%                     W = src(:,[1:end 1]);
+%                     h = PhasePlot.PhasePlot(Z,W,'e');
+%                 otherwise
+%                     error('Unrecognized grid type.')
+%             end
+%             
+%             axis auto 
+%             axis equal
+%             
+%             if ~washold
+%                 hold off
+%             end
+%             
+%             if nargout > 0
+%                 out = h;
+%             end
+%         end
     end
     
     methods (Hidden)
@@ -132,7 +133,11 @@ classdef polargrid < zgrid
                     g.dataImage = src;
                 case 'mesh'
                     [R,T] = ndgrid(g.radii,g.angles);
-                    g.dataSource = R.*exp(1i*T);
+                    Z = R.*exp(1i*T);
+                    if ~isempty(Z)
+                        Z = Z(:,[1:end 1]);   % to join up in theta
+                    end
+                    g.dataSource = Z;          
                     g.dataImage = g.dataSource;
                 otherwise
                     error('Unrecognized grid type.')

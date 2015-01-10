@@ -18,14 +18,15 @@ classdef cartesiangrid < zgrid
             g.bounds = bounds_;
             g.real = real_;
             g.imag = imag_;
+            g.PhasePlotType = 'v';
             
             g = createsource(g);  % set up the initial grid
-
+            
         end
         
         function g = apply(g,f)
             src = g.dataSource;
-
+            
             switch(g.type)
                 case 'curves'
                     for i = 1:length(src{1})
@@ -42,76 +43,35 @@ classdef cartesiangrid < zgrid
             end
         end
         
-        function out = plot(g)
-            src = g.dataSource;
-            img = g.dataImage;
-            
-            %newplot
-            washold = ishold;
-            hold on
-            
-            pref = plotset;
-            plotargs = {'linewidth',pref.gridWidth,'color',pref.gridColor};
-
-            switch(g.type)
-                case 'curves'
-                    for i = 1:length(src{1})
-                        h1(i) = plot(img{1}{i});
-                    end
-                    for i = 1:length(src{2})
-                        h2(i) = plot(img{2}{i});
-                    end
-                    h = [h1 h2];
-                    set(h1,plotargs{:});
-                    set(h2,plotargs{:});
-                case 'mesh'
-                    Z = img(:,[1:end 1]);
-                    W = src(:,[1:end 1]);
-                    h = PhasePlot.PhasePlot(Z,W,'v');
-                otherwise
-                    error('Unrecognized grid type.')
+        
+        function g = set.imag(g,y)
+            if length(y)==1 && y==round(y)
+                y = equidistribute(g,y,3:4);
             end
-            
-            if ~washold
-                axis equal
-                box on
-                hold off
+            g.imag = y;
+            g = createsource(g);
+        end
+        
+        function g = set.real(g,x)
+            if length(x)==1 && x==round(x)
+                x = equidistribute(g,x,1:2);
             end
-            
-            if nargout > 0
-                out = h;
-            end
-           
+            g.real = x;
+            g = createsource(g);
         end
-    
-    function g = set.imag(g,y)
-        if length(y)==1 && y==round(y)
-            y = equidistribute(g,y,3:4);
-        end
-        g.imag = y;
-        g = createsource(g);
-    end
-    
-    function g = set.real(g,x)
-        if length(x)==1 && x==round(x)
-            x = equidistribute(g,x,1:2);
-        end
-        g.real = x;
-        g = createsource(g);
-    end
-
-    
+        
+        
     end
     methods (Hidden)
         function g = createsource(g)
             % Set up the source grid with whichever type of implementation
-            % is selected. 
+            % is selected.
             b = g.bounds;
             switch(g.type)
                 case 'curves'
                     src = cell(1,2);
                     % For vertical segments with infinite endpoints, have
-                    % to get the tangent direction right. 
+                    % to get the tangent direction right.
                     for i = 1:length(g.real)
                         x = g.real(i);
                         if isinf(b(3))
