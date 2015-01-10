@@ -10,11 +10,18 @@ classdef zline < curve
                 case 1
                     zp = varargin{1};
                     % Look for two points in a vector.
-                    if isa(zp,'double') && length(zp)==2 && all(~isinf(zp))
-                        point_ = zp(1);
-                        tangent_ = diff(zp);
+                    if length(zp)==2 && ~all(isinf(zp))
+                        if isinf(zp(1))
+                            zp = zp([2 1]);
+                        end
+                        point_ = double(zp(1));  % might have been homog
+                        if isinf(zp(2))
+                            tangent_ = sign(zp(2));
+                        else
+                            tangent_ = diff(zp);
+                        end
                     else
-                        error('Expected a vector of 2 finite points on the line.')
+                        error('Expected a vector of 2 points on the line.')
                     end
                 case 2
                     % Look for a point and a tangent
@@ -61,8 +68,13 @@ classdef zline < curve
             tf = true;
         end
         
+%         function bx = plotbox(l)
+%             pts = l.position([-0.4,0.4]);
+%             bx = [min(real(pts)),max(real(pts)),min(imag(pts)),max(imag(pts))];
+%         end
+        
         function l = truncate(l)
-            l = segment(l.position(-0.5),l.position(0.5));
+            l = segment(l.position(-0.6),l.position(0.6));
         end
     end
     
