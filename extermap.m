@@ -40,6 +40,7 @@ classdef extermap < scmap
 %   $Id: extermap.m 129 2001-05-07 15:04:13Z driscoll $
 
 properties
+    polygon
     prevertex
     constant
     qdata
@@ -123,7 +124,8 @@ methods
         
         
         % Retrieve options
-        opt = scmapopt(opt);
+        map = map@scmap(opt);
+        opt = map.options;
         
         % Take actions based on what needs to be filled in
         
@@ -157,8 +159,7 @@ methods
             c = diff(w(1:2))/I;
         end
         
-        map = map@scmap(poly,opt);
-        
+        map.polygon = poly;
         map.prevertex = z;
         map.constant = c;
         map.qdata = qdata;
@@ -169,8 +170,13 @@ methods
             map.scmap = scmap(poly,opt);
         end
         
-        % Now fill in apparent accuracy
+        % Fill in apparent accuracy
         map.accuracyVal = accuracy(map);
+        
+        % Fill in the standard region properties.
+        map.theDomain = unitdisk;
+        map.theRange = exterior(poly);
+
     end
     
     function acc = accuracy(M)
@@ -558,32 +564,55 @@ methods
         %   Copyright 1998 by Toby Driscoll.
         %   $Id: plot.m 7 1998-05-10 04:37:19Z tad $
         
-        p = M.polygon;
-        w = flipud(vertex(p));
-        beta = flipud(1 - angle(p));
-        z = M.prevertex;
-        c = M.constant;
-        n = length(w);
-        
-        if nargin == 1
-            [a1,a2,a3] = M.deplot(w,beta,z,c);
-        elseif length(varargin) == 1
-            % Tolerance given only
-            [a1,a2,a3] = M.deplot(w,beta,z,c,10,10,ceil(-log10(varargin{1})));
-        elseif length(varargin) == 2
-            % R, theta given only
-            [a1,a2,a3] = M.deplot(w,beta,z,c,varargin{1},varargin{2});
+        if nargin==1
+            type = 'curves';
         else
-            % All given
-            nqpts = ceil(-log10(varargin{3}));
-            [a1,a2,a3] = M.deplot(w,beta,z,c,varargin{1},varargin{2},nqpts);
+            type = varargin{1};
         end
+        g = grid(domain(M),type);
+        out = plot( apply(g,M) );
+        washold = ishold;
+        hold on
+        plot( M.polygon )
+        axis( plotbox(M.polygon,2.4)) 
+        if ~washold
+            hold off
+        end
+%         end
         
         if nargout > 0
-            h = a1;
-            r = a2;
-            theta = a3;
+            h = out;
+%             r = a2;
+%             theta = a3;
         end
+        
+        %         p = M.polygon;
+%         w = flipud(vertex(p));
+%         beta = flipud(1 - angle(p));
+%         z = M.prevertex;
+%         c = M.constant;
+%         n = length(w);
+%         
+%         if nargin == 1
+%             [a1,a2,a3] = M.deplot(w,beta,z,c);
+%         elseif length(varargin) == 1
+%             % Tolerance given only
+%             [a1,a2,a3] = M.deplot(w,beta,z,c,10,10,ceil(-log10(varargin{1})));
+%         elseif length(varargin) == 2
+%             % R, theta given only
+%             [a1,a2,a3] = M.deplot(w,beta,z,c,varargin{1},varargin{2});
+%         else
+%             % All given
+%             nqpts = ceil(-log10(varargin{3}));
+%             [a1,a2,a3] = M.deplot(w,beta,z,c,varargin{1},varargin{2},nqpts);
+%         end
+%         
+%         if nargout > 0
+%             h = a1;
+%             r = a2;
+%             theta = a3;
+%         end
+%     end
     end
 end
 
