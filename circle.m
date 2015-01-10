@@ -224,6 +224,17 @@ classdef circle < closedcurve
                 c.line = cline*z;
             end
         end
+        
+        function out = rsplot(c)
+            if isinf(c)
+                h = rsplot(c.line);
+            else
+                h = rsplot@closedcurve(c);
+            end
+            if nargout > 0
+                out = h;
+            end
+        end
      
         function c = truncate(c)
             if isinf(c)
