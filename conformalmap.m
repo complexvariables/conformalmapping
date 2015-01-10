@@ -67,6 +67,11 @@ methods
             end
         end
         
+        % Worth a try...?
+        if isempty(f.theRange) && ~isempty(f.theDomain)
+            f.theRange = apply(f,f.theDomain);
+        end
+        
     end
 
     function w = apply(f, z)
@@ -192,10 +197,17 @@ methods
         hold on
         
         % Separate grid construction and plot 'name'/value pairs.
-        [gargs, pargs] = separateArgs(get(f.theDomain), varargin{:}); 
-        hg = plot(apply(f, grid(f.theDomain, gargs{:})), pargs{:});
+        %FIXME errors?
+        %[gargs, pargs] = separateArgs(get(f.theDomain), varargin{:}); 
+        %hg = plot(apply(f, grid(f.theDomain, gargs{:})), pargs{:});
+        hg = plot(apply(f, grid(f.theDomain)) );
         if ~isempty(f.theRange)
-            hb = plot(boundary(f.theRange), pargs{:});
+            %hb = plot(boundary(f.theRange), pargs{:});
+            bdy = boundary(f.theRange);
+            if ~iscell(bdy), bdy = {bdy}; end
+            for i = 1:length(bdy)
+                hb(i) = plot(bdy{i});
+            end
             pb = plotbox(f.theRange);
         else
             pb = axis;
@@ -308,6 +320,7 @@ methods(Access=protected)
         if isanonymous(f)
             w = f.functionList{1}(z);
         else
+            %TODO: Why is this needed?
             % Default map is identity.
             if ~isa(f, 'conformalmap')
                 warning('CMT:BadThings', ...
