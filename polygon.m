@@ -95,8 +95,9 @@ classdef polygon < closedcurve
             % Parameterize the boundary.
             function tau = tangent(t)
                 thisSide = max( 1, ceil(t(:)) );
+                nextSide = mod(thisSide,n) + 1;
                 tau = zeros(size(t));
-                tau(:) = incoming(thisSide);
+                tau(:) = incoming(nextSide);
 %                 nextSide = mod(thisSide,n) + 1;
 %                 tau = nan(size(t));
 %                 
