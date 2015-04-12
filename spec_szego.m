@@ -1,7 +1,7 @@
 %% Specification by example -- Szego kernel map.
 % This file best viewed via the command
 %
-%   open(publish('spec_mobius_grids')).
+%   open(publish('spec_szego')).
 %
 clear
 
